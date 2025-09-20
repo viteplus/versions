@@ -1,0 +1,18 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "types": [
+            "node",
+            "@remotex-labs/xjet"
+        ]
+    },
+    "include": [
+        "**/*.ts",
+        "**/*.spec.ts",
+        "includes/**/*"
+    ],
+    "exclude": [
+        "dist",
+        "node_modules"
+    ]
+}
