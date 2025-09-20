@@ -36,6 +36,7 @@ jobs:
 
             -   name: Run Unit Tests
                 run: npm run ci:test
+                if: success() || failure()
 
             -   name: Clean Distribution Directory
                 run: npm run ci:clean
