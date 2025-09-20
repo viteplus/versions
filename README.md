@@ -1,10 +1,10 @@
 # @viteplus/versions
 
-[![Documentation](https://img.shields.io/badge/Documentation-orange?logo=typescript&logoColor=f5f5f5)](https://vitepulse.github.io/versions/)
-[![npm version](https://img.shields.io/npm/v/@vitepulse/versions.svg)](https://www.npmjs.com/package/@vitepulse/versions)
+[![Documentation](https://img.shields.io/badge/Documentation-orange?logo=typescript&logoColor=f5f5f5)](https://viteplus.github.io/versions/)
+[![npm version](https://img.shields.io/npm/v/@viteplus/versions.svg)](https://www.npmjs.com/package/@viteplus/versions)
 [![License: MPL 2.0](https://img.shields.io/badge/License-MPL_2.0-brightgreen.svg)](https://opensource.org/licenses/MPL-2.0)
-[![Node.js CI](https://github.com/vitepulse/versions/actions/workflows/node.js.yml/badge.svg)](https://github.com/vitepulse/versions/actions/workflows/node.js.yml)
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/vitepulse/versions)
+[![Node.js CI](https://github.com/viteplus/versions/actions/workflows/node.js.yml/badge.svg)](https://github.com/viteplus/versions/actions/workflows/node.js.yml)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/viteplus/versions)
 
 A plugin for VitePress that enables versioned documentation, including automatic versioned routes, sidebars, navigation, and a version switcher component.
 
@@ -135,7 +135,7 @@ I would like to express my gratitude to those who inspired and supported this pr
 
 ## Documentation
 
-For complete API documentation, examples, and guides, visit: [Documentation](https://vitepulse.github.io/versions/)
+For complete API documentation, examples, and guides, visit: [Documentation](https://viteplus.github.io/versions/)
 
 ## Compatibility
 
