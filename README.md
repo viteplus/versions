@@ -35,7 +35,7 @@ This is critical because the plugin relies on relative paths to determine the co
 ../help/faq.md
 ```
 
-> [!CAUTION] ⚠️
+> [!CAUTION]
 > Absolute links like /guide/getting-started will break versioned navigation.
 
 2. Configure Versioning
