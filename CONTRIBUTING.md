@@ -1,133 +1,135 @@
 # Contributing to @viteplus/versions
-Thank you for considering contributing to # viteplus! This document outlines the process for contributing to
-the project and provides guidelines to make the process smooth for everyone involved.
+
+Thank you for your interest in contributing to this project!  
+Your contributions — whether they are bug fixes, new features, documentation improvements,  
+or optimizations — are highly valued. This guide will help you contribute effectively.
+
+---
 
 ## Code of Conduct
-By participating in this project, you agree to abide by our code of conduct.
-Please be respectful, inclusive, and considerate when interacting with other contributors.
 
-## Development Workflow
-### Setting Up Your Environment
+By participating, you agree to abide by the
+[Contributor Covenant Code of Conduct](https://www.contributor-covenant.org/version/2/1/code_of_conduct/).  
+Be respectful, inclusive, and constructive in all discussions, pull requests, and code reviews.
 
-The project uses TypeScript and requires Node.js (20+). After installing dependencies, you can:
+---
 
-- Run tests: `npm test`
-- Build the project: `npm run build -- -w`
-- Run linting: `npm run lint`
+## How to Contribute
 
-### Making Changes
+### Reporting Issues
 
-1. Make your changes in your feature branch
-2. Add or update tests as necessary
-3. Ensure all tests pass and lint checks succeed
-4. Update documentation if relevant
-5. Commit your changes with clear, descriptive commit messages
+1. Check the [issues page](https://github.com/viteplus/versions/issues) for existing reports.
+2. If it doesn’t exist, open a new issue with:
+    - **Description:** What went wrong or needs improvement.
+    - **Steps to Reproduce:** Minimal steps to reproduce the issue.
+    - **Environment:** Node.js version, OS, project version.
+    - **Expected vs. Actual Behavior**
+    - **Screenshots / Logs:** Optional.
+
+### Suggesting Features
+
+1. Open a new issue labeled `enhancement`.
+2. Describe the feature, the problem it solves, and provide examples if possible.
+3. Optionally suggest implementation ideas.
 
 ### Commit Message Guidelines
-Follow these best practices for commit messages:
 
-- Use the present tense ("Add feature" not "Added feature")
-- Use the imperative mood ("Move cursor to..." not "Moves cursor to...")
-- Limit the first line to 72 characters or less
-- Reference issues and pull requests liberally after the first line
+- Use **present tense** ("add feature" not "added feature").
+- Use **imperative mood** ("fix bug" not "fixes bug").
+- Limit the first line to **72 characters or fewer**.
+- Reference issues and pull requests after the first line when relevant.
 
-Example:
-```
-string.matcher: Add `toMatchPattern()` matcher
+### Submitting Pull Requests
 
-This new matcher allows testing against regular expression patterns
-with detailed error output. Supports both string and RegExp objects.
+1. Fork the repo and create a branch:
 
-Fixes #123
-```
+    ```bash
+    git checkout -b feature/your-feature-name
+    ```
 
-## Pull Request Process
-1. **Update your fork** with the latest changes from the main repository
+2. Make your changes.
+3. Ensure your code passes linting and tests:
 
-```shell script
-git remote add upstream https://github.com/viteplus/versions.git
-git fetch upstream
-git rebase upstream/main
-```
+    ```bash
+    npm run lint
+    npm run test
+    ```
 
-2. **Push your changes** to your fork
-```shell script
-git push origin feature/your-feature-name
-```
+4. Rebase or sync with the latest `main` branch:
 
-3. **Submit a pull request** to the main repository
-    - Provide a clear title and description
-    - Reference any related issues
-    - Explain what your changes do and why they should be included
+    ```bash
+    git fetch upstream
+    git rebase upstream/main
+    ```
 
-4. **Address review feedback**
-    - Respond to comments and make requested changes
-    - Push additional commits to your branch as needed
-    - The maintainers may ask for changes before merging
+5. Submit a PR describing:
+    - What changes you made
+    - Why you made them
+    - Any potential impact on other modules
+
+> **Tip:** Small, focused PRs are easier to review and merge.
+
+---
+
+## Coding Guidelines
+
+- Use **TypeScript** with strong typing.
+- Follow **TSDoc conventions** for interfaces, types, and functions.
+- Keep functions **pure and testable** where possible.
+- Prefer **immutable updates**.
+- Use **clear and consistent naming**.
+
+---
 
 ## Testing
-Every new feature or bug fix should include appropriate tests:
 
-- Unit tests for new matchers or utilities
-- Integration tests for complex functionality
-- Edge case tests for potential issues
+- Use **xJet** for unit testing.
+- Example:
 
-Run the test suite to ensure your changes don't break existing functionality:
+    ```ts
+    describe('getAllMarkdownFilesRelative', () => {
+        const mockReaddirSync = xJet.mock(readdirSync);
 
-```shell script
-npm test
-```
+        beforeEach(() => {
+            mockReaddirSync.mockReset();
+        });
 
-For thorough testing, you can also run:
+        test('should return empty array when no markdown files exist', () => {
+            mockReaddirSync.mockReturnValueOnce([{ name: 'file.txt', isFile: () => true, isDirectory: () => false }]);
+            expect(getAllMarkdownFilesRelative('/root')).toEqual([]);
+        });
+    });
+    ```
 
-```shell script
-npm run test:coverage
-```
+- Cover **edge cases** for versioning, navigation, and sidebar parsing.
+
+---
 
 ## Documentation
 
-When adding new features, please update the relevant documentation:
+- Add **TSDoc comments** for public APIs.
+- Update `README.md` if needed.
+- Update `docs`  if needed.
+- Include usage examples.
+- Update the **VitePress site** for major features.  
+  Documentation should follow [TSDoc standards](https://tsdoc.org/).
 
-- Add TSDoc comments to all public APIs
-- Update README.md if necessary
-- Add examples showing how to use the new functionality
-- Update the documentation site when adding major features
-
-Documentation follows the TSDoc standard and is built using VitePress.
-
-## Types and Type Safety
-
-`versions` is built with TypeScript, and we place a high value on type safety:
-
-- All public APIs should have explicit type annotations
-- Generic types should be used where appropriate
-- Type guards should be implemented when necessary
-- Run `npm run lint` to verify type correctness
+---
 
 ## Versioning
 
 We follow [Semantic Versioning](https://semver.org/):
 
-- MAJOR version for incompatible API changes
-- MINOR version for backwards-compatible functionality
-- PATCH version for backwards-compatible bug fixes
+- **MAJOR**: incompatible API changes
+- **MINOR**: backwards-compatible features
+- **PATCH**: backwards-compatible bug fixes
 
-## Release Process
-
-Releases are managed by the core maintainers. The general process is:
-
-1. Finalize and merge all changes for the release
-2. Update version in package.json
-3. Update CHANGELOG.md
-4. Create a tagged release
-5. Publish to npm
+---
 
 ## Questions?
 
-If you have questions about contributing, please:
+- Open an **issue** for general questions.
+- Contact maintainers for sensitive matters.
+- Join community discussions (links in README).
 
-- Open an issue for general questions
-- Contact the maintainers for sensitive matters
-- Join our community discussions (links in README)
-
-Thank you for contributing to # viteplus!
+Thank you for contributing to **@viteplus/versions**! 🎉
