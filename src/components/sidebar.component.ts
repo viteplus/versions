@@ -82,7 +82,9 @@ export function populateSidebar(target: ThemeInterface, items: Array<SidebarItem
         item = { ...item };
 
         item.base ??= '';
-        item.base = join('/', version, base, item.base, '/');
+        if(item.link !== '/' || version !== '') {
+            item.base = join('/', version, base, item.base, '/');
+        }
 
         return item;
     });
