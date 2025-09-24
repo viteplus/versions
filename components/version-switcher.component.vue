@@ -14,8 +14,8 @@ import VPFlyout from 'vitepress/dist/client/theme-default/components/VPFlyout.vu
 import VPMenuLink from 'vitepress/dist/client/theme-default/components/VPMenuLink.vue';
 
 interface VersioningPlugin {
-  versions: Array<string>,
-  latestVersion: string
+    versions: Array<string>,
+    currentVersion: string
 }
 
 const props = defineProps<{
@@ -29,20 +29,20 @@ const { site } = useData()
 // Optimize version detection using find() instead of for loop
 const currentVersion = computed(() => {
   const basePath = site.value.base
-  const { versions, latestVersion } = props.versioningPlugin
+  const { versions, currentVersion } = props.versioningPlugin
 
   // Find the first version that matches the current path
   const matchedVersion = versions.find(version =>
       router.route.path.startsWith(`${ basePath }${ version }/`)
   )
 
-  return matchedVersion || latestVersion
+  return matchedVersion || currentVersion
 })
 
 // Create a reusable menu item generator to DRY up template
 const createVersionMenuItem = (version: string) => ({
   text: version,
-  link: version === props.versioningPlugin.latestVersion ? '/' : `/${ version }/`
+  link: version === props.versioningPlugin.currentVersion ? '/' : `/${ version }/`
 })
 
 const isOpen = ref(false)
@@ -63,8 +63,8 @@ const toggle = () => {
     <div class="items">
       <!-- Only show latest version link if we're not already on latest -->
       <VPMenuLink
-          v-if="currentVersion !== versioningPlugin.latestVersion"
-          :item="createVersionMenuItem(versioningPlugin.latestVersion)"
+          v-if="currentVersion !== versioningPlugin.currentVersion"
+          :item="createVersionMenuItem(versioningPlugin.currentVersion)"
       />
       <!-- Show all version links except current version -->
       <template v-for="version in versioningPlugin.versions" :key="version">
@@ -92,7 +92,7 @@ const toggle = () => {
 
     <div id="navbar-group-version" class="items">
       <!-- Always show latest version link -->
-      <VPMenuLink :item="createVersionMenuItem(versioningPlugin.latestVersion)"/>
+      <VPMenuLink :item="createVersionMenuItem(versioningPlugin.currentVersion)"/>
       <!-- Show all version links -->
       <VPMenuLink
           v-for="version in versioningPlugin.versions"
