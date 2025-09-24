@@ -1,96 +1,64 @@
 /**
- * Import will remove at compile time
- */
-
-import type { VersionThemeInterface } from '@interfaces/config.interface';
-
-/**
  * Imports
  */
 
-import { assignMissingDeep } from '@components/object.component';
 import { versionSwitcher } from '@components/switcher.component';
 
 /**
  * Tests
  */
 
-beforeEach(() => {
-    xJet.clearAllMocks();
-});
-
 describe('versionSwitcher', () => {
-    const mockAssignMissingDeep = xJet.mock(assignMissingDeep);
+    test('should return undefined if versionSwitcher is false', () => {
+        const themeConfig: any = { versionSwitcher: false };
+        const result = versionSwitcher(themeConfig, [ 'v1.0.0' ]);
+        expect(result).toBeUndefined();
+    });
 
-    test('adds dropdown with latest label and versions', () => {
-        const themeConfig: VersionThemeInterface = { nav: [] } as any;
+    test('should include current version as "Latest" by default', () => {
+        const themeConfig: any = {
+            versionSwitcher: { text: 'Versions', includeCurrentVersion: true }
+        };
 
-        versionSwitcher(themeConfig, [ 'v1', 'v2' ]);
-
-        expect(themeConfig.nav?.[0]).toEqual({
-            text: 'Switch Version',
+        const result = versionSwitcher(themeConfig, [ 'v1.0.0', 'v0.9.0' ]);
+        expect(result).toEqual({
+            text: 'Versions',
             items: [
-                { text: 'Latest', link: '/' },
-                { text: 'v1', link: '/v1/' },
-                { text: 'v2', link: '/v2/' }
+                { link: '/', text: 'Latest', skipVersioning: true },
+                { text: 'v1.0.0', link: '/v1.0.0/', skipVersioning: true },
+                { text: 'v0.9.0', link: '/v0.9.0/', skipVersioning: true }
             ]
         });
     });
 
-    test('appends to existing nav items', () => {
+    test('should include current version label when provided', () => {
         const themeConfig: any = {
-            nav: [{ text: 'Home', link: '/' }]
-        } as any;
+            versionSwitcher: { text: 'Versions', includeCurrentVersion: true }
+        };
 
-        versionSwitcher(themeConfig, [ 'v1' ]);
-
-        expect(themeConfig.nav?.length).toBe(2);
-        expect(themeConfig.nav?.[1].text).toBe('Switch Version');
-    });
-
-    test('uses custom latestVersion label', () => {
-        const themeConfig: any = { nav: [] } as any;
-
-        versionSwitcher(themeConfig, [ 'v1' ], '2.0.0');
-
-        expect(themeConfig.nav?.[0].items?.[0]).toEqual({
-            text: '2.0.0 (latest)',
-            link: '/'
+        const result = versionSwitcher(themeConfig, [ 'v2.0.0', 'v1.5.0' ], 'v2.0.0');
+        expect(result).toEqual({
+            text: 'Versions',
+            items: [
+                { link: '/', text: 'v2.0.0 (latest)', skipVersioning: true },
+                { text: 'v2.0.0', link: '/v2.0.0/', skipVersioning: true },
+                { text: 'v1.5.0', link: '/v1.5.0/', skipVersioning: true }
+            ]
         });
     });
 
-    test('fills missing keys with defaults when versionSwitcher object exists', () => {
-        const themeConfig: VersionThemeInterface = {
-            versionSwitcher: { text: 'Versions' },
-            nav: []
-        } as any;
+    test('should return correct items when includeCurrentVersion is false', () => {
+        const themeConfig: any = {
+            versionSwitcher: { text: 'Versions', includeCurrentVersion: false }
+        };
 
-        versionSwitcher(themeConfig, [ 'v1' ]);
-
-        expect(mockAssignMissingDeep).toHaveBeenCalledWith(
-            themeConfig.versionSwitcher,
-            { text: 'Switch Version', includeLatestVersion: true }
-        );
-    });
-
-    test('exits early if versionSwitcher is false', () => {
-        const themeConfig: VersionThemeInterface = {
-            versionSwitcher: false,
-            nav: []
-        } as any;
-
-        versionSwitcher(themeConfig, [ 'v1' ]);
-
-        expect(themeConfig.nav).toEqual([]);
-        expect(mockAssignMissingDeep).not.toHaveBeenCalled();
-    });
-
-    test('handles undefined nav by initializing array', () => {
-        const themeConfig: any = {} as any;
-
-        versionSwitcher(themeConfig, [ 'v1' ]);
-
-        expect(Array.isArray(themeConfig.nav)).toBe(true);
-        expect(themeConfig.nav?.[0].items?.length).toBe(2);
+        const result = versionSwitcher(themeConfig, [ 'v2.0.0', 'v1.5.0' ]);
+        expect(result).toEqual({
+            text: 'Versions',
+            items: [
+                { text: 'v2.0.0', link: '/v2.0.0/', skipVersioning: true },
+                { text: 'v1.5.0', link: '/v1.5.0/', skipVersioning: true }
+            ]
+        });
     });
 });

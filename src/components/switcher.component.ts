@@ -1,65 +1,69 @@
 /**
- * Import will remove at compile time
- */
-
-import type { DefaultTheme } from 'vitepress';
-import type { VersionThemeInterface } from '@interfaces/config.interface';
-
-/**
  * Imports
  */
 
-import { assignMissingDeep } from '@components/object.component';
+import type { NavItemWithChildrenType } from '@interfaces/nav.interface';
+import type { VersionsConfigInterface } from '@interfaces/configuration.interface';
 
 /**
- * Adds a version-switching dropdown to the VitePress navigation.
+ * Builds a version switcher navigation item for the documentation site.
+ *
+ * @param themeConfig - The {@link VersionsConfigInterface} configuration object.
+ * @param versions - An array of available version strings.
+ * @param current - The current version label, defaults to `"Latest"`.
+ *
+ * @returns A {@link NavItemWithChildrenType} representing the version switcher,
+ * or `undefined` if the switcher is disabled in the configuration.
  *
  * @remarks
- * This utility augments the provided {@link VersionThemeInterface | themeConfig}
- * with a `nav` entry that lists available documentation versions.
+ * - If `themeConfig.versionSwitcher === false`, no switcher is created.
+ * - The returned navigation item contains child links for each version in `versions`.
+ * - If `includeCurrentVersion` is enabled, adds a link to the root (`"/"`)
+ *   for the currently active version, displayed as `"Latest"` or
+ *   `"vX.Y.Z (latest)"`.
+ * - All version links have `skipVersioning: true` to prevent further prefixing.
  *
- * - If `themeConfig.versionSwitcher` is `false`, the function exits without changes.
- * - If `themeConfig.versionSwitcher` is an object, missing keys are filled using {@link assignMissingDeep}.
- *
- * @param themeConfig - The mutable VitePress theme configuration that will receive the version switcher.
- * @param versions - Array of version strings (e.g., `['v1', 'v2']`) to display as selectable links.
- * @param latestVersion - Optional label for the latest version entry. Defaults to `'Latest'`.
+ * This utility allows users to quickly switch between documentation versions
+ * from the navigation bar.
  *
  * @example
  * ```ts
- * versionSwitcher(themeConfig, ['v1', 'v2']);
- * // Adds a nav dropdown titled "Switch Version" with entries:
- * // → Latest
- * // → v1
- * // → v2
+ * const themeConfig: VersionsConfigInterface = {
+ *   versionSwitcher: { text: "Versions", includeCurrentVersion: true }
+ * };
+ *
+ * const versions = ["v2.0.0", "v1.5.0"];
+ * const navItem = versionSwitcher(themeConfig, versions, "v2.0.0");
+ *
+ * // → {
+ * //   text: "Versions",
+ * //   items: [
+ * //     { link: "/", text: "v2.0.0 (latest)", skipVersioning: true },
+ * //     { link: "/v2.0.0/", text: "v2.0.0", skipVersioning: true },
+ * //     { link: "/v1.5.0/", text: "v1.5.0", skipVersioning: true }
+ * //   ]
+ * // }
  * ```
  *
- * @since 1.0.0
+ * @since 2.0.0
  */
 
-export function versionSwitcher(themeConfig: VersionThemeInterface, versions: Array<string>, latestVersion: string = 'Latest'): void {
+export function versionSwitcher(themeConfig: VersionsConfigInterface, versions: Array<string>, current: string = 'Latest'): undefined | NavItemWithChildrenType {
     if (themeConfig.versionSwitcher === false) return;
-    const defaults = { text: 'Switch Version', includeLatestVersion: true };
 
-    if (!themeConfig.versionSwitcher) {
-        themeConfig.versionSwitcher = { ...defaults };
-    } else {
-        assignMissingDeep(themeConfig.versionSwitcher, defaults);
-    }
-
-    const { text, includeLatestVersion } = themeConfig.versionSwitcher;
-    const items: DefaultTheme.NavItemWithLink[] = [];
-    if (includeLatestVersion) {
+    const { text, includeCurrentVersion } = themeConfig.versionSwitcher;
+    const items = [];
+    if (includeCurrentVersion) {
         items.push({
-            text: latestVersion === 'Latest' ? latestVersion : `${ latestVersion } (latest)`,
-            link: '/'
+            link: '/',
+            text: current === 'Latest' ? current : `${ current } (latest)`,
+            skipVersioning: true
         });
     }
 
     for (const version of versions) {
-        items.push({ text: version, link: `/${ version }/` });
+        items.push({ text: version, link: `/${ version }/`, skipVersioning: true });
     }
 
-    themeConfig.nav ??= [];
-    themeConfig.nav.push({ text, items });
+    return { text, items };
 }
