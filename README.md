@@ -6,132 +6,173 @@
 [![Node.js CI](https://github.com/viteplus/versions/actions/workflows/node.js.yml/badge.svg)](https://github.com/viteplus/versions/actions/workflows/node.js.yml)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/viteplus/versions)
 
-A plugin for VitePress that enables versioned documentation, including automatic versioned routes, sidebars, navigation, and a version switcher component.
+A **VitePress plugin** that enables versioned documentation, including:
+
+- Automatic versioned routes
+- Sidebar & navigation per version
+- Version switcher component
+
+---
 
 ## Installation
 
-Install the plugin using your preferred package manager:
+Install via your preferred package manager:
+
 ```bash
-pnpm install @viteplus/versions
+pnpm add @viteplus/versions
 # or
 npm install @viteplus/versions
 # or
 yarn add @viteplus/versions
 ```
 
-## Basic Setup
-1. Ensure Relative Links
+## Quick Start
 
-All links in your `markdown` files must be relative. 
-This is critical because the plugin relies on relative paths to determine the correct versioned file to link to.
+1. **Add the plugin to your VitePress config:**
 
-- Example: Linking `docs/guide/advanced-setup.md` from `docs/guide/getting-started.md`:
-```markdown
-./advanced-setup.md
-```
+    ```js
+    // .vitepress/config.js
+    import { withVersions } from '@viteplus/versions';
 
-- Example: Linking `docs/help/faq.md` from `docs/guide/getting-started.md`:
-```markdown
-../help/faq.md
-```
+    export default withVersions({
+      // your VitePress config here
+    });
+    ```
 
-> [!CAUTION]
-> Absolute links like /guide/getting-started will break versioned navigation.
+2. **Configure navigation and sidebar:**
+    - Define them at the root-level to apply for all versions.
+    - Or, define them for specific versions (e.g., `v1.0` or `v2.0`) to customize per version.
 
-2. Configure Versioning
-
-Replace defineConfig in .vitepress/config.ts with `defineVersionedConfig`:
-
-```ts
-import { defineVersionedConfig } from '@viteplus/versions';
-
-export default defineVersionedConfig({
-    root: 'docs', // root folder 
-    title: 'SomeProject',
-    base: '/SomeProject/', // in case github page that have prefix 
-    srcDir: 'src',
-    versioning: {
-        latestVersion: '1.0.0',
+    ```js
+    themeConfig: {
+      nav: {
+        root: [ /* Global navigation */ ],
+        'v1.0': [ /* Navigation for version 1.0 */ ],
+        'v2.0': [ /* Navigation for version 2.0 */ ]
+      },
+      sidebar: {
+        root: [ /* Global sidebar */ ],
+        'v1.0': [ /* Sidebar for version 1.0 */ ],
+        'v2.0': [ /* Sidebar for version 2.0 */ ]
+      }
     }
-});
-```
+    ```
 
-3. Version Switcher Component
+## Sidebar & Navigation Configuration
 
-To use a custom version switcher component:
+Both the navigation (`nav`) and sidebar (`sidebar`) can be defined in your VitePress configuration in two flexible ways:
 
-1. Import and register it in your theme config:
+- **As an Array:** Simply provide an array to apply a global navigation or sidebar for all versions.
 
-```ts
-/**
- * Import will remove at compile time
- */
-
-import type { VNode } from '@vue/runtime-core';
-import type { Awaitable, Theme } from 'vitepress';
-
-/**
- * Styles
- */
-
-import './style.css';
-
-/**
- * Imports
- */
-
-import { h } from 'vue';
-import DefaultTheme from 'vitepress/theme';
-import VersionSwitcher from '@viteplus/versions/components/version-switcher.component.vue';
-
-export default {
-    extends: DefaultTheme,
-    Layout: (): VNode => {
-        return h(DefaultTheme.Layout, null, {
-        });
-    },
-    enhanceApp({ app }): Awaitable<void> {
-        app.component('VersionSwitcher', VersionSwitcher);
+    ```ts
+    themeConfig: {
+        nav: [ /* Global navigation for all versions */ ],
+        sidebar: [ /* Global sidebar for all versions */ ]
     }
-} satisfies Theme;
-```
+    ```
 
-2. Add it to your navbar:
+- **As a Mapping/Object:** Provide an object to specify different navigation or sidebar options for each version.
+
+    ```ts
+    themeConfig: {
+        nav: {
+          root: [ /* Navigation for all versions */ ],
+          'v1.0': [ /* Navigation for version 1.0 */ ]
+        },
+        sidebar: {
+          root: [ /* Sidebar for all versions */ ],
+          'v2.0': [ /* Sidebar for version 2.0 */ ]
+        }
+    }
+    ```
+
+## customize navigation (`nav`) and sidebar (`sidebar`)
+
+You can fully customize your documentation's navigation (`nav`) and sidebar (`sidebar`) according to your needs:
+
+- **Global:**  
+  Use an array to apply a navigation or sidebar structure for all locales and all versions.
+
+- **Per-Version:**  
+  Use an object mapping to specify different navigation/sidebar for each version
+  while still supporting a global (`root`) fallback.
+
+- **Per-Locale:**  
+  Use the `locales` property to define locale-specific structure.
+  Each locale can individually specify its own nav and sidebar
+  as either an array (for that locale) or as a mapping of versions.
+
+### Example: Per-locale, per-version, and global navigation/sidebar
 
 ```ts
-themeConfig: {
-  versionSwitcher: false, // hide default switcher
-  nav: [
-    ...,
-    {
-      component: 'VersionSwitcher',
-    },
-  ]
-}
-```
+    locales: {
+        'root': {
+            label: 'English',
+            lang: 'en',
+            themeConfig: {
+                nav: [
+                    { text: 'Home', link: '/' },
+                    { text: 'Examples', link: '/api' }
+                ],
+                sidebar: [
+                    {
+                        text: 'Examples',
+                        items: [
+                            { text: 'Markdown Examples', link: '/guide' },
+                            { text: 'Runtime API Examples', link: '/guide/getting-started' },
+                        ]
+                    }
+                ]
+            }
+        },
+        'fr': {
+            label: 'fr',
+            lang: 'fr',
+            themeConfig: {
+                nav: [
+                    { text: 'Sākums', link: '/' },
+                    { text: 'Piemēri', link: '/api' }
+                ],
+                sidebar: [
+                    {
+                        text: 'Examples',
+                        items: [
+                            { text: 'fr - Markdown Examples', link: '/guide' },
+                            { text: 'fr - Runtime API Examples', link: '/guide/getting-started' },
+                        ]
+                    }
+                ]
+            }
+        },
+        'fr/xs': {
+            label: 'fr-xs',
+            lang: 'fr-xs',
+            base: 'fr',
+            themeConfig: {
+                nav: [
+                    { text: 'Sākums', link: '/' },
+                    { text: 'Piemēri', link: '/api' }
+                ],
+                sidebar: [
+                    {
+                        text: 'Examples',
+                        items: [
+                            { text: 'fr - Markdown Examples', link: '/guide' },
+                            { text: 'fr - Runtime API Examples', link: '/guide/getting-started' },
+                        ]
+                    }
+                ]
+            }
+        }
+    }
 
-## Troubleshooting
-1. Sidebar Cannot Be an Array
-
-```ts
-// ❌ Incorrect
-sidebar: [
-  { text: '1.0.0', link: '/' },
-]
-
-// ✅ Correct
-sidebar: {
-  '/': [
-    { text: '1.0.0', link: '/' },
-  ]
-}
 ```
 
 ## Acknowledgments
 
 I would like to express my gratitude to those who inspired and supported this project:
-- `@IMB11`, for the original vitepress-versioning-plugin
 
+- `@IMB11`, for the original vitepress-versioning-plugin
 
 ## Documentation
 
@@ -142,7 +183,8 @@ For complete API documentation, examples, and guides, visit: [Documentation](htt
 - Node.js 20+
 - All modern browsers (via bundlers)
 - TypeScript 4.5+
-- 
+-
+
 ## Contributing
 
 Contributions are welcome!\
