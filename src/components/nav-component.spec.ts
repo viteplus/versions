@@ -175,7 +175,7 @@ describe('nav.component', () => {
             expect(mockState.vitepressConfig.locales.root.themeConfig.nav[0].link)
                 .toBe(join('/', '', '/'));
             expect(mockState.vitepressConfig.locales.v1.themeConfig.nav[0].link)
-                .toBe(join('/', '', '/'));
+                .toBe(join('/', 'v1', '/'));
         });
     });
 });

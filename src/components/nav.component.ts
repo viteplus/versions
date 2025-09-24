@@ -279,7 +279,7 @@ export function parseNavs(): void {
         const versionNav = nav[version] ?? nav.root ?? [];
         if (versionNav.length) {
             locales[version].themeConfig ??= {};
-            populateNav(locales[version].themeConfig as ThemeInterface, versionNav, '');
+            populateNav(locales[version].themeConfig as ThemeInterface, versionNav, version);
         }
     });
 }
