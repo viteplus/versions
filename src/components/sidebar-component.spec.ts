@@ -2,129 +2,264 @@
  * Import will remove at compile time
  */
 
-import type { ConfigInterface, SidebarOptionsInterface, SidebarItemInterface } from '@interfaces/config.interface';
+import type { MockState } from '@remotex-labs/xjet';
+import type { StateModel } from '@models/state.model';
+import type { SidebarItemType, SidebarObjectType, SidebarType } from '@interfaces/sidebar.interface';
 
 /**
  * Imports
  */
 
-import { resolve } from 'path';
-import { existsSync, readFileSync } from 'fs';
-import { replaceLinksRecursive, loadSidebar, versioningSidebar } from '@components/sidebar.component';
+import { inject } from '@symlinks/services/inject.service';
+import { normalizeSidebar, normalizeSidebars, parseSidebar, populateSidebar } from '@components/sidebar.component';
 
 /**
  * Tests
  */
 
-beforeEach(() => {
-    xJet.clearAllMocks();
-});
+describe('populateSidebar', () => {
+    test('should prepend version to base when item has a link', () => {
+        const sidebar: Array<SidebarItemType> = [{ text: 'Intro', link: '/intro' }];
 
-describe('replaceLinksRecursive', () => {
-    test('updates links recursively and skips skipVersioning items', () => {
-        const sidebarOptions: SidebarOptionsInterface = {
-            sidebarUrlProcessor: (link, ver) => `/${ ver }${ link }`
-        };
+        const result = populateSidebar(sidebar, 'v1');
 
-        const sidebar: SidebarItemInterface[] = [
-            { text: 'A', link: '/a' },
-            { text: 'B', skipVersioning: true, link: '/b' },
+        expect(result[0].base).toBe('/v1/');
+    });
+
+    test('should prepend version to base when item has nested items', () => {
+        const sidebar: Array<SidebarItemType> = [
             {
-                text: 'C',
-                items: [{ text: 'C1', link: '/c1' }]
+                text: 'Guide',
+                items: [{ text: 'Setup', link: '/setup' }]
             }
         ];
 
-        const result = replaceLinksRecursive(sidebarOptions, '1.0.0', sidebar);
+        const result = populateSidebar(sidebar, 'v2');
 
-        expect(result[0].link).toBe('/1.0.0/a');
-        expect(result[1].link).toBe('/b'); // unchanged
-        expect(result[2].items?.[0].link).toBe('/1.0.0/c1');
+        expect(result[0].base).toBe('/v2/');
+    });
+
+    test('should skip versioning if skipVersioning is true', () => {
+        const sidebar: Array<SidebarItemType> = [{ text: 'Docs', link: '/docs', skipVersioning: true }];
+
+        const result = populateSidebar(sidebar, 'v1');
+
+        expect(result[0].base).toBeUndefined();
+    });
+
+    test('should normalize "root" version to empty string', () => {
+        const sidebar: Array<SidebarItemType> = [{ text: 'Intro', link: '/intro' }];
+
+        const result = populateSidebar(sidebar, 'root');
+
+        expect(result[0].base).toBeUndefined();
+    });
+
+    test('should preserve other properties of the sidebar item', () => {
+        const sidebar: Array<any> = [{ text: 'Intro', link: '/intro', collapsible: true }];
+
+        const result: any = populateSidebar(sidebar, 'v1');
+
+        expect(result[0].text).toBe('Intro');
+        expect(result[0].collapsible).toBe(true);
+        expect(result[0].base).toBe('/v1/');
     });
 });
 
-describe('loadSidebar', () => {
-    const mockExistsSync = xJet.mock(existsSync);
-    const mockReadFileSync = xJet.mock(readFileSync);
-    const mockResolve = xJet.mock(resolve);
+describe('normalizeSidebar', () => {
+    test('should wrap array sidebar in root key when prefix is empty', () => {
+        const results: SidebarObjectType = {};
+        const sidebar: Array<SidebarItemType> = [{ text: 'Home', link: '/' }];
 
-    const sidebarOptions: SidebarOptionsInterface = {
-        sidebarPathResolver: (v) => `${ v }-sidebar.json`,
-        sidebarUrlProcessor: (link, ver) => `/${ ver }${ link }`
-    };
+        normalizeSidebar(results, sidebar);
+
+        expect(results.root).toEqual([{ text: 'Home', link: '/' }]);
+    });
+
+    test('should use prefix as key when provided', () => {
+        const results: SidebarObjectType = {};
+        const sidebar: Array<SidebarItemType> = [{ text: 'Guide', link: '/guide/' }];
+
+        normalizeSidebar(results, sidebar, 'en');
+
+        expect(results.en).toEqual([{ text: 'Guide', link: '/guide/' }]);
+    });
+
+    test('should merge with root items if root exists', () => {
+        const results: SidebarObjectType = {};
+        const sidebar: Array<SidebarItemType> = [{ text: 'Child', link: '/child/' }];
+        const root: SidebarObjectType = { root: [{ text: 'RootItem', link: '/' }] };
+
+        normalizeSidebar(results, sidebar, '', root); // <-- pass root here
+
+        expect(results.root).toEqual([
+            { text: 'RootItem', link: '/' },
+            { text: 'Child', link: '/child/' }
+        ]);
+    });
+
+    test('should handle sidebar object with multiple keys', () => {
+        const results: SidebarObjectType = {};
+        const sidebar: SidebarType = {
+            root: [{ text: 'Root', link: '/' }],
+            guide: [{ text: 'Guide', link: '/guide/' }]
+        };
+
+        normalizeSidebar(results, sidebar);
+
+        expect(results.root).toEqual([{ text: 'Root', link: '/' }]);
+        expect(results['guide']).toEqual([{ text: 'Guide', link: '/guide/' }]);
+    });
+
+    test('should handle single item in sidebar object', () => {
+        const results: SidebarObjectType = {};
+        const sidebar: any = {
+            guide: { text: 'Guide', link: '/guide/' } // single item
+        };
+
+        normalizeSidebar(results, sidebar);
+
+        expect(results['guide']).toEqual([{ text: 'Guide', link: '/guide/' }]);
+    });
+
+    test('should merge with root or specific root key from root object', () => {
+        const results: SidebarObjectType = {};
+        const sidebar: SidebarType = {
+            guide: [{ text: 'Child', link: '/child/' }]
+        };
+        const root: SidebarObjectType = { guide: [{ text: 'RootGuide', link: '/root-guide/' }] };
+
+        normalizeSidebar(results, sidebar, '', root);
+
+        expect(results['guide']).toEqual([{ text: 'RootGuide', link: '/root-guide/' }, { text: 'Child', link: '/child/' }]);
+    });
+});
+
+describe('normalizeSidebars', () => {
+    let mockState: StateModel;
 
     beforeEach(() => {
-        xJet.clearAllMocks();
-        mockResolve.mockImplementation((...parts: string[]) => parts.join('/'));
+        mockState = {
+            configuration: {
+                locales: {
+                    en: { themeConfig: { sidebar: [{ text: 'EnItem', link: '/en/' }] } },
+                    fr: { themeConfig: { sidebar: [{ text: 'FrItem', link: '/fr/' }] } }
+                },
+                themeConfig: {
+                    sidebar: [{ text: 'GlobalItem', link: '/global/' }]
+                }
+            },
+            localesMap: { en: 'root', fr: 'fr' }
+        } as unknown as StateModel;
     });
 
-    test('returns empty array if file does not exist', () => {
-        mockExistsSync.mockReturnValue(false);
+    test('should normalize locale sidebars with prefix', () => {
+        const result = normalizeSidebars(mockState);
 
-        const result = loadSidebar(sidebarOptions, '1.0.0', 'root', '/root');
+        expect(result.root).toEqual([
+            { text: 'GlobalItem', link: '/global/' },
+            { text: 'EnItem', link: '/en/' }
+        ]);
 
-        expect(result).toEqual([]);
-        expect(mockExistsSync).toHaveBeenCalled();
+        expect(result.fr).toEqual([
+            { text: 'GlobalItem', link: '/global/' },
+            { text: 'FrItem', link: '/fr/' }
+        ]);
     });
 
-    test('loads and processes single-array sidebar', () => {
-        mockExistsSync.mockReturnValue(true);
-        mockReadFileSync.mockReturnValue(
-            JSON.stringify([{ text: 'Intro', link: '/intro' }])
-        );
+    test('should fallback to root if locale sidebar is empty', () => {
+        mockState.configuration.locales['de'] = { themeConfig: {} };
 
-        const result = loadSidebar(sidebarOptions, '1.0.0', 'root', '/root');
+        const result = normalizeSidebars(mockState);
 
-        expect(Array.isArray(result)).toBe(true);
-        expect((result as SidebarItemInterface[])[0].link).toBe('/1.0.0/intro');
-    });
-
-    test('loads and processes multi-sidebar object with locale prefix', () => {
-        mockExistsSync.mockReturnValue(true);
-        mockReadFileSync.mockReturnValue(
-            JSON.stringify({
-                '/guide/': [{ text: 'Guide', link: '/guide/intro' }]
-            })
-        );
-
-        const result = loadSidebar(sidebarOptions, '2.0.0', 'en', '/root');
-
-        expect((result as any)['/guide/'][0].link).toBe('/en/2.0.0/guide/intro');
+        expect(result.de).toEqual([{ text: 'GlobalItem', link: '/global/' }]);
     });
 });
 
-describe('versioningSidebar', () => {
-    const mockLoadSidebar = xJet.mock(loadSidebar);
+describe('parseSidebar', () => {
+    let mockInject: MockState<unknown, Parameters<typeof inject>>;
 
-    test('returns empty object when sidebarOptions is false', () => {
-        const config = {
-            versioning: { sidebarOptions: false }
-        } as unknown as ConfigInterface;
-
-        const result = versioningSidebar(config, [ '1.0.0' ], [ 'root' ], '/root');
-
-        expect(result).toEqual({});
+    beforeEach(() => {
+        xJet.restoreAllMocks();
+        mockInject = xJet.mock(inject);
     });
 
-    test('builds sidebar mapping for versions and locales', () => {
-        const config = {
-            versioning: {
-                sidebarOptions: {
-                    sidebarPathResolver: (v: string) => `${ v }.json`,
-                    sidebarUrlProcessor: (link: string, ver: string) => `/${ ver }${ link }`
+    test('should populate sidebar for each locale using normalizeSidebars result', () => {
+        const mockState = {
+            configuration: {
+                locales: {
+                    en: { themeConfig: {} },
+                    fr: { themeConfig: {} }
+                },
+                themeConfig: {
+                    sidebar: [{ text: 'GlobalItem', link: '/' }] as SidebarItemType[]
                 }
-            }
-        } as unknown as ConfigInterface;
+            },
+            vitepressConfig: {
+                locales: {
+                    en: {},
+                    fr: {}
+                }
+            },
+            localesMap: { en: 'en', fr: 'fr' }
+        } as unknown as StateModel;
 
-        mockLoadSidebar
-            .mockReturnValueOnce([{ text: 'Intro', link: '/intro' }])
-            .mockReturnValueOnce({
-                '/guide/': [{ text: 'Guide', link: '/guide' }]
-            });
+        mockInject.mockReturnValue(mockState);
 
-        const result = versioningSidebar(config, [ '1.0.0' ], [ 'root', 'en' ], '/root');
+        parseSidebar();
 
-        expect(result['/1.0.0/']).toBeDefined();
-        expect(result['/en/1.0.0/guide/']).toBeDefined();
+        expect(mockState.vitepressConfig.locales.en.themeConfig?.sidebar).toEqual([{ text: 'GlobalItem', link: '/', base: '/en/' }]);
+        expect(mockState.vitepressConfig.locales.fr.themeConfig?.sidebar).toEqual([{ text: 'GlobalItem', link: '/', base: '/fr/' }]);
+    });
+
+    test('should fallback to root sidebar if locale key is missing in sidebars', () => {
+        const mockState = {
+            configuration: {
+                locales: {
+                    he: { themeConfig: {} }
+                },
+                themeConfig: {
+                    sidebar: [{ text: 'RootOnly', link: '/' }] as SidebarItemType[]
+                }
+            },
+            vitepressConfig: {
+                locales: {
+                    he: {}
+                }
+            },
+            localesMap: { he: 'he' }
+        } as unknown as StateModel;
+
+        mockInject.mockReturnValue(mockState);
+
+        parseSidebar();
+
+        expect(mockState.vitepressConfig.locales.he.themeConfig?.sidebar).toEqual([{ text: 'RootOnly', link: '/', base: '/he/' }]);
+    });
+
+    test('should initialize missing themeConfig for a locale', () => {
+        const mockState = {
+            configuration: {
+                locales: {
+                    de: {}
+                },
+                themeConfig: {
+                    sidebar: [{ text: 'Docs', link: '/docs/' }] as SidebarItemType[]
+                }
+            },
+            vitepressConfig: {
+                locales: {
+                    de: {} // no themeConfig here initially
+                }
+            },
+            localesMap: { de: 'de' }
+        } as unknown as StateModel;
+
+        mockInject.mockReturnValue(mockState);
+
+        parseSidebar();
+
+        expect(mockState.vitepressConfig.locales.de.themeConfig).toBeDefined();
+        expect(mockState.vitepressConfig.locales.de.themeConfig?.sidebar).toEqual([{ text: 'Docs', link: '/docs/', base: '/de/' }]);
     });
 });
