@@ -2,129 +2,113 @@
  * Import will remove at compile time
  */
 
-import type { ConfigInterface, SidebarOptionsInterface, SidebarItemInterface } from '@interfaces/config.interface';
+import type { MockState } from '@remotex-labs/xjet';
 
 /**
  * Imports
  */
 
-import { resolve } from 'path';
-import { existsSync, readFileSync } from 'fs';
-import { replaceLinksRecursive, loadSidebar, versioningSidebar } from '@components/sidebar.component';
+import { join } from 'path/posix';
+import { inject } from '@symlinks/services/inject.service';
+import { parseSidebar } from '@components/sidebar.component';
 
 /**
  * Tests
  */
 
-beforeEach(() => {
-    xJet.clearAllMocks();
-});
-
-describe('replaceLinksRecursive', () => {
-    test('updates links recursively and skips skipVersioning items', () => {
-        const sidebarOptions: SidebarOptionsInterface = {
-            sidebarUrlProcessor: (link, ver) => `/${ ver }${ link }`
-        };
-
-        const sidebar: SidebarItemInterface[] = [
-            { text: 'A', link: '/a' },
-            { text: 'B', skipVersioning: true, link: '/b' },
-            {
-                text: 'C',
-                items: [{ text: 'C1', link: '/c1' }]
-            }
-        ];
-
-        const result = replaceLinksRecursive(sidebarOptions, '1.0.0', sidebar);
-
-        expect(result[0].link).toBe('/1.0.0/a');
-        expect(result[1].link).toBe('/b'); // unchanged
-        expect(result[2].items?.[0].link).toBe('/1.0.0/c1');
-    });
-});
-
-describe('loadSidebar', () => {
-    const mockExistsSync = xJet.mock(existsSync);
-    const mockReadFileSync = xJet.mock(readFileSync);
-    const mockResolve = xJet.mock(resolve);
-
-    const sidebarOptions: SidebarOptionsInterface = {
-        sidebarPathResolver: (v) => `${ v }-sidebar.json`,
-        sidebarUrlProcessor: (link, ver) => `/${ ver }${ link }`
-    };
+describe('parseSidebar', () => {
+    let mockInject: MockState<unknown, Parameters<typeof inject>>;
 
     beforeEach(() => {
-        xJet.clearAllMocks();
-        mockResolve.mockImplementation((...parts: string[]) => parts.join('/'));
+        xJet.restoreAllMocks();
+        mockInject = xJet.mock(inject);
     });
 
-    test('returns empty array if file does not exist', () => {
-        mockExistsSync.mockReturnValue(false);
-
-        const result = loadSidebar(sidebarOptions, '1.0.0', 'root', '/root');
-
-        expect(result).toEqual([]);
-        expect(mockExistsSync).toHaveBeenCalled();
-    });
-
-    test('loads and processes single-array sidebar', () => {
-        mockExistsSync.mockReturnValue(true);
-        mockReadFileSync.mockReturnValue(
-            JSON.stringify([{ text: 'Intro', link: '/intro' }])
-        );
-
-        const result = loadSidebar(sidebarOptions, '1.0.0', 'root', '/root');
-
-        expect(Array.isArray(result)).toBe(true);
-        expect((result as SidebarItemInterface[])[0].link).toBe('/1.0.0/intro');
-    });
-
-    test('loads and processes multi-sidebar object with locale prefix', () => {
-        mockExistsSync.mockReturnValue(true);
-        mockReadFileSync.mockReturnValue(
-            JSON.stringify({
-                '/guide/': [{ text: 'Guide', link: '/guide/intro' }]
-            })
-        );
-
-        const result = loadSidebar(sidebarOptions, '2.0.0', 'en', '/root');
-
-        expect((result as any)['/guide/'][0].link).toBe('/en/2.0.0/guide/intro');
-    });
-});
-
-describe('versioningSidebar', () => {
-    const mockLoadSidebar = xJet.mock(loadSidebar);
-
-    test('returns empty object when sidebarOptions is false', () => {
-        const config = {
-            versioning: { sidebarOptions: false }
-        } as unknown as ConfigInterface;
-
-        const result = versioningSidebar(config, [ '1.0.0' ], [ 'root' ], '/root');
-
-        expect(result).toEqual({});
-    });
-
-    test('builds sidebar mapping for versions and locales', () => {
-        const config = {
-            versioning: {
-                sidebarOptions: {
-                    sidebarPathResolver: (v: string) => `${ v }.json`,
-                    sidebarUrlProcessor: (link: string, ver: string) => `/${ ver }${ link }`
+    test('should parse sidebar for locales when locales are defined', () => {
+        const mockState: any = {
+            configuration: {
+                locales: {
+                    en: {
+                        themeConfig: {
+                            sidebar: {
+                                root: [
+                                    { text: 'Guide', link: '/guide' },
+                                    { text: 'Skip', link: '/skip', skipVersioning: true }
+                                ]
+                            }
+                        }
+                    }
                 }
-            }
-        } as unknown as ConfigInterface;
+            },
+            vitepressConfig: {
+                locales: {
+                    root: {},
+                    'v1.0': {}
+                }
+            },
+            localesMap: { en: 'root' },
+            versionsList: [ 'v1.0' ]
+        };
 
-        mockLoadSidebar
-            .mockReturnValueOnce([{ text: 'Intro', link: '/intro' }])
-            .mockReturnValueOnce({
-                '/guide/': [{ text: 'Guide', link: '/guide' }]
-            });
+        mockInject.mockReturnValue(mockState);
+        parseSidebar();
 
-        const result = versioningSidebar(config, [ '1.0.0' ], [ 'root', 'en' ], '/root');
+        // Root sidebar
+        expect(mockState.vitepressConfig.locales.root.themeConfig.sidebar).toEqual([
+            { text: 'Guide', link: '/guide', base: join('/', '', '', '/', '/') },
+            { text: 'Skip', link: '/skip', skipVersioning: true }
+        ]);
 
-        expect(result['/1.0.0/']).toBeDefined();
-        expect(result['/en/1.0.0/guide/']).toBeDefined();
+        // Version sidebar
+        expect(mockState.vitepressConfig.locales['v1.0'].themeConfig.sidebar).toEqual([
+            { text: 'Guide', link: '/guide', base: join('/', 'v1.0', '', '/', '/') },
+            { text: 'Skip', link: '/skip', skipVersioning: true }
+        ]);
+    });
+
+    test('should parse sidebar from root themeConfig when no locales defined', () => {
+        const mockState: any = {
+            configuration: {
+                locales: {},
+                themeConfig: {
+                    sidebar: {
+                        root: [{ text: 'Overview', link: '/overview' }]
+                    }
+                }
+            },
+            vitepressConfig: {
+                locales: { root: {}, 'v1.0': {} }
+            },
+            versionsList: [ 'v1.0' ]
+        };
+
+        mockInject.mockReturnValue(mockState);
+        parseSidebar();
+
+        // Root sidebar
+        expect(mockState.vitepressConfig.locales.root.themeConfig.sidebar).toEqual([{ text: 'Overview', link: '/overview', base: join('/', '', '', '/', '/') }]);
+
+        // Version sidebar
+        expect(mockState.vitepressConfig.locales['v1.0'].themeConfig.sidebar).toEqual([{ text: 'Overview', link: '/overview', base: join('/', 'v1.0', '', '/', '/') }]);
+    });
+
+    test('should handle empty sidebar gracefully', () => {
+        const mockState: any = {
+            configuration: {
+                locales: {},
+                themeConfig: { sidebar: { root: [] } }
+            },
+            vitepressConfig: {
+                locales: { root: {}, 'v1.0': {} }
+            },
+            versionsList: [ 'v1.0' ]
+        };
+
+        mockInject.mockReturnValue(mockState);
+        parseSidebar();
+
+        // Expect sidebar not to throw and remain empty
+        expect(mockState.vitepressConfig.locales.root.themeConfig.sidebar).toBeUndefined();
+        expect(mockState.vitepressConfig.locales['v1.0'].themeConfig.sidebar).toBeUndefined();
     });
 });
