@@ -2,164 +2,184 @@
  * Import will remove at compile time
  */
 
-import type { DefaultTheme } from 'vitepress';
-import type { ConfigInterface, SidebarItemInterface, SidebarOptionsInterface } from '@interfaces/config.interface';
+import type { ThemeInterface } from '@interfaces/theme.interface';
+import type { SidebarItemType, SidebarType } from '@interfaces/sidebar.interface';
+import type { PathSidebarInterface, SidebarGroupInterface } from '@interfaces/sidebar.interface';
 
 /**
  * Imports
  */
 
-import { resolve } from 'path';
-import { existsSync, readFileSync } from 'fs';
+import { join } from 'path/posix';
+import { StateModel } from '@models/state.model';
+import { inject } from '@symlinks/services/inject.service';
 
 /**
- * Recursively replaces sidebar links for a given version using a custom URL processor.
+ * Normalizes a sidebar configuration into a {@link PathSidebarInterface}.
  *
- * @param sidebarOptions - Sidebar options containing the `sidebarUrlProcessor` function.
- * @param version - The current documentation version to apply in the links.
- * @param sidebar - An array of sidebar items to process.
- *
- * @returns A new array of sidebar items with versioned links applied.
+ * @param sidebar - The raw sidebar definition provided by the user.
+ * @returns A normalized {@link PathSidebarInterface}.
  *
  * @remarks
- * - Skips items marked with `skipVersioning`.
- * - Recursively processes nested items under `items`.
+ * - If the input is `undefined`, returns an empty object.
+ * - If the input is an array, wraps it under the `root` key.
+ * - If the input is already a record, returns it as-is.
+ *
+ * This ensures that sidebars are consistently shaped before being
+ * processed by other utilities.
  *
  * @example
  * ```ts
- * const updatedSidebar = replaceLinksRecursive(sidebarOptions, '1.0.0', sidebar);
+ * normalizeSidebar([{ text: "Guide", link: "/guide/" }]);
+ * // → { root: [{ text: "Guide", link: "/guide/" }] }
  * ```
  *
- * @since 1.0.0
+ * @since 2.0.0
  */
 
-export function replaceLinksRecursive(
-    sidebarOptions: SidebarOptionsInterface, version: string, sidebar: Array<SidebarItemInterface>
-): Array<SidebarItemInterface> {
-    return sidebar.map((item) => {
-        if (item.skipVersioning) {
-            return item;
-        }
+export function normalizeSidebar(sidebar?: SidebarType): PathSidebarInterface {
+    return !sidebar ? {} : Array.isArray(sidebar) ? { root: sidebar } : sidebar;
+}
 
-        if (item.link) {
-            item.link = sidebarOptions.sidebarUrlProcessor!(item.link, version);
-        }
+/**
+ * Populates the sidebar of a theme configuration with versioned items.
+ *
+ * @param target - The target {@link ThemeInterface} to populate with sidebar entries.
+ * @param items - Either an array of sidebar items or a grouped sidebar definition.
+ * @param version - The version or locale key to prefix into sidebar item bases.
+ *
+ * @remarks
+ * - If provided `items` is a group, extracts its `base` and `items` fields.
+ * - Ignores processing if `items` is empty.
+ * - For each sidebar item:
+ *   - Skips base modification if `skipVersioning` is set.
+ *   - Otherwise, normalizes and prefixes the `base` with the given version.
+ * - Mutates `target.sidebar` with the processed items.
+ *
+ * @example
+ * ```ts
+ * const theme: ThemeInterface = {};
+ * populateSidebar(theme, [{ text: "Guide", link: "/guide/" }], "v2.0.0");
+ *
+ * // theme.sidebar → [
+ * //   { text: "Guide", link: "/guide/", base: "/v2.0.0/" }
+ * // ]
+ * ```
+ *
+ * @since 2.0.0
+ */
 
-        if (item.items) {
-            item.items = replaceLinksRecursive(sidebarOptions, version, item.items);
-        }
+export function populateSidebar(target: ThemeInterface, items: Array<SidebarItemType> | SidebarGroupInterface, version: string): void {
+    let base = '';
+    if(!Array.isArray(items)) {
+        base = items.base;
+        items = items.items;
+    }
+
+    if(!items.length) return;
+    target.sidebar = items.map(item => {
+        if(item.skipVersioning) return item;
+        item = { ...item };
+
+        item.base ??= '';
+        item.base = join('/', version, base, item.base, '/');
 
         return item;
     });
 }
 
 /**
- * Loads a sidebar for a specific version and locale from the filesystem.
+ * Parses and populates sidebar structures for each locale and version.
  *
- * @param sidebarOptions - Sidebar options including `sidebarPathResolver`.
- * @param version - The current documentation version.
- * @param locale - The locale key ('root' for default locale).
- * @param rootPath - Absolute path to the project root.
- *
- * @returns A `DefaultTheme.Sidebar` object (array or multi-sidebar) with versioned links.
+ * @param state - The current {@link StateModel}, which provides:
+ * - `vitepressConfig.locales` — the target locales object to populate.
+ * - `configuration.locales` — user-defined locale configurations.
+ * - `localesMap` — a mapping between locale keys and their indices.
+ * - `versionsList` — available documentation versions.
  *
  * @remarks
- * - If the sidebar file does not exist, returns an empty array.
- * - Recursively applies `replaceLinksRecursive` for versioned links.
- * - Supports both single-array sidebars and multi-sidebar objects.
+ * - Iterates through the `localesMap` entries.
+ * - For each locale:
+ *   - Normalizes the user-provided sidebar via {@link normalizeSidebar}.
+ *   - Populates the root sidebar into the locale’s theme configuration.
+ *   - Iterates through all `versionsList` to populate version-specific
+ *     sidebars as well.
+ * - Uses {@link populateSidebar} to inject version-aware sidebar bases
+ *   into each locale’s theme configuration.
  *
  * @example
  * ```ts
- * const sidebar = loadSidebar(sidebarOptions, '1.0.0', 'en', '/path/to/project');
+ * const state = inject(StateModel);
+ * parseLocaleSidebar(state);
+ *
+ * // Populates `state.vitepressConfig.locales` with
+ * // versioned sidebars for all locales.
  * ```
  *
- * @since 1.0.0
+ * @since 2.0.0
  */
 
-export function loadSidebar(sidebarOptions: SidebarOptionsInterface, version: string, locale: string, rootPath: string): DefaultTheme.Sidebar {
-    const sidebarPath = resolve(
-        rootPath,
-        sidebarOptions.sidebarPathResolver!(
-            version + (locale === 'root' ? '' : `-${ locale }`)
-        )
-    );
+export function parseLocaleSidebar(state: StateModel): void {
+    const { vitepressConfig: { locales }, configuration: { locales: userLocales }, localesMap, versionsList } = state;
 
-    if (!existsSync(sidebarPath)) return [];
-    const sidebar = JSON.parse(readFileSync(sidebarPath, 'utf-8'));
-    if (Array.isArray(sidebar)) {
-        return replaceLinksRecursive(
-            sidebarOptions,
-            (locale === 'root' ? '' : `${ locale }/`) + version,
-            sidebar
-        );
-    }
+    Object.entries(localesMap).forEach(([ key, index ]) => {
+        const sidebar = normalizeSidebar(<SidebarType> userLocales[key].themeConfig?.sidebar);
+        const rootNav = sidebar.root ?? [];
 
-    const multiSidebar = sidebar as DefaultTheme.SidebarMulti;
-    Object.keys(multiSidebar).forEach((key) => {
-        if (Array.isArray(multiSidebar[key])) {
-            multiSidebar[key] = replaceLinksRecursive(
-                sidebarOptions,
-                (locale === 'root' ? '' : `${ locale }/`) + version,
-                multiSidebar[key] as Array<SidebarItemInterface>
-            );
-        }
+        locales[index].themeConfig ??= {};
+        populateSidebar(locales[index].themeConfig as ThemeInterface, rootNav, index === 'root' ? '' : index);
+
+        versionsList.forEach(version => {
+            const subIndex = index === 'root' ? version : join(key, version);
+            const versionNav = sidebar[subIndex] ?? sidebar.root ?? [];
+
+            locales[subIndex].themeConfig ??= {};
+            populateSidebar(locales[subIndex].themeConfig as ThemeInterface, versionNav, subIndex);
+        });
     });
-
-    return multiSidebar;
 }
 
 /**
- * Generates versioned sidebars for all versions and locales.
- *
- * @param config - The configuration object containing versioning and sidebar settings.
- * @param versions - An array of available documentation versions.
- * @param locales - An array of locale keys including `'root'`. If empty, `'root'` will be used.
- * @param rootPath - Absolute path to the project root.
- *
- * @returns A `DefaultTheme.SidebarMulti` object mapping versioned paths to sidebars.
+ * Parses and populates the sidebar structure for the documentation site.
  *
  * @remarks
- * - Iterates through all versions and locales to load and process sidebars.
- * - Uses {@link loadSidebar} to read the sidebar JSON and convert links to versioned URLs.
- * - Handles both single-array sidebars and multi-sidebar objects.
- * - All sidebar links are converted to **absolute paths** relative to the version root to prevent duplicated folder segments in nested paths.
- * - If `config.versioning.sidebarOptions` is `false`, returns an empty sidebar mapping.
- * - Defaults to `'root'` locale if no locales are specified.
+ * - Serves as the entry point for building sidebar trees.
+ * - If user-defined locales exist in {@link ConfigurationInterface.locales},
+ *   delegates to {@link parseLocaleSidebar}.
+ * - Otherwise, builds sidebar entries from the root-level
+ *   `themeConfig.sidebar` and applies them to the root and all versions.
+ * - Uses {@link populateSidebar} to apply version-aware sidebar bases.
+ *
+ * This ensures consistent sidebar initialization across both
+ * locale-based and single-root documentation setups.
  *
  * @example
  * ```ts
- * const sidebars = versioningSidebar(config, ['1.0.0', '2.0.0'], ['root', 'en'], '/path/to/project');
- * // sidebars['/1.0.0/'] → sidebar for root locale, version 1.0.0
- * // sidebars['/en/1.0.0/'] → sidebar for 'en' locale, version 1.0.0
+ * // Without locales, parse root and version-level sidebars
+ * parseSidebar();
+ *
+ * // With locales, internally calls parseLocaleSidebar(state)
  * ```
  *
- * @since 1.0.0
+ * @since 2.0.0
  */
 
-export function versioningSidebar(
-    config: ConfigInterface, versions: Array<string>, locales: Array<string>, rootPath: string
-): DefaultTheme.SidebarMulti {
-    const versionSidebars: DefaultTheme.SidebarMulti = {};
-    const sidebarOptions = config.versioning.sidebarOptions!;
-    if (sidebarOptions === false) return versionSidebars;
+export function parseSidebar(): void {
+    const state = inject(StateModel);
+    const { vitepressConfig: { locales }, configuration, versionsList } = state;
 
-    for (const version of versions) {
-        for (const locale of locales) {
-            const sidebar = loadSidebar(sidebarOptions, version, locale, rootPath);
+    if (Object.keys(state.configuration.locales).length)
+        return parseLocaleSidebar(state);
 
-            if (Array.isArray(sidebar)) {
-                versionSidebars[
-                    (locale === 'root' ? '' : `/${ locale }`) + `/${ version }/`
-                ] = sidebar;
-            } else {
-                Object.keys(sidebar).forEach((key) => {
-                    versionSidebars[
-                        (locale === 'root' ? '' : `/${ locale }`) + `/${ version }${ key }`
-                    ] = (sidebar as DefaultTheme.SidebarMulti)[key];
-                });
-            }
-        }
-    }
+    const sidebar = normalizeSidebar(<SidebarType> configuration.themeConfig?.sidebar);
+    const rootSidebar = sidebar.root ?? [];
 
-    return versionSidebars;
+    locales.root.themeConfig ??= {};
+    populateSidebar(locales.root.themeConfig as ThemeInterface, rootSidebar, '');
+
+    versionsList.forEach(version => {
+        const versionSidebar = sidebar[version] ?? sidebar.root ?? [];
+        locales[version].themeConfig ??= {};
+        populateSidebar(locales[version].themeConfig as ThemeInterface, versionSidebar, version);
+    });
 }
