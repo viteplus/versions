@@ -158,12 +158,12 @@ export default defineVersionedConfig({
 
 ## 📚 Documentation
 
-For comprehensive guides and reference, check our [documentation](https://vitepulse.github.io/versions/).
+For comprehensive guides and reference, check our [documentation](https://viteplus.github.io/versions/).
 
-- [Localization](https://vitepulse.github.io/versions//guide/locales.html)
-- [URL Path Rewrites](https://vitepulse.github.io/versions//guide/rewrites.html)
-- [Version Switcher](https://vitepulse.github.io/versions//guide/switcher.html)
-- [Configuration Guide](https://vitepulse.github.io/versions//guide/configuration.html)
+- [Localization](https://viteplus.github.io/versions//guide/locales.html)
+- [URL Path Rewrites](https://viteplus.github.io/versions//guide/rewrites.html)
+- [Version Switcher](https://viteplus.github.io/versions//guide/switcher.html)
+- [Configuration Guide](https://viteplus.github.io/versions//guide/configuration.html)
 
 ## 🤝 Contributing
 
