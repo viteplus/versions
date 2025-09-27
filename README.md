@@ -6,184 +6,178 @@
 [![Node.js CI](https://github.com/viteplus/versions/actions/workflows/node.js.yml/badge.svg)](https://github.com/viteplus/versions/actions/workflows/node.js.yml)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/viteplus/versions)
 
-A **VitePress plugin** that enables versioned documentation, including:
+@viteplus/versions is a powerful VitePress plugin that enables versioned documentation with built-in localization support,
+seamless navigation between versions, and intelligent URL routing.
 
-- Automatic versioned routes
-- Sidebar & navigation per version
-- Version switcher component
-- support 2.0.0-alpha.12
+## ✨ Features
 
----
+- **Version Management**: Effortlessly manage multiple documentation versions
+- **Localization**: Full multi-language support with version-aware localization
+- **Smart URL Routing**: Automatic path rewriting for clean, predictable URLs
+- **Version Switcher**: Built-in component for navigating between versions
+- **Flexible Configuration**: Customize navigation, sidebar, and URL structures per version/locale
+- **VitePress**: support 2.0.0-alpha.12
 
-## Installation
-
-Install via your preferred package manager:
+## 📦 Installation
 
 ```bash
-pnpm add @viteplus/versions
-# or
 npm install @viteplus/versions
 # or
 yarn add @viteplus/versions
+# or
+pnpm add @viteplus/versions
 ```
 
-## Quick Start
+## 🚀 Quick Start
 
-1. **Add the plugin to your VitePress config:**
-
-    ```js
-    // .vitepress/config.js
-    import { withVersions } from '@viteplus/versions';
-
-    export default withVersions({
-      // your VitePress config here
-    });
-    ```
-
-2. **Configure navigation and sidebar:**
-    - Define them at the root-level to apply for all versions.
-    - Or, define them for specific versions (e.g., `v1.0` or `v2.0`) to customize per version.
-
-    ```js
-    themeConfig: {
-      nav: {
-        root: [ /* Global navigation */ ],
-        'v1.0': [ /* Navigation for version 1.0 */ ],
-        'v2.0': [ /* Navigation for version 2.0 */ ]
-      },
-      sidebar: {
-        root: [ /* Global sidebar */ ],
-        'v1.0': [ /* Sidebar for version 1.0 */ ],
-        'v2.0': [ /* Sidebar for version 2.0 */ ]
-      }
-    }
-    ```
-
-## Sidebar & Navigation Configuration
-
-Both the navigation (`nav`) and sidebar (`sidebar`) can be defined in your VitePress configuration in two flexible ways:
-
-- **As an Array:** Simply provide an array to apply a global navigation or sidebar for all versions.
-
-    ```ts
-    themeConfig: {
-        nav: [ /* Global navigation for all versions */ ],
-        sidebar: [ /* Global sidebar for all versions */ ]
-    }
-    ```
-
-- **As a Mapping/Object:** Provide an object to specify different navigation or sidebar options for each version.
-
-    ```ts
-    themeConfig: {
-        nav: {
-          root: [ /* Navigation for all versions */ ],
-          'v1.0': [ /* Navigation for version 1.0 */ ]
-        },
-        sidebar: {
-          root: [ /* Sidebar for all versions */ ],
-          'v2.0': [ /* Sidebar for version 2.0 */ ]
-        }
-    }
-    ```
-
-## customize navigation (`nav`) and sidebar (`sidebar`)
-
-You can fully customize your documentation's navigation (`nav`) and sidebar (`sidebar`) according to your needs:
-
-- **Global:**  
-  Use an array to apply a navigation or sidebar structure for all locales and all versions.
-
-- **Per-Version:**  
-  Use an object mapping to specify different navigation/sidebar for each version
-  while still supporting a global (`root`) fallback.
-
-- **Per-Locale:**  
-  Use the `locales` property to define locale-specific structure.
-  Each locale can individually specify its own nav and sidebar
-  as either an array (for that locale) or as a mapping of versions.
-
-### Example: Per-locale, per-version, and global navigation/sidebar
+1. Create a VitePress project
+2. Install @viteplus/versions
+3. Configure your documentation using `defineVersionedConfig`
 
 ```ts
-    locales: {
-        'root': {
-            label: 'English',
-            lang: 'en',
-            themeConfig: {
-                nav: [
-                    { text: 'Home', link: '/' },
-                    { text: 'Examples', link: '/api' }
-                ],
-                sidebar: [
-                    {
-                        text: 'Examples',
-                        items: [
-                            { text: 'Markdown Examples', link: '/guide' },
-                            { text: 'Runtime API Examples', link: '/guide/getting-started' },
-                        ]
-                    }
-                ]
-            }
-        },
-        'fr': {
-            label: 'fr',
-            lang: 'fr',
-            themeConfig: {
-                nav: [
-                    { text: 'Sākums', link: '/' },
-                    { text: 'Piemēri', link: '/api' }
-                ],
-                sidebar: [
-                    {
-                        text: 'Examples',
-                        items: [
-                            { text: 'fr - Markdown Examples', link: '/guide' },
-                            { text: 'fr - Runtime API Examples', link: '/guide/getting-started' },
-                        ]
-                    }
-                ]
-            }
-        },
-        'fr/xs': {
-            label: 'fr-xs',
-            lang: 'fr-xs',
-            base: 'fr',
-            themeConfig: {
-                nav: [
-                    { text: 'Sākums', link: '/' },
-                    { text: 'Piemēri', link: '/api' }
-                ],
-                sidebar: [
-                    {
-                        text: 'Examples',
-                        items: [
-                            { text: 'fr - Markdown Examples', link: '/guide' },
-                            { text: 'fr - Runtime API Examples', link: '/guide/getting-started' },
-                        ]
-                    }
-                ]
-            }
-        }
+// .vitepress/config.ts
+import { defineVersionedConfig } from '@viteplus/versions';
+
+export default defineVersionedConfig({
+  title: 'My Project Documentation',
+  description: 'Documentation with version control',
+  
+  // Version configuration
+  versionsConfig: {
+    current: 'v2.0.0',
+    versionSwitcher: {
+      text: 'Version',
+      includeCurrentVersion: true
     }
+  },
+  
+  // Standard VitePress configuration
+  themeConfig: {
+    nav: [
+      { text: 'Guide', link: '/guide/' },
+      { component: 'VersionSwitcher' }
+    ],
+    // ...
+  }
+});
+```
+
+## 📂 Project Structure
+
+```text
+docs/
+├── .vitepress/
+│   └── config.ts
+├── src/            // Current version docs
+│   ├── en/         // English (default locale)
+│   │   ├── index.md
+│   │   └── guide/
+│   └── de/         // German locale
+│       ├── index.md
+│       └── guide/
+└── archive/       // Archived versions
+    └── v1.0/
+        ├── en/
+        │   ├── index.md
+        │   └── guide/
+        └── de/
+            ├── index.md
+            └── guide/
 
 ```
 
-## Acknowledgments
+## 🌐 Localization Support
 
-I would like to express my gratitude to those who inspired and supported this project:
+```ts
+export default defineVersionedConfig({
+  // ...
+  locales: {
+    root: {
+      lang: 'en',
+      label: 'English',
+      themeConfig: {
+        nav: [
+          { text: 'Home', link: '/' },
+          { text: 'Guide', link: '/guide/' }
+        ]
+      }
+    },
+    de: {
+      lang: 'de',
+      label: 'Deutsch',
+      themeConfig: {
+        nav: [
+          { text: 'Startseite', link: '/' },
+          { text: 'Anleitung', link: '/guide/' }
+        ]
+      }
+    }
+  }
+});
 
-- `@IMB11`, for the original vitepress-versioning-plugin
+```
 
-## Documentation
+## 🔄 Version-Specific Navigation
 
-For complete API documentation, examples, and guides, visit: [Documentation](https://viteplus.github.io/versions/)
+```ts
+export default defineVersionedConfig({
+  themeConfig: {
+    nav: {
+      // Default navigation for all versions
+      root: [
+        { text: 'Home', link: '/' },
+        { text: 'Guide', link: '/guide/' }
+      ],
+      
+      // Navigation only for v1.0
+      'v1.0': [
+        { text: 'Home', link: '/' },
+        { text: 'Legacy API', link: '/legacy-api/' }
+      ]
+    }
+  }
+});
 
-## Contributing
+```
 
-Contributions are welcome!\
-Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+## 🛠️ Custom URL Structure
 
-## License
+```ts
+export default defineVersionedConfig({
+  versionsConfig: {
+    // ...
+    hooks: {
+      rewritesHook: (source, version, locale) => {
+        // Custom URL structure (version first, then locale)
+        return `${version}/${locale}/${source}`;
+      }
+    }
+  }
+});
+```
 
-This project is licensed under the Mozilla Public License 2.0 see the [LICENSE](LICENSE) file for details.
+## 📚 Documentation
+
+For comprehensive guides and reference, check our [documentation](https://vitepulse.github.io/versions/).
+
+- [Localization](https://vitepulse.github.io/versions//guide/locales.html)
+- [URL Path Rewrites](https://vitepulse.github.io/versions//guide/rewrites.html)
+- [Version Switcher](https://vitepulse.github.io/versions//guide/switcher.html)
+- [Configuration Guide](https://vitepulse.github.io/versions//guide/configuration.html)
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our [contributing guidelines](CONTRIBUTING.md) for details.
+
+## 📄 License
+
+This project is licensed under the [MIT License](LICENSE).
+
+## 💖 Acknowledgements
+
+- [VitePress](https://vitepress.dev/) - The amazing static site generator this plugin extends
+- [Vue.js](https://vuejs.org/) - The progressive JavaScript framework
+- [Vite](https://vitejs.dev/) - Next generation frontend tooling
+- `@IMB11` - for the original vitepress-versioning-plugin
+
+Made with ❤️ by the @viteplus team
