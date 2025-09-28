@@ -15,10 +15,10 @@ This method provides a straightforward dropdown menu in your navigation bar.
 const config = {
     versionsConfig: {
         // other version settings...
-        versionSwitcher: {
-            text: 'Switch Version',           // The display label for the dropdown
-            includeCurrentVersion: true       // Whether to include current version in the dropdown
-        }
+        versionSwitcher: { // [!code focus]
+            text: 'Switch Version',           // [!code focus] The display label for the dropdown
+            includeCurrentVersion: true       // [!code focus] Whether to include current version in the dropdown
+        } // [!code focus]
     }
 }
 ```
@@ -62,7 +62,7 @@ First, register the component in your theme setup:
 // docs/.vitepress/theme/index.ts
 import { h } from 'vue';
 import DefaultTheme from 'vitepress/theme';
-import VersionSwitcher from '@viteplus/versions/components/version-switcher.component.vue';
+import VersionSwitcher from '@viteplus/versions/components/version-switcher.component.vue'; // [!code focus]
 
 export default {
   extends: DefaultTheme,
@@ -71,10 +71,10 @@ export default {
       // Custom layout slots if needed
     });
   },
-  enhanceApp({ app }) {
+  enhanceApp({ app }) { // [!code focus]
     // Register the component
-    app.component('VersionSwitcher', VersionSwitcher);
-  }
+    app.component('VersionSwitcher', VersionSwitcher); // [!code focus]
+  } // [!code focus]
 };
 ```
 
