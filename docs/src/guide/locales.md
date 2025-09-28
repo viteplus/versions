@@ -155,10 +155,10 @@ When the root key is missing, the configuration automatically uses the first key
 
 ```ts
 const locales = {
-    locales: {
-        en: { lang: 'en', label: 'English' },
-        de: { lang: 'de', label: 'Deutsch' }
-    }
+    locales: { // [!code focus]
+        en: { lang: 'en', label: 'English' }, // [!code focus]
+        de: { lang: 'de', label: 'Deutsch' } // [!code focus]
+    } // [!code focus]
 }
 ```
 
@@ -171,17 +171,17 @@ Navigation can be configured globally or per locale:
 
 ```ts
 const config = {
-    themeConfig: {
-        nav: [{ text: 'Global Nav', link: '/' }]
-    },
+    themeConfig: { // [!code focus]
+        nav: [{ text: 'Global Nav', link: '/' }] // [!code focus]
+    }, // [!code focus]
 
-    locales: {
-        root: {
-            themeConfig: {
-                nav: [{ text: 'English Nav', link: '/' }]
-            }
-        }
-    }
+    locales: { // [!code focus]
+        root: { // [!code focus]
+            themeConfig: { // [!code focus]
+                nav: [{ text: 'English Nav', link: '/' }] // [!code focus]
+            } // [!code focus]
+        } // [!code focus]
+    } // [!code focus]
 }
 ```
 
@@ -214,10 +214,10 @@ const themeConfig = {
     themeConfig: {
         sidebar: {
             // For all versions and locales
-            root: {
-                base: '/docs/',
-                items: [{ text: 'Docs', link: '/' }]
-            }
+            root: { // [!code focus]
+                base: '/docs/', // [!code focus]
+                items: [{ text: 'Docs', link: '/' }] // [!code focus]
+            } // [!code focus]
         }
     },
 
@@ -226,10 +226,10 @@ const themeConfig = {
             themeConfig: {
                 sidebar: {
                     // For all versions in German
-                    root: {
-                        base: '/docs/',
-                        items: [{ text: 'Dokumentation', link: '/' }]
-                    }
+                    root: { // [!code focus]
+                        base: '/docs/', // [!code focus]
+                        items: [{ text: 'Dokumentation', link: '/' }] // [!code focus]
+                    } // [!code focus]
                 }
             }
         }
@@ -278,16 +278,16 @@ const locales = {
             themeConfig: {
                 nav: {
                     // For all versions
-                    root: [
-                        { text: 'Home', link: '/' },
-                        { text: 'Guide', link: '/guide/' }
-                    ],
+                    root: [ // [!code focus]
+                        { text: 'Home', link: '/' }, // [!code focus]
+                        { text: 'Guide', link: '/guide/' } // [!code focus]
+                    ], // [!code focus]
 
                     // Only for v1.0 
-                    'v1.0': [
-                        { text: 'Home v1.0', link: '/' },
-                        { text: 'Legacy Guide', link: '/legacy-guide/' }
-                    ]
+                    'v1.0': [ // [!code focus]
+                        { text: 'Home v1.0', link: '/' }, // [!code focus]
+                        { text: 'Legacy Guide', link: '/legacy-guide/' } // [!code focus]
+                    ] // [!code focus]
                 }
             }
         }
