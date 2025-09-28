@@ -504,8 +504,8 @@ describe('parseNavs', () => {
         parseNavs();
         expect(mockState.vitepressConfig.locales.de.themeConfig).toBeDefined();
         expect(mockState.vitepressConfig.locales.de.themeConfig?.nav).toEqual([
-            { text: 'some text', items: expect.any(Array) },
-            { text: 'Docs', link: '/de/docs/' }
+            { text: 'Docs', link: '/de/docs/' },
+            { text: 'some text', items: expect.any(Array) }
         ]);
     });
 });
