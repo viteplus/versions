@@ -260,12 +260,13 @@ export function normalizeNavs(state: StateModel): Record<string, Array<NavItemTy
     const locales = state.configuration.locales;
     const localesKeys = Object.keys(locales);
     const globalResults: Record<string, Array<NavItemType>> = { root: [] };
-    const switcher = versionSwitcher(state.versionsConfig, state.versionsList, state.versionsConfig.current);
-    if(switcher) globalResults.root.push(switcher);
 
     if (state.configuration.themeConfig?.nav) {
         normalizeNav(globalResults, state.configuration.themeConfig.nav as NavType);
     }
+
+    const switcher = versionSwitcher(state.versionsConfig, state.versionsList, state.versionsConfig.current);
+    if(switcher) globalResults.root.push(switcher);
 
     if (!localesKeys.length) return globalResults;
     const results: Record<string, Array<NavItemType>> = { root: [] };
