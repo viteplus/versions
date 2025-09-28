@@ -47,13 +47,7 @@ export default defineVersionedConfig({
                 { text: 'Configuration', link: '/guide/configuration' },
                 { text: 'Version Switchers', link: '/guide/switchers' }
             ],
-            'v1.0.x': [
-                { text: 'Locales', link: '/guide/locales' },
-                { text: 'Sidebar', link: '/guide/sidebar' },
-                { text: 'Rewrites', link: '/guide/rewrites' },
-                { text: 'Configuration', link: '/guide/configuration' },
-                { text: 'Version Switchers', link: '/guide/switchers' }
-            ]
+            'v1.0.x': []
         },
 
         socialLinks: [
