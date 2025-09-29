@@ -18,7 +18,7 @@ import VPMenuLink from 'vitepress/dist/client/theme-default/components/VPMenuLin
  */
 
 interface VersioningPlugin {
-    versions: Array<string>;
+    versions: Set<string>;
     currentVersion: string;
 }
 
@@ -34,36 +34,37 @@ const props = defineProps<{
     screenMenu?: boolean
 }>();
 
-const getActiveVersion = computed(() => {
-    const path = router.route.data.relativePath.split('/');
-    const { versions, currentVersion } = props.versioningPlugin
-    const index = (site.value.lang === path[0]) ? versions.indexOf(path[1]) : versions.indexOf(path[0]);
+const versionSet = computed(() => new Set([ ...props.versioningPlugin.versions ]));
 
-    return (index === -1) ? currentVersion : versions[index];
+function getPathSegments(): string[] {
+    return router.route.data.relativePath.split('/');
+}
+
+const getActiveVersion = computed(() => {
+    const segments = getPathSegments();
+    const { currentVersion } = props.versioningPlugin;
+    const first = segments[0];
+    const second = segments[1];
+    const candidate = site.value.lang === first ? second : first;
+
+    return versionSet.value.has(candidate) ? candidate : currentVersion;
 })
 
 function createVersionMenuItem(version: string): { text: string, link: string } {
-    const { versions, currentVersion } = props.versioningPlugin
-    const relativePath = router.route.data.relativePath
-    const pathSegments = relativePath.split('/')
+    const { currentVersion } = props.versioningPlugin;
+    const segments = getPathSegments();
+    const baseSegments = segments.filter(seg => !versionSet.value.has(seg));
 
-    let newPathSegments: Array<string>;
-    if (version !== currentVersion) {
-        const langSegment = pathSegments.includes(site.value.lang) ? site.value.lang : undefined
-        newPathSegments = langSegment
-            ? [langSegment, version, ...pathSegments.slice(1)]
-            : [version, ...pathSegments];
-    } else {
-        if (versions.includes(pathSegments[0])) {
-            newPathSegments = pathSegments.slice(1)
-        } else if (versions.includes(pathSegments[1])) {
-            newPathSegments = [...pathSegments.slice(0, 1), ...pathSegments.slice(2)]
-        } else {
-            newPathSegments = [...pathSegments]
-        }
-    }
+    // Determine if the first segment is a language code
+    const [ first ] = baseSegments;
+    const langIsFirst = first === site.value.lang;
 
-    return { text: version, link: `/${ newPathSegments.join('/') }` }
+    let newSegments: Array<string>;
+    if (version === currentVersion)  newSegments = baseSegments;
+    else if (langIsFirst) newSegments = [ first, version, ...baseSegments.slice(1) ];
+    else newSegments = [ version, ...baseSegments ];
+
+    return { text: version, link: `/${ newSegments.join('/') }` };
 }
 
 function toggle() {
