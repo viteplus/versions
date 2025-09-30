@@ -13,7 +13,7 @@ export default defineVersionedConfig({
     base: '/versions/',
     description: 'A versioning plugin for VitePress',
     head: [
-        [ 'link', { rel: 'icon', type: 'image/png', href: '/xJet/logo.png' }],
+        [ 'link', { rel: 'icon', type: 'image/png', href: '/versions/logo.png' }],
         [ 'meta', { name: 'theme-color', content: '#ff7e17' }],
         [ 'script', { async: '', src: 'https://www.googletagmanager.com/gtag/js?id=G-ZSH55Z9478' }],
         [
