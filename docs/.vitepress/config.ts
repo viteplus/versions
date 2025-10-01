@@ -15,7 +15,18 @@ export default defineVersionedConfig({
     head: [
         [ 'link', { rel: 'icon', type: 'image/png', href: '/versions/logo.png' }],
         [ 'meta', { name: 'theme-color', content: '#ff7e17' }],
-        [ 'script', { async: '', src: 'https://www.googletagmanager.com/gtag/js?id=G-ZSH55Z9478' }],
+        [
+            'script', {
+                async: '',
+                src: 'https://cloud.umami.is/script.js',
+                'data-website-id': 'fe8ff4ea-17b8-4c20-b35f-81dd1311dce0'
+            }
+        ],
+        [
+            'script', {
+                async: '', src: 'https://www.googletagmanager.com/gtag/js?id=G-ZSH55Z9478'
+            }
+        ],
         [
             'script', {},
             'window.dataLayer = window.dataLayer || [];function gtag(){ dataLayer.push(arguments); }gtag(\'js\', new Date());gtag(\'config\', \'G-ZSH55Z9478\');'
