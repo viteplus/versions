@@ -59,7 +59,7 @@
         "typescript-eslint": "^8.45.0",
         "eslint-plugin-tsdoc": "^0.4.0",
         "eslint-plugin-perfectionist": "^4.15.0",
-        "@types/node": "^24.6.0",
+        "@types/node": "^24.6.1",
         "@viteplus/versions": "^2.0.2",
         "@remotex-labs/xjet": "^1.1.1",
         "@remotex-labs/xbuild": "1.6.0"
