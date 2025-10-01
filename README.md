@@ -4,6 +4,7 @@
 [![npm version](https://img.shields.io/npm/v/@viteplus/versions.svg)](https://www.npmjs.com/package/@viteplus/versions)
 [![License: MPL 2.0](https://img.shields.io/badge/License-MPL_2.0-brightgreen.svg)](https://opensource.org/licenses/MPL-2.0)
 [![Node.js CI](https://github.com/viteplus/versions/actions/workflows/node.js.yml/badge.svg)](https://github.com/viteplus/versions/actions/workflows/node.js.yml)
+[![Discord](https://img.shields.io/discord/1422908712116420659?logo=Discord&label=Discord)](https://discord.gg/R7cqb5eY)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/viteplus/versions)
 
 @viteplus/versions is a powerful VitePress plugin that enables versioned documentation with built-in localization support,
