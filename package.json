@@ -65,7 +65,7 @@
         "@remotex-labs/xbuild": "1.6.0"
     },
     "peerDependencies": {
-        "vitepress": "^1.6.4"
+        "vitepress": "^1.6.4 || ^2.0.0"
     },
     "peerDependenciesMeta": {
         "vitepress": {
