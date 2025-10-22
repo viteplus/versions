@@ -48,40 +48,34 @@ describe('parseLocale', () => {
         expect(mockState.vitepressConfig.locales.root).toEqual({
             link: '/',
             lang: 'en-US',
-            label: 'English',
-            themeConfig: undefined
+            label: 'English'
         });
         expect(mockState.vitepressConfig.locales.de).toEqual({
             link: '/de-DE/',
             lang: 'de-DE',
-            label: 'Germany',
-            themeConfig: undefined
+            label: 'Germany'
         });
 
         // sub-locales for versions
         expect(mockState.vitepressConfig.locales['v1.0']).toEqual({
             link: '/',
             lang: 'en-US',
-            label: ' ',
-            themeConfig: undefined
+            label: ' '
         });
         expect(mockState.vitepressConfig.locales['v2.0']).toEqual({
             link: '/',
             lang: 'en-US',
-            label: ' ',
-            themeConfig: undefined
+            label: ' '
         });
         expect(mockState.vitepressConfig.locales[join('de', 'v1.0')]).toEqual({
             link: '/de-DE/',
             lang: 'de-DE',
-            label: ' ',
-            themeConfig: undefined
+            label: ' '
         });
         expect(mockState.vitepressConfig.locales[join('de', 'v2.0')]).toEqual({
             link: '/de-DE/',
             lang: 'de-DE',
-            label: ' ',
-            themeConfig: undefined
+            label: ' '
         });
     });
 
@@ -99,8 +93,7 @@ describe('parseLocale', () => {
         expect(mockState.vitepressConfig.locales.root).toEqual({
             link: '/',
             lang: 'en-US',
-            label: 'English',
-            themeConfig: undefined
+            label: 'English'
         });
     });
 });
