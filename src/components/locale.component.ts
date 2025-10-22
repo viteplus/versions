@@ -35,7 +35,12 @@ export function parseLocale(): void {
         const index = state.localesMap[key];
         const isRoot = index === 'root';
         const localeObject = 'root' in userLocales ? userLocales[index] : userLocales[key];
-        const localeItems = { ...localeObject, themeConfig: undefined };
+        const localeItems = { ...localeObject };
+        if(Object.keys(localeItems.themeConfig ?? {}).length > 0) {
+            localeItems.themeConfig = { ...localeObject.themeConfig };
+            delete localeItems.themeConfig.nav;
+            delete localeItems.themeConfig.sidebar;
+        }
 
         locales[index] ??= {};
         Object.assign(locales[index], localeItems);
