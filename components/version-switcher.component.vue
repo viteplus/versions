@@ -35,7 +35,7 @@ const props = defineProps<{
 }>();
 
 const versionSet = computed(() => new Set([ ...props.versioningPlugin.versions ]));
-
+const hasVersions = computed(() => versionSet.value.size > 0);
 function getPathSegments(): string[] {
     return router.route.data.relativePath.split('/');
 }
@@ -60,7 +60,7 @@ function createVersionMenuItem(version: string): { text: string, link: string } 
     const langIsFirst = first === site.value.lang;
 
     let newSegments: Array<string>;
-    if (version === currentVersion)  newSegments = baseSegments;
+    if (version === currentVersion) newSegments = baseSegments;
     else if (langIsFirst) newSegments = [ first, version, ...baseSegments.slice(1) ];
     else newSegments = [ version, ...baseSegments ];
 
@@ -73,57 +73,59 @@ function toggle() {
 </script>
 
 <template>
-    <!-- Desktop version flyout -->
-    <VPFlyout
-        v-if="!screenMenu"
-        class="VPVersionSwitcher"
-        icon="vpi-versioning"
-        :button="getActiveVersion"
-        label="Switch Version"
-    >
-        <div class="items">
-            <!-- Only show latest version link if we're not already on latest -->
-            <VPMenuLink
-                v-if="getActiveVersion !== versioningPlugin.currentVersion"
-                :item="createVersionMenuItem(versioningPlugin.currentVersion)"
-            />
-            <!-- Show all version links except current version -->
-            <template v-for="version in versioningPlugin.versions" :key="version">
+    <!-- Only render if versions exist -->
+    <template v-if="hasVersions">
+        <!-- Desktop version flyout -->
+        <VPFlyout
+            v-if="!screenMenu"
+            class="VPVersionSwitcher"
+            icon="vpi-versioning"
+            :button="getActiveVersion"
+            label="Switch Version"
+        >
+            <div class="items">
+                <!-- Only show latest version link if we're not already on latest -->
                 <VPMenuLink
-                    v-if="getActiveVersion !== version"
+                    v-if="getActiveVersion !== versioningPlugin.currentVersion"
+                    :item="createVersionMenuItem(versioningPlugin.currentVersion)"
+                />
+                <!-- Show all version links except current version -->
+                <template v-for="version in versioningPlugin.versions" :key="version">
+                    <VPMenuLink
+                        v-if="getActiveVersion !== version"
+                        :item="createVersionMenuItem(version)"
+                    />
+                </template>
+            </div>
+        </VPFlyout>
+
+        <!-- Mobile version dropdown -->
+        <div v-else class="VPScreenVersionSwitcher" :class="{ open: isOpen }">
+            <button
+                class="button"
+                aria-controls="navbar-group-version"
+                :aria-expanded="isOpen"
+                @click="toggle"
+            >
+          <span class="button-text">
+            <span class="vpi-versioning icon"/>Switch Version
+          </span>
+                <span class="vpi-plus button-icon"/>
+            </button>
+
+            <div id="navbar-group-version" class="items">
+                <!-- Always show latest version link -->
+                <VPMenuLink :item="createVersionMenuItem(versioningPlugin.currentVersion)"/>
+                <!-- Show all version links -->
+                <VPMenuLink
+                    v-for="version in versioningPlugin.versions"
+                    :key="version"
                     :item="createVersionMenuItem(version)"
                 />
-            </template>
+            </div>
         </div>
-    </VPFlyout>
-
-    <!-- Mobile version dropdown -->
-    <div v-else class="VPScreenVersionSwitcher" :class="{ open: isOpen }">
-        <button
-            class="button"
-            aria-controls="navbar-group-version"
-            :aria-expanded="isOpen"
-            @click="toggle"
-        >
-      <span class="button-text">
-        <span class="vpi-versioning icon"/>Switch Version
-      </span>
-            <span class="vpi-plus button-icon"/>
-        </button>
-
-        <div id="navbar-group-version" class="items">
-            <!-- Always show latest version link -->
-            <VPMenuLink :item="createVersionMenuItem(versioningPlugin.currentVersion)"/>
-            <!-- Show all version links -->
-            <VPMenuLink
-                v-for="version in versioningPlugin.versions"
-                :key="version"
-                :item="createVersionMenuItem(version)"
-            />
-        </div>
-    </div>
+    </template>
 </template>
-
 <style>
 /* Versioning icon styling */
 .vpi-versioning.option-icon {
