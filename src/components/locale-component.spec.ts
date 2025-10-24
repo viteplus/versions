@@ -17,7 +17,7 @@ import { inject } from '@symlinks/services/inject.service';
  */
 
 describe('parseLocale', () => {
-    let mockInject: MockState<unknown, Parameters<typeof inject>>;
+    let mockInject: MockState<any>;
 
     beforeEach(() => {
         xJet.resetAllMocks();
@@ -39,6 +39,9 @@ describe('parseLocale', () => {
                     root: {},
                     de: {}
                 }
+            },
+            getLanguageOnly(locale: string): string {
+                return locale.split(/[-_]/)[0];
             }
         };
 
@@ -51,7 +54,7 @@ describe('parseLocale', () => {
             label: 'English'
         });
         expect(mockState.vitepressConfig.locales.de).toEqual({
-            link: '/de-DE/',
+            link: '/de/',
             lang: 'de-DE',
             label: 'Germany'
         });
@@ -68,12 +71,12 @@ describe('parseLocale', () => {
             label: ' '
         });
         expect(mockState.vitepressConfig.locales[join('de', 'v1.0')]).toEqual({
-            link: '/de-DE/',
+            link: '/de/',
             lang: 'de-DE',
             label: ' '
         });
         expect(mockState.vitepressConfig.locales[join('de', 'v2.0')]).toEqual({
-            link: '/de-DE/',
+            link: '/de/',
             lang: 'de-DE',
             label: ' '
         });
