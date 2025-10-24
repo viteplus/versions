@@ -12,6 +12,7 @@ import type { VersionsConfigInterface, VitepressConfigInterface } from '@interfa
 
 import { join, posix } from 'path';
 import { xterm } from '@remotex-labs/xansi/xterm.component';
+import { getLanguageOnly } from '@components/locale.component';
 import { Injectable } from '@symlinks/services/inject.service';
 import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'fs';
 import { defaultConfiguration } from '@constants/configuration.constant';
@@ -246,38 +247,7 @@ export class StateModel {
         return this;
     }
 
-    /**
-     * Extracts the language code from a locale string.
-     *
-     * @param locale - A locale string in the format `language[-_]REGION`
-     *   (e.g., `"en-US"`, `"en_GB"`, `"fr"`, `"de-DE"`).
-     *
-     * @returns The language portion of the locale string, extracted by splitting on
-     * hyphens (`-`) or underscores (`_`) and returning the first segment.
-     *
-     * @remarks
-     * - This function uses a regex split pattern `/[-_]/` to handle both hyphen and
-     *   underscore separators, which are common in locale strings.
-     * - If the input locale does not contain a separator, the entire string is returned.
-     * - The function always returns the language code in its original case.
-     * - Use this when you need to normalize or compare locale strings based on their
-     *   language component only, ignoring region or script information.
-     *
-     * @example
-     * ```ts
-     * getLanguageOnly("en-US");  // → "en"
-     * getLanguageOnly("fr_FR");  // → "fr"
-     * getLanguageOnly("de");     // → "de"
-     * getLanguageOnly("zh-Hans-CN"); // → "zh"
-     * ```
-     *
-     * @see parseLocale
-     * @since 2.0.4
-     */
 
-    getLanguageOnly(locale: string): string {
-        return locale.split(/[-_]/)[0];
-    }
 
     /**
      * Initializes the locale entries in the VitePress configuration and builds a mapping
@@ -304,7 +274,7 @@ export class StateModel {
             const rootLocaleKey = 'root' in userLocales ? 'root' : keys[0];
 
             for (const key of keys) {
-                const index = this.getLanguageOnly(userLocales[key].lang ?? key);
+                const index = getLanguageOnly(userLocales[key].lang ?? key);
                 for (const version of this.versionsList) {
                     if(key === rootLocaleKey) continue;
                     const versionPath = posix.join(index, version);

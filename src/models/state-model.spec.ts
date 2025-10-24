@@ -99,21 +99,4 @@ describe('StateModel', () => {
         const state = new StateModel(customConfig as any);
         expect(state.vitepressConfig).toEqual({ customKey: 'customValue' });
     });
-
-    test('getLanguageOnly should extract language code from locale string', () => {
-        mockExistsSync.mockReturnValue(true);
-        const state = new StateModel();
-
-        // Test with hyphen separator
-        expect((state as any).getLanguageOnly('en-US')).toBe('en');
-
-        // Test with underscore separator
-        expect((state as any).getLanguageOnly('fr_FR')).toBe('fr');
-
-        // Test with no separator
-        expect((state as any).getLanguageOnly('de')).toBe('de');
-
-        // Test with complex locale
-        expect((state as any).getLanguageOnly('zh-Hans-CN')).toBe('zh');
-    });
 });
