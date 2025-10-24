@@ -62,7 +62,7 @@ export function populateSidebar(sidebar: Array<SidebarItemType>, version: string
     if (version === 'root') version = '';
 
     return sidebar.map(item => {
-        if(item.skipVersioning) return item;
+        if(item.skipVersioning || item?.link?.startsWith('http')) return item;
         item = { ...item };
 
         if((item.link || item.items) && version !== '') {
