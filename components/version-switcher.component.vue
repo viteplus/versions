@@ -36,39 +36,43 @@ const props = defineProps<{
 
 const versionSet = computed(() => new Set([ ...props.versioningPlugin.versions ]));
 const hasVersions = computed(() => versionSet.value.size > 0);
-function getPathSegments(): string[] {
-    return router.route.data.relativePath.split('/');
-}
 
 const getActiveVersion = computed(() => {
-    const segments = getPathSegments();
+    const segments = router.route.data.relativePath.split('/');
     const { currentVersion } = props.versioningPlugin;
-    const first = segments[0];
-    const second = segments[1];
-    const candidate = site.value.lang === first ? second : first;
+    const locale = site.value.locales[site.value.localeIndex].link.replace(/\//g, '');
+
+    // Check if the first segment is locale, use the second segment if so, otherwise first
+    const candidate = segments[0] === locale ? segments[1] : segments[0];
 
     return versionSet.value.has(candidate) ? candidate : currentVersion;
-})
+});
 
 function createVersionMenuItem(version: string): { text: string, link: string } {
     const { currentVersion } = props.versioningPlugin;
-    const segments = getPathSegments();
+    const segments = router.route.data.relativePath.split('/');
+    const locale = site.value.locales[site.value.localeIndex].link.replace(/\//g, '');
+
+    // Filter out version segments
     const baseSegments = segments.filter(seg => !versionSet.value.has(seg));
 
-    // Determine if the first segment is a language code
-    const [ first ] = baseSegments;
-    const langIsFirst = first === site.value.lang;
+    // Check if first segment matches current locale
+    const langIsFirst = baseSegments[0] === locale;
 
-    let newSegments: Array<string>;
-    if (version === currentVersion) newSegments = baseSegments;
-    else if (langIsFirst) newSegments = [ first, version, ...baseSegments.slice(1) ];
-    else newSegments = [ version, ...baseSegments ];
+    let newSegments: string[];
+    if (version === currentVersion) {
+        newSegments = baseSegments;
+    } else if (langIsFirst) {
+        newSegments = [ baseSegments[0], version, ...baseSegments.slice(1) ];
+    } else {
+        newSegments = [ version, ...baseSegments ];
+    }
 
     return { text: version, link: `/${ newSegments.join('/') }` };
 }
 
 function toggle() {
-    return isOpen.value = !isOpen.value;
+    isOpen.value = !isOpen.value;
 }
 </script>
 

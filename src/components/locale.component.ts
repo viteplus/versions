@@ -46,7 +46,7 @@ export function parseLocale(): void {
         Object.assign(locales[index], localeItems);
 
         if(isRoot) locales[index].link = '/';
-        else locales[index].link = `/${ locales[index].lang }/`;
+        else locales[index].link = `/${ state.getLanguageOnly(locales[index].lang ?? '') }/`;
 
         for (const version of versions) {
             const subIndex = isRoot ? version : join(key, version);
@@ -55,7 +55,7 @@ export function parseLocale(): void {
 
             locales[subIndex].label = ' ';
             if(isRoot) locales[subIndex].link = '/';
-            else locales[subIndex].link = `/${ locales[subIndex].lang }/`;
+            else locales[subIndex].link = `/${ state.getLanguageOnly(locales[subIndex].lang ?? '') }/`;
         }
     }
 }
