@@ -12,8 +12,8 @@ import type { NavItemType, NavObjectType, NavType } from '@interfaces/nav.interf
 
 import { join } from 'path/posix';
 import { inject } from '@symlinks/services/inject.service';
-import { populateNav, normalizeNav, normalizeNavs, parseNavs } from '@components/nav.component';
 import { isNavItemWithChildren, isNavItemWithLink, replaceLinksRecursive } from '@components/nav.component';
+import { populateNav, normalizeNav, normalizeNavs, parseNavs, getNavForLocale } from '@components/nav.component';
 
 /**
  * Tests
@@ -402,7 +402,7 @@ describe('normalizeNavs', () => {
 });
 
 describe('parseNavs', () => {
-    let mockInject: MockState<unknown, Parameters<typeof inject>>;
+    let mockInject: MockState<any>;
 
     beforeEach(() => {
         mockInject = xJet.mock(inject);
@@ -507,5 +507,43 @@ describe('parseNavs', () => {
             { text: 'Docs', link: '/de/docs/' },
             { text: 'some text', items: expect.any(Array) }
         ]);
+    });
+});
+
+describe('getNavForLocale', () => {
+    beforeEach(() => {
+        xJet.restoreAllMocks();
+    });
+
+    const mockNavs: Record<string, Array<NavItemType>> = {
+        root: [{ text: 'Home', link: '/' }],
+        en: [{ text: 'English Home', link: '/en' }],
+        'en-US': [{ text: 'US English Home', link: '/en-US' }],
+        fr: [{ text: 'Accueil', link: '/fr' }]
+    };
+
+    test('returns navs for exact key if it exists', () => {
+        const result = getNavForLocale(mockNavs, 'en');
+        expect(result).toEqual(mockNavs.en);
+    });
+
+    test('returns base locale navs if key includes "/" and base exists', () => {
+        const result = getNavForLocale(mockNavs, 'en/something');
+        expect(result).toEqual(mockNavs['en']);
+    });
+
+    test('returns root navs if key does not exist and no base locale found', () => {
+        const result = getNavForLocale(mockNavs, 'de');
+        expect(result).toEqual(mockNavs.root);
+    });
+
+    test('returns root navs if key includes "/" but base locale is missing', () => {
+        const result = getNavForLocale(mockNavs, 'de-DE/some/path');
+        expect(result).toEqual(mockNavs.root);
+    });
+
+    test('returns root navs if everything is missing', () => {
+        const result = getNavForLocale({}, 'anything');
+        expect(result).toBeUndefined(); // or [] if you decide to default that way
     });
 });

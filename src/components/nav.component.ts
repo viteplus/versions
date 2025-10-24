@@ -280,6 +280,72 @@ export function normalizeNavs(state: StateModel): Record<string, Array<NavItemTy
 }
 
 /**
+ * Retrieves the appropriate navigation configuration for a given locale key.
+ *
+ * @param navs - The navigation configurations mapped by locale keys.
+ * @param key - The locale key to retrieve navigation for (e.g., 'root', 'fr', 'fr/v1.0.0').
+ * @returns The navigation configuration for the locale, falling back to parent locale or root.
+ *
+ * @remarks
+ * This function implements a fallback strategy for finding navigation configurations:
+ * 1. If an exact match exists for the key, return it
+ * 2. If the key contains '/' (versioned locale), extract the base locale and try that
+ * 3. If no base locale exists, fall back to 'root'
+ *
+ * This allows versioned locales (e.g., 'fr/v1.0.0', 'de/v2.0') to inherit navigation
+ * from their base locale ('fr', 'de') without duplicating configuration.
+ *
+ * Fallback hierarchy examples:
+ * - `'fr'` → Direct match, returns `navs.fr`
+ * - `'fr/v1.0.0'` → No direct match → Checks `'fr'` → Returns `navs.fr`
+ * - `'es/v1.0.0'` → No direct match → Checks `'es'` (doesn't exist) → Returns `navs.root`
+ * - `'root'` → Direct match, returns `navs.root`
+ *
+ * @example
+ * ```ts
+ * const navs = {
+ *   root: [{ text: 'Home', link: '/' }],
+ *   fr: [{ text: 'Accueil', link: '/fr/' }],
+ *   de: [{ text: 'Startseite', link: '/de/' }]
+ * };
+ *
+ * // Exact match
+ * getNavForLocale(navs, 'fr'); // Returns fr nav
+ *
+ * // Versioned locale - inherits from base
+ * getNavForLocale(navs, 'fr/v1.0.0'); // Returns fr nav
+ * getNavForLocale(navs, 'de/v2.0'); // Returns de nav
+ *
+ * // No base locale exists - falls back to root
+ * getNavForLocale(navs, 'es/v1.0.0'); // Returns root nav
+ *
+ * // Root locale
+ * getNavForLocale(navs, 'root'); // Returns root nav
+ * ```
+ *
+ * @see {@link parseNavs} - Uses this function to populate navigation for all locales
+ * @see {@link NavItemType} - The navigation item type structure
+ *
+ * @since 2.0.5
+ */
+
+export function getNavForLocale(navs: Record<string, Array<NavItemType>>, key: string): Array<NavItemType> {
+    if (navs[key]) return navs[key];
+
+    // If the key contains '/', try to get the base locale
+    if (key.includes('/')) {
+        const baseLocale = key.split('/')[0];
+
+        if (navs[baseLocale]) {
+            return navs[baseLocale];
+        }
+    }
+
+    // Fall back to root
+    return navs.root;
+}
+
+/**
  * Parses and populates the navigation structure for all locales.
  *
  * @remarks
@@ -307,7 +373,7 @@ export function parseNavs(): void {
     const navs = normalizeNavs(state);
 
     for (const [ key, locale ] of Object.entries(locales)) {
-        const nav = navs[key] ?? navs.root;
+        const nav = getNavForLocale(navs, key);
 
         locale.themeConfig ??= {};
         locale.themeConfig.nav = populateNav(nav, key);
