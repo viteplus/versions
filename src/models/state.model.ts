@@ -16,7 +16,6 @@ import { getLanguageOnly } from '@components/locale.component';
 import { Injectable } from '@symlinks/services/inject.service';
 import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'fs';
 import { defaultConfiguration } from '@constants/configuration.constant';
-import { getAllMarkdownFilesRelative } from '@components/object.component';
 
 /**
  * Manages the state of a versioned VitePress documentation project.
@@ -38,7 +37,6 @@ import { getAllMarkdownFilesRelative } from '@components/object.component';
  *
  * const state = new StateModel(config).init();
  * console.log(state.versionsList);
- * console.log(state.fileMap);
  * ```
  *
  * @since 2.0.0
@@ -159,21 +157,6 @@ export class StateModel {
     readonly localesMap: Record<string, string> = {};
 
     /**
-     * A map of version names to arrays of Markdown file paths relative to the sources directory.
-     *
-     * @remarks
-     * - The key is the version name (or `''` for the root/source version).
-     * - The value is an array of file paths (strings) for that version.
-     *
-     * This structure is built during initialization to facilitate generating versioned
-     * documentation and navigation.
-     *
-     * @since 2.0.0
-     */
-
-    readonly fileMap: Record<string, Array<string>> = {};
-
-    /**
      * Creates an instance of `StateModel`.
      *
      * @param configuration - Optional configuration object; defaults to {@link defaultConfiguration}.
@@ -212,42 +195,116 @@ export class StateModel {
     }
 
     /**
-     * Initializes the state by reading archive subfolders and building file maps.
+     * Initializes the state model by scanning archive directory and setting up locale configuration.
      *
-     * @returns The instance itself (`this`) to allow method chaining.
+     * @returns The current instance for method chaining.
      *
      * @remarks
-     * This method performs the following steps:
-     * - Reads all subdirectories in the archive directory.
-     * - Populates `fileMap` with all Markdown files relative to the sources directory.
-     *   - The root source files are stored under the `''` key.
-     *   - Archive subfolders are stored under their folder names.
-     * - Initializes `vitepressConfig.locales` for each folder with an empty `themeConfig`.
-     * - Populates `versionsList` with all version keys derived from `fileMap`.
+     * This method performs the initial setup sequence for a multi-version documentation system
+     * by discovering available versions and preparing the locale infrastructure. It executes
+     * three primary operations:
+     *
+     * 1. **Root Locale Initialization**: Sets up the root locale entry in {@link vitepressConfig.locales}
+     *    with an empty theme configuration, establishing the foundation for all locale-specific settings
+     * 2. **Version Discovery**: Scans {@link archivePath} using {@link readdirSync} to identify all
+     *    subdirectories, which represent available documentation versions. Each subdirectory name
+     *    is added to {@link versionsList}
+     * 3. **Locale Map Setup**: Calls {@link initializeLocalesMap} to establish the locale mapping
+     *    structure and populate versioned locale entries
+     *
+     * The archive directory structure is expected to contain version folders:
+     * ```
+     * archive/
+     *   ├── v1.0/
+     *   ├── v2.0/
+     *   └── latest/
+     * ```
+     *
+     * Each subdirectory discovered becomes a version entry, enabling the system to generate
+     * versioned locale configurations and routing structures for multi-version documentation.
+     *
+     * The root locale is initialized first to ensure a consistent base exists before user-defined
+     * locale configurations are applied through {@link initializeLocalesMap}.
+     *
+     * Method chaining support allows for fluent initialization patterns, making it easy to
+     * combine multiple setup operations in a readable sequence.
+     *
+     * @example
+     * ```ts
+     * // Basic initialization
+     * const state = new StateModel(config);
+     * state.init();
+     *
+     * console.log(state.versionsList);
+     * // ['v1.0', 'v2.0', 'v3.0', 'latest']
+     *
+     * console.log(state.vitepressConfig.locales['root']);
+     * // { themeConfig: {} }
+     *
+     * // Method chaining pattern
+     * const state = new StateModel(config)
+     *   .init();
+     *
+     * console.log(`Initialized with ${state.versionsList.length} versions`);
+     *
+     * // Use case: Dynamic version detection
+     * const config = {
+     *   versionsConfig: {
+     *     sources: 'src',
+     *     archive: 'versions'
+     *   },
+     *   locales: {
+     *     root: { lang: 'en-US', label: 'English' },
+     *     '/de/': { lang: 'de-DE', label: 'Deutsch' }
+     *   }
+     * };
+     *
+     * const state = new StateModel(config).init();
+     *
+     * // Archive structure:
+     * // versions/
+     * //   ├── v1.0.0/
+     * //   ├── v2.0.0/
+     * //   └── latest/
+     *
+     * console.log(state.versionsList);
+     * // ['v1.0.0', 'v2.0.0']
+     *
+     * // Locale entries created for each version
+     * console.log(Object.keys(state.vitepressConfig.locales));
+     * // ['root', 'v1.0.0', 'v2.0.0', 'latest', '/de/', 'de/v1.0.0', 'de/v2.0.0']
+     *
+     * // Use case: Error handling
+     * try {
+     *   const state = new StateModel(config).init();
+     *   if (state.versionsList.length === 0) {
+     *     console.warn('No versions found in archive');
+     *   }
+     * } catch (error) {
+     *   console.error('Failed to initialize state:', error);
+     * }
+     * ```
+     *
+     * @see archivePath
+     * @see readdirSync
+     * @see versionsList
+     * @see vitepressConfig
+     * @see initializeLocalesMap
      *
      * @since 2.0.0
      */
 
     init(): this {
-        const subFolders = readdirSync(this.archivePath, { withFileTypes: true })
-            .filter((entry: Dirent) => entry.isDirectory());
+        this.vitepressConfig.locales.root = { themeConfig: {} };
+        const versionFolders = readdirSync(this.archivePath, { withFileTypes: true })
+            .filter((entry: Dirent) => entry.isDirectory())
+            .map((entry: Dirent) => entry.name);
 
-        this.fileMap[''] = getAllMarkdownFilesRelative(this.sourcesPath);
-        this.vitepressConfig.locales['root'] = {
-            themeConfig: {}
-        };
-
-        for (const folder of subFolders) {
-            const path = join(folder.parentPath, folder.name);
-            this.fileMap[folder.name] = getAllMarkdownFilesRelative(path);
-        }
-
+        this.versionsList.push(...versionFolders);
         this.initializeLocalesMap();
 
         return this;
     }
-
-
 
     /**
      * Initializes the locale entries in the VitePress configuration and builds a mapping
@@ -266,7 +323,6 @@ export class StateModel {
     private initializeLocalesMap(): void {
         const locales = this.vitepressConfig.locales;
         const userLocales = this.configuration.locales;
-        this.versionsList.push(...Object.keys(this.fileMap).filter(Boolean));
 
         locales['root'] = {};
         if (Object.keys(userLocales).length > 0) {
