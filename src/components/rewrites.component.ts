@@ -58,22 +58,37 @@ export function rewritesHook(source: string, version: string, locale: string): s
  */
 
 export function parseRoutesComponent(): void {
-    const result: Record<string, string> = {};
     const state = inject(StateModel);
     const localesPrefix = Object.keys(state.localesMap);
 
-    for (const [ folder, fileList ] of Object.entries(state.fileMap)) {
-        const prefix = folder === '' ? state.sources : state.archive;
+    state.vitepressConfig.rewrites = function (id: string): string {
+        // Handle src/ files
+        if (id.startsWith('src/')) {
+            const path = id.replace('src/', '');
+            const localeKey = localesPrefix.find(prefix => path.startsWith(prefix + '/'));
 
-        for (const file of fileList) {
-            const localeKey = localesPrefix[localesPrefix.findIndex(item => file.startsWith(item))];
-            const locale = state.localesMap[localeKey] === 'root' ? '' : localeKey ?? '';
+            if (localeKey) {
+                const locale = state.localesMap[localeKey] === 'root' ? '' : localeKey;
+                const filePath = path.replace(localeKey + '/', '');
 
-            result[join(prefix, folder, file)] = state.versionsConfig.hooks.rewritesHook(
-                file.replace(localeKey + '/', ''), folder, locale
-            );
+                return state.versionsConfig.hooks.rewritesHook(filePath, '', locale);
+            }
+
+            return path;
         }
-    }
 
-    state.vitepressConfig.rewrites = result;
+        // Handle archive/ files
+        if (id.startsWith('archive/')) {
+            const path = id.replace('archive/', '');
+            const parts = path.split('/');
+            const version = parts[0];
+            const localeKey = parts[1];
+            const locale = state.localesMap[localeKey] === 'root' ? '' : localeKey;
+            const filePath = parts.slice(2).join('/');
+
+            return state.versionsConfig.hooks.rewritesHook(filePath, version, locale);
+        }
+
+        return id;
+    };
 }

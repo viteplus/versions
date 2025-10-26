@@ -37,7 +37,7 @@ describe('StateModel', () => {
         expect(mockWriteFileSync).toHaveBeenCalledWith(expect.stringContaining('.gitkeep'), '');
     });
 
-    test('init should populate fileMap and versionsList', () => {
+    test('init should populate versionsList', () => {
         const mockReaddirSync = xJet.mock(readdirSync);
         const mockGetAllMarkdownFilesRelative = xJet.mock(getAllMarkdownFilesRelative);
 
@@ -49,10 +49,6 @@ describe('StateModel', () => {
         ] as any);
 
         const state = new StateModel().init();
-
-        expect(state.fileMap['']).toEqual([ 'file1.md', 'file2.md' ]);
-        expect(state.fileMap['v1.0']).toEqual([ 'file1.md', 'file2.md' ]);
-        expect(state.fileMap['v2.0']).toEqual([ 'file1.md', 'file2.md' ]);
         expect(state.versionsList).toEqual([ 'v1.0', 'v2.0' ]);
     });
 
