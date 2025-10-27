@@ -181,4 +181,4 @@ export type SidebarType = Array<SidebarItemType> | PathSidebarInterface;
  * @since 2.0.0
  */
 
-export type SidebarObjectType = Record<string, Array<SidebarItemType>>;
+export type SidebarObjectType = Record<string, Array<SidebarItemType | SidebarGroupInterface>>;
