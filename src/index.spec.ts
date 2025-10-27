@@ -12,7 +12,7 @@ import { defineVersionedConfig } from './index';
 import { StateModel } from '@models/state.model';
 import { parseNavs } from '@components/nav.component';
 import { parseLocale } from '@components/locale.component';
-import { parseSidebar } from '@components/sidebar.component';
+import { parseSidebars } from '@components/sidebar.component';
 import { forceInject } from '@symlinks/services/inject.service';
 import { parseRoutesComponent } from '@components/rewrites.component';
 import { defaultConfiguration } from '@constants/configuration.constant';
@@ -22,18 +22,18 @@ import { defaultConfiguration } from '@constants/configuration.constant';
  */
 
 describe('defineVersionedConfig', () => {
-    let mockForceInject: MockState<any, Parameters<typeof forceInject>>;
-    let mockParseNavs: MockState<any, []>;
-    let mockParseLocale: MockState<any, []>;
-    let mockParseSidebar: MockState<any, []>;
-    let mockParseRoutes: MockState<any, []>;
+    let mockForceInject: MockState<any>;
+    let mockParseNavs: MockState<any>;
+    let mockParseLocale: MockState<any>;
+    let mockParseSidebar: MockState<any>;
+    let mockParseRoutes: MockState<any>;
 
     beforeEach(() => {
         xJet.resetAllMocks();
         mockForceInject = xJet.mock(forceInject).mockImplementation(<any> (() => {}));
         mockParseNavs = xJet.mock(parseNavs).mockImplementation(<any> (() => {}));
         mockParseLocale = xJet.mock(parseLocale).mockImplementation(<any> (() => {}));
-        mockParseSidebar = xJet.mock(parseSidebar).mockImplementation(<any> (() => {}));
+        mockParseSidebar = xJet.mock(parseSidebars).mockImplementation(<any> (() => {}));
         mockParseRoutes = xJet.mock(parseRoutesComponent).mockImplementation(<any> (() => {}));
     });
 
