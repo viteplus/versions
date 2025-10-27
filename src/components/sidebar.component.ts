@@ -15,6 +15,81 @@ import { StateModel } from '@models/state.model';
 import { inject } from '@symlinks/services/inject.service';
 
 /**
+ * Safely joins path segments, preventing empty or dot-only results.
+ *
+ * @param args - Variable number of path segments to join.
+ * @returns A joined path string, or empty string if the result would be '.' or empty.
+ *
+ * @remarks
+ * This function is a wrapper around Node.js's {@link join} from path/posix that addresses
+ * a common edge case: when all input segments are empty or falsy, {@link join} returns
+ * a single dot (`'.'`) representing the current directory. This function prevents that
+ * behavior by returning an empty string instead.
+ *
+ * **Processing steps**:
+ * 1. Filters out falsy values (empty strings, null, undefined, 0, false) using {@link Boolean}
+ * 2. Joins remaining segments using {@link join}
+ * 3. Returns empty string if result is `'.'`, otherwise returns the joined path
+ *
+ * **Use cases**:
+ * - Building URL paths where empty segments should result in empty strings
+ * - Constructing locale-aware paths with optional prefixes
+ * - Generating version-specific routes where components may be absent
+ * - Avoiding visual artifacts from dot paths in UI components
+ *
+ * The function is particularly useful in multi-version, multi-locale systems where
+ * path components (locale, version, base path) may be conditionally empty, and you
+ * need consistent empty-string results rather than dot notation.
+ *
+ * @example
+ * ```ts
+ * // Normal path joining
+ * const path1 = safeJoin('docs', 'guide', 'intro');
+ * console.log(path1); // 'docs/guide/intro'
+ *
+ * // With empty segments (filtered out)
+ * const path2 = safeJoin('', 'docs', '', 'guide');
+ * console.log(path2); // 'docs/guide'
+ *
+ * // All empty segments (returns empty string, not '.')
+ * const path3 = safeJoin('', '', '');
+ * console.log(path3); // '' (not '.')
+ *
+ * // Single segment
+ * const path4 = safeJoin('docs');
+ * console.log(path4); // 'docs'
+ *
+ * // Use case: Building versioned paths
+ * const locale = ''; // Root locale (empty)
+ * const version = ''; // Current version (empty)
+ * const base = 'guide';
+ *
+ * const path = safeJoin(locale, version, base);
+ * console.log(path); // 'guide' (not './guide' or '.')
+ *
+ * // Use case: Optional prefix paths
+ * function buildPath(prefix: string, ...segments: string[]): string {
+ *   return '/' + safeJoin(prefix, ...segments);
+ * }
+ *
+ * console.log(buildPath('', 'api', 'users')); // '/api/users'
+ * console.log(buildPath('v2', 'api', 'users')); // '/v2/api/users'
+ * console.log(buildPath('', '', '')); // '/' (not '/.')
+ * ```
+ *
+ * @see join
+ * @see Boolean
+ *
+ * @since 2.0.5
+ */
+
+function safeJoin(...args: Array<string>): string {
+    const joined = join(...args.filter(Boolean));
+
+    return joined === '.' ? '' : joined;
+}
+
+/**
  * Populates sidebar items with version-specific base paths.
  *
  * @param sidebar - Array of sidebar items to process {@link SidebarItemType}.
@@ -82,7 +157,7 @@ export function populateSidebar(sidebar: Array<SidebarItemType>, version: string
 
         return {
             ...item,
-            base: join('/', normalizedVersion, item.base ?? '', '/')
+            base: safeJoin('/', normalizedVersion, item.base ?? '', '/')
         };
     });
 }
@@ -271,8 +346,8 @@ export function normalizeSidebar(state: StateModel, results: Record<string, Side
 
         if (lang && !prefix.startsWith(lang)) continue;
 
-        const parent = version ? join(normalizedPrefix, version) : normalizedPrefix;
-        const index = join(parent, ...segments).replace('.', '') || '/';
+        const parent = version ? safeJoin(normalizedPrefix, version) : normalizedPrefix;
+        const index = safeJoin(parent, ...segments) || '/';
         const parentIndex = parent || 'root';
 
         results[parentIndex] ??= {};
@@ -380,9 +455,13 @@ export function normalizeSidebars(state: StateModel): Record<string, SidebarObje
     const { vitepressConfig, configuration: { locales, themeConfig } } = state;
     const normalizedSidebar: Record<string, SidebarObjectType> = {};
 
-    for (const [ localeKey, locale ] of Object.entries(locales)) {
-        normalizeSidebar(state, normalizedSidebar, themeConfig?.sidebar as SidebarObjectType, localeKey);
-        normalizeSidebar(state, normalizedSidebar, locale.themeConfig?.sidebar as SidebarObjectType, localeKey);
+    if(Object.keys(locales).length > 0) {
+        for (const [ localeKey, locale ] of Object.entries(locales)) {
+            normalizeSidebar(state, normalizedSidebar, themeConfig?.sidebar as SidebarObjectType, localeKey);
+            normalizeSidebar(state, normalizedSidebar, locale.themeConfig?.sidebar as SidebarObjectType, localeKey);
+        }
+    } else {
+        normalizeSidebar(state, normalizedSidebar, themeConfig?.sidebar as SidebarObjectType, 'root');
     }
 
     const localesList = Object.values(state.localesMap);
@@ -398,7 +477,7 @@ export function normalizeSidebars(state: StateModel): Record<string, SidebarObje
         for (const [ key, items ] of Object.entries(parent)) {
             const segments = key.split('/').filter(Boolean);
             extractLocale(segments, localesList, versionsList);
-            normalizedSidebar[index][join(index, ...segments)] = [ ...items ];
+            normalizedSidebar[index][safeJoin(index, ...segments)] = [ ...items ];
         }
     }
 
@@ -512,7 +591,7 @@ export function parseSidebars(): void {
         for (const [ index, items ] of Object.entries(sidebars[key])) {
             const { lang, version } = extractLocale(index.split('/'), localesList, versionsList);
             (locale.themeConfig.sidebar as SidebarObjectType)[index] = populateSidebar(
-                items, join(lang, version).replace('.', '')
+                items, safeJoin(lang, version)
             );
         }
     }
