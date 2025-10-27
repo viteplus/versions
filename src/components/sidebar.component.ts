@@ -380,10 +380,16 @@ export function normalizeSidebars(state: StateModel): Record<string, SidebarObje
     const { vitepressConfig, configuration: { locales, themeConfig } } = state;
     const normalizedSidebar: Record<string, SidebarObjectType> = {};
 
-    for (const [ localeKey, locale ] of Object.entries(locales)) {
-        normalizeSidebar(state, normalizedSidebar, themeConfig?.sidebar as SidebarObjectType, localeKey);
-        normalizeSidebar(state, normalizedSidebar, locale.themeConfig?.sidebar as SidebarObjectType, localeKey);
+    if(Object.keys(locales).length > 0) {
+        for (const [ localeKey, locale ] of Object.entries(locales)) {
+            normalizeSidebar(state, normalizedSidebar, themeConfig?.sidebar as SidebarObjectType, localeKey);
+            normalizeSidebar(state, normalizedSidebar, locale.themeConfig?.sidebar as SidebarObjectType, localeKey);
+        }
+    } else {
+        normalizeSidebar(state, normalizedSidebar, themeConfig?.sidebar as SidebarObjectType, 'root');
     }
+
+    console.log(normalizedSidebar)
 
     const localesList = Object.values(state.localesMap);
     const versionsList = state.versionsList;
