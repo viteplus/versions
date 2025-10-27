@@ -138,6 +138,7 @@ describe('parseRoutesComponent', () => {
 
         const mockState: any = {
             localesMap: { en: 'en' },
+            versionsList: [ 'v1.0.0', 'v2.0.0' ],
             versionsConfig: { hooks: { rewritesHook: mockRewritesHook } },
             vitepressConfig: {}
         };
@@ -159,6 +160,7 @@ describe('parseRoutesComponent', () => {
 
         const mockState: any = {
             localesMap: { en: 'root' },
+            versionsList: [ 'v1.0.0', 'v2.0.0' ],
             versionsConfig: { hooks: { rewritesHook: mockRewritesHook } },
             vitepressConfig: {}
         };
@@ -196,6 +198,7 @@ describe('parseRoutesComponent', () => {
 
         const mockState: any = {
             localesMap: { en: 'en', fr: 'fr' },
+            versionsList: [ 'v1.0.0', 'v2.0.0' ],
             versionsConfig: { hooks: { rewritesHook: mockRewritesHook } },
             vitepressConfig: {}
         };
@@ -222,6 +225,7 @@ describe('parseRoutesComponent', () => {
 
         const mockState: any = {
             localesMap: { en: 'en' },
+            versionsList: [ 'v1.0.0', 'v2.0.0' ],
             versionsConfig: { hooks: { rewritesHook: mockRewritesHook } },
             vitepressConfig: {}
         };

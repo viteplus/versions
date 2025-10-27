@@ -1,4 +1,10 @@
 /**
+ * Import will remove at compile time
+ */
+
+import type { PathSegmentsInterface } from '@components/interfaces/sidebar-component.interface';
+
+/**
  * imports
  */
 
@@ -34,6 +40,82 @@ export function rewritesHook(source: string, version: string, locale: string): s
 }
 
 /**
+ * Extracts locale and version information from URL path segments.
+ *
+ * @param segments - Array of URL path segments to parse (will be modified by shifting elements).
+ * @param localesList - List of valid locale identifiers for matching.
+ * @param versionsList - List of valid version identifiers for matching.
+ * @returns An object containing extracted language and version {@link PathSegmentsInterface}.
+ *
+ * @remarks
+ * This function parses URL path segments to identify and extract locale and version
+ * information, supporting both version-first and locale-first URL structures. The
+ * function operates on the segment array destructively, removing matched elements
+ * via {@link Array.shift}.
+ *
+ * **Parsing logic**:
+ * 1. If the first segment matches a version → extract it as `version`.
+ * 2. If the first segment matches a locale → extract it as `lang`.
+ * 3. Return both extracted values (empty strings if not found).
+ *
+ * **URL patterns supported**:
+ * - `/v2.0/guide/` → `{ lang: '', version: 'v2.0' }`
+ * - `/fr/v2.0/guide/` → `{ lang: 'fr', version: 'v2.0' }`
+ * - `/fr/guide/` → `{ lang: 'fr', version: '' }`
+ * - `/guide/` → `{ lang: '', version: '' }`
+ *
+ * The segment array is mutated during extraction, with matched segments removed
+ * from the beginning. This allows the following processing to work with the remaining
+ * path components.
+ *
+ * @example
+ * ```ts
+ * const localesList = ['en', 'fr', 'de'];
+ * const versionsList = ['v1.0', 'v2.0', 'latest'];
+ *
+ * // Version-first pattern
+ * const segments1 = ['v2.0', 'guide', 'intro'];
+ * const result1 = extractLocale(segments1, localesList, versionsList);
+ * console.log(result1); // { lang: '', version: 'v2.0' }
+ * console.log(segments1); // ['guide', 'intro']
+ *
+ * // Locale-first pattern
+ * const segments2 = ['fr', 'v2.0', 'api', 'reference'];
+ * const result2 = extractLocale(segments2, localesList, versionsList);
+ * console.log(result2); // { lang: 'fr', version: 'v2.0' }
+ * console.log(segments2); // ['api', 'reference']
+ *
+ * // No locale or version
+ * const segments3 = ['docs', 'getting-started'];
+ * const result3 = extractLocale(segments3, localesList, versionsList);
+ * console.log(result3); // { lang: '', version: '' }
+ * console.log(segments3); // ['docs', 'getting-started']
+ *
+ * // Use case: URL parsing for routing
+ * const url = '/de/latest/guide/installation';
+ * const segments = url.split('/').filter(Boolean);
+ * const { lang, version } = extractLocale(
+ *   segments,
+ *   ['en', 'de', 'fr'],
+ *   ['latest', 'v1', 'v2']
+ * );
+ * const route = segments.join('/');
+ * console.log({ lang, version, route });
+ * // { lang: 'de', version: 'latest', route: 'guide/installation' }
+ * ```
+ *
+ * @see PathSegmentsInterface
+ * @since 2.0.5
+ */
+
+export function extractLocale(segments: Array<string>, localesList: Array<string>, versionsList: Array<string>): PathSegmentsInterface {
+    const version = versionsList.includes(segments[0]) ? segments.shift()! : '';
+    const lang = localesList.includes(segments[0]) ? segments.shift()! : '';
+
+    return { lang, version };
+}
+
+/**
  * Parses all documentation routes and generates rewritten paths for versioned and localized files.
  *
  * @remarks
@@ -60,6 +142,8 @@ export function rewritesHook(source: string, version: string, locale: string): s
 export function parseRoutesComponent(): void {
     const state = inject(StateModel);
     const localesPrefix = Object.keys(state.localesMap);
+    const localesList = Object.keys(state.localesMap);
+    const versionsList = state.versionsList;
 
     state.vitepressConfig.rewrites = function (id: string): string {
         // Handle src/ files
@@ -80,13 +164,13 @@ export function parseRoutesComponent(): void {
         // Handle archive/ files
         if (id.startsWith('archive/')) {
             const path = id.replace('archive/', '');
-            const parts = path.split('/');
-            const version = parts[0];
-            const localeKey = parts[1];
-            const locale = state.localesMap[localeKey] === 'root' ? '' : localeKey;
-            const filePath = parts.slice(2).join('/');
+            const segments = path.split('/');
+            const { lang, version } = extractLocale(segments, localesList, versionsList);
+            const source = segments.join('/');
 
-            return state.versionsConfig.hooks.rewritesHook(filePath, version, locale);
+            return state.versionsConfig.hooks.rewritesHook(
+                source, version, state.localesMap[lang] === 'root' ? '' : lang
+            );
         }
 
         return id;
