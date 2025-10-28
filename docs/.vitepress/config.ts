@@ -1,4 +1,10 @@
 /**
+ * Import will remove at compile time
+ */
+
+import type { PageData } from 'vitepress';
+
+/**
  * Imports
  */
 
@@ -73,6 +79,30 @@ export default defineVersionedConfig({
         footer: {
             message: 'Released under the Mozilla Public License 2.0',
             copyright: `Copyright © ${ new Date().getFullYear() } @viteplus/versions Contributors`
+        },
+        editLink: {
+            pattern: ({ filePath, relativePath }: PageData) => {
+                const owner = 'viteplus';
+                const repo = 'versions';
+                const branch = 'master';
+
+                // GitHub blob link to the specific file
+                const fileUrl = `https://github.com/${ owner }/${ repo }/blob/${ branch }/docs/${ filePath }`;
+
+                // Pre-filled issue parameters
+                const title = encodeURIComponent(`Suggestion for: ${ relativePath }`);
+                const body = encodeURIComponent(
+                    '### Suggested changes\n\n' +
+                    `File: [${ relativePath }](${ fileUrl })\n\n` +
+                    '---\n\n' +
+                    '**Describe your suggestion:**\n\n'
+                );
+                const labels = encodeURIComponent('enhancement,documentation');
+
+                return `https://github.com/${ owner }/${ repo }/issues/new?title=${ title }&body=${ body }&labels=${ labels }`;
+            },
+
+            text: 'Suggest changes to this page'
         }
     }
 });
