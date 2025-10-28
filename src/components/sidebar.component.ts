@@ -233,6 +233,7 @@ export function populateSidebar(sidebar: Array<SidebarItemType>, version: string
  */
 
 export function extractLocale(segments: Array<string>, localesList: Array<string>, versionsList: Array<string>): PathSegmentsInterface {
+    if (localesList.length === 0) localesList = [ 'root' ];
     if (versionsList.includes(segments[0])) {
         return { lang: '', version: segments.shift()! };
     }
@@ -455,7 +456,7 @@ export function normalizeSidebars(state: StateModel): Record<string, SidebarObje
     const { vitepressConfig, configuration: { locales, themeConfig } } = state;
     const normalizedSidebar: Record<string, SidebarObjectType> = {};
 
-    if(Object.keys(locales).length > 0) {
+    if (Object.keys(locales).length > 0) {
         for (const [ localeKey, locale ] of Object.entries(locales)) {
             normalizeSidebar(state, normalizedSidebar, themeConfig?.sidebar as SidebarObjectType, localeKey);
             normalizeSidebar(state, normalizedSidebar, locale.themeConfig?.sidebar as SidebarObjectType, localeKey);
