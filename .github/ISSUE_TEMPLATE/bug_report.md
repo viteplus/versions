@@ -1,13 +1,14 @@
 ---
-name: Bug Report
-about: Report a bug to help us improve @viteplus/versions
+name: 🐞 Bug Report
+about: Report a bug or regression in @viteplus/versions
 title: "[BUG] "
 labels: bug
 assignees: ''
-
 ---
 
-## Type of Issue
+## Description
+
+<!-- A clear and concise description of what the bug is -->
 
 Select the type of issue:
 
@@ -15,54 +16,32 @@ Select the type of issue:
 - [ ] Feature request
 - [ ] Usage question
 
----
+## Steps to Reproduce
 
-## Environment
+<!-- Steps to reproduce the behavior -->
 
-Provide relevant environment details:
-
-- **Node.js version:** (e.g., 20.x)
-- **TypeScript version:** (e.g., 5.x)
-- **OS & version:** (e.g., Windows 11 / macOS 14)
-- **@viteplus/versions version:** (e.g., 2.0.0)
-
----
-
-## Repository / Reproduction
-
-Provide a link to a repository or minimal reproduction if possible.  
-This helps us debug faster.
-
-- **Repo / Demo:** (optional)
-
----
+1. Install @viteplus/versions
+2. Run command '...'
+3. See error
 
 ## Expected Behavior
 
-Describe what you expected to happen.
+<!-- What you expected to happen -->
 
----
+## Package Version
 
-## Actual Behavior
+<!-- Which version of @viteplus/versions are you using? e.g., 1.2.3 -->
 
-Describe what actually happened, including any incorrect behavior.
+**Version:**
 
----
+## Environment
 
-## Error Messages / Stack Trace
+<!-- Information about your environment -->
 
-Include any relevant error messages or stack traces.
+- **Node.js version:**
+- **pnpm / npm version:**
+- **Operating System:**
 
-```text
-# Paste the error or stack trace here
-```
+## Additional Context
 
-## Steps to Reproduce
-
-1. Step 1
-2. Step 2
-3. Step 3
-
-### Additional Notes
-
-Any other context, screenshots, or details that might help. (optional)
+<!-- Add any other context about the problem here (logs, screenshots, etc.) -->
