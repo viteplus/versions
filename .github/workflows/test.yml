@@ -1,11 +1,12 @@
 name: Test
 
 on:
-    push:
-        branches: [ master ]
     pull_request:
         branches: [ '**' ]
         types: [ opened, synchronize, reopened ]
+
+    # Allow manual deployment
+    workflow_dispatch:
 
 jobs:
     test:

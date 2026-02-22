@@ -23,6 +23,9 @@ export default defineConfig([
             ecmaVersion: 'latest'
         },
         rules: {
+            // Disable strict require() rule because we allow it in $$inline
+            '@typescript-eslint/no-require-imports': 'error',
+
             // Tsdoc
             'tsdoc/syntax': 'error',
 
@@ -107,12 +110,12 @@ export default defineConfig([
 
                     groups: [
                         'type',
+                        'style',
                         [
                             'internal', 'parent',
                             'sibling', 'index',
                             'builtin', 'external'
-                        ],
-                        'object'
+                        ]
                     ]
                 }
             ],
@@ -216,10 +219,31 @@ export default defineConfig([
         }
     },
     {
+        files: [ '**/*.js', '**/*.cjs', '**/*.mjs' ],
+        languageOptions: {
+            parser: undefined,
+            sourceType: 'module',
+            ecmaVersion: 'latest'
+        },
+        rules: {
+            '@typescript-eslint/no-require-imports': 'off',
+            '@typescript-eslint/no-unused-vars': 'off',
+            '@typescript-eslint/no-explicit-any': 'off',
+            '@typescript-eslint/explicit-function-return-type': 'off',
+            '@typescript-eslint/explicit-module-boundary-types': 'off',
+            '@typescript-eslint/consistent-type-imports': 'off',
+            '@typescript-eslint/naming-convention': 'off',
+            '@typescript-eslint/member-ordering': 'off',
+            '@typescript-eslint/no-invalid-this': 'off',
+            '@typescript-eslint/no-dupe-class-members': 'off',
+            '@typescript-eslint/no-redeclare': 'off',
+            '@typescript-eslint/no-namespace': 'off'
+        }
+    },
+    {
         ignores: [
             'dist/*',
             'includes/*',
-            'jest.config.cjs',
             'docs/.vitepress/dist/*',
             'docs/.vitepress/cache/*'
         ]
