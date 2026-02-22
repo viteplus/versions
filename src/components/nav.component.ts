@@ -63,7 +63,7 @@ export function isNavItemWithChildren(item: NavItemType): item is NavItemWithChi
  */
 
 export function isNavItemWithLink(item: NavItemType): item is NavItemWithLinkType {
-    return 'link' in item && !!item.link && !item.link.includes('http');
+    return 'link' in item && !!item.link && typeof item.link === 'string' && !item.link.includes('http');
 }
 
 /**
@@ -109,7 +109,7 @@ export function replaceLinksRecursive(version: string, item: NavItemType): NavIt
     if (isNavItemWithLink(item) && !item.skipVersioning) {
         return {
             ...item,
-            link: join('/', version, item.link)
+            link: typeof item.link === 'string' ? join('/', version, item.link) : item.link
         };
     }
 
