@@ -1,43 +1,38 @@
-name: CodeQL
+name: Code scanning
 
 on:
   push:
     branches: [ master ]
   pull_request:
     branches: [ master ]
-  # Run a weekly security scan on Mondays at 00:00 UTC
   schedule:
-    - cron: '0 0 * * 1'
+    - cron: '0 0 * * 1' # every Monday at 00:00 UTC
+
+permissions:
+  contents: read
+  security-events: write
+
+concurrency:
+  group: codeql-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   analyze:
-    name: Analyze code
+    name: CodeQL
     runs-on: ubuntu-latest
 
-    permissions:
-      actions: read
-      contents: read
-      security-events: write
-
-    strategy:
-      fail-fast: false
-      matrix:
-        language: [ javascript, typescript ]
-
     steps:
-      # Checkout repository code
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
-      # Initialize CodeQL analysis
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
-          languages: ${{ matrix.language }}
           queries: security-and-quality
+          languages: javascript-typescript
+          build-mode: none
 
-      # Perform CodeQL analysis
-      - name: Perform CodeQL Analysis
+      - name: Analyze
         uses: github/codeql-action/analyze@v3
         with:
-          category: '/language:${{ matrix.language }}'
+          category: '/language:javascript-typescript'

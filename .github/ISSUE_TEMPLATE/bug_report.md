@@ -1,47 +1,56 @@
 ---
 name: 🐞 Bug Report
-about: Report a bug or regression in @viteplus/versions
-title: "[BUG] "
-labels: bug
-assignees: ''
+title: 🐞 Bug Report
+about: Something is broken
+labels: [ "bug", "needs triage" ]
 ---
 
-## Description
+**Describe the bug**
 
-<!-- A clear and concise description of what the bug is -->
+A clear and concise description of what is wrong.
 
-Select the type of issue:
+**Reproduction**
 
-- [ ] Bug report
-- [ ] Feature request
-- [ ] Usage question
+A minimal VitePress config and the setup that triggers the problem.
 
-## Steps to Reproduce
+```ts
+// .vitepress/config.ts
+import { defineVersionedConfig } from '@viteplus/versions';
 
-<!-- Steps to reproduce the behavior -->
+export default defineVersionedConfig({
+    title: 'My Project Documentation',
+    versionsConfig: {
+        current: 'v2.0.0'
+        /* ... */
+    }
+});
+```
 
-1. Install @viteplus/versions
-2. Run command '...'
-3. See error
+**Expected behavior**
 
-## Expected Behavior
+What you expected to happen.
 
-<!-- What you expected to happen -->
+**Actual behavior**
 
-## Package Version
+What actually happened. Include the full error message and stack trace if there is one.
 
-<!-- Which version of @viteplus/versions are you using? e.g., 1.2.3 -->
+```text
+Error: ...
+    at ...
+```
 
-**Version:**
+**Environment**
 
-## Environment
+|                                 | |
+|---------------------------------|-|
+| `@viteplus/versions` version    | |
+| VitePress version               | |
+| Node.js version                 | |
+| TypeScript version              | |
+| OS                              | |
 
-<!-- Information about your environment -->
+**Checklist**
 
-- **Node.js version:**
-- **pnpm / npm version:**
-- **Operating System:**
-
-## Additional Context
-
-<!-- Add any other context about the problem here (logs, screenshots, etc.) -->
+- [ ] I have searched for existing issues, and this is not a duplicate.
+- [ ] I am using the latest published version.
+- [ ] I have included a minimal reproduction above.
