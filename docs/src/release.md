@@ -1,0 +1,77 @@
+# Release Notes
+
+What changed in each release of `@viteplus/versions`. The current line is `v2.0.x`; for
+the previous line see [Earlier releases](#earlier-releases).
+
+## v2.0.6
+
+Sidebar and routing robustness, plus a documentation "suggest changes" edit link.
+
+- **Added**: An edit link on every docs page that opens a pre-filled GitHub issue for suggesting changes.
+- **Changed**: Route rewriting resolves the active locale through a shared `extractLocale` helper.
+- **Changed**: The [sidebar](guide/config/sidebar) falls back gracefully when a locale has no entries, and path
+  joining uses a safe utility so versioned links stay correct across platforms.
+
+## v2.0.5
+
+Multi-locale, multi-version support across the [sidebar](guide/config/sidebar),
+[navigation](guide/features/navigation), and [rewrites](guide/config/rewrites).
+
+- **Added**: Per-locale navigation resolution, so each language can define its own [nav](guide/features/navigation).
+- **Added**: Language-and-region locale keys such as `fr-FR` are matched to their base language.
+- **Added**: External links (starting with `http`) in nav and sidebar are left untouched, as if marked
+  [`skipVersioning`](guide/config/sidebar).
+- **Changed**: `parseSidebar` renamed to `parseSidebars`.
+- **Changed**: Sidebar and route parsing reworked to resolve the active locale and version dynamically.
+
+## v2.0.4
+
+- **Changed**: The [version switcher](guide/features/switchers) renders only when archived versions exist.
+- **Changed**: Locale handling in `themeConfig` refined.
+
+## v2.0.3
+
+- **Added**: Compatibility with the stable `vitepress@2.0.0` release.
+- **Fixed**: Navbar icon rendering.
+
+## v2.0.2
+
+- **Fixed**: The [version switcher](guide/features/switchers) no longer chains version prefixes when switching repeatedly.
+
+## v2.0.1
+
+- **Changed**: Default [version switcher](guide/features/switchers) placement in the nav bar.
+
+## v2.0.0
+
+Full rewrite around a new `defineVersionedConfig` API, a `src` + `archive` layout, and
+per-version [navigation](guide/features/navigation) and [sidebars](guide/config/sidebar).
+
+```ts
+// .vitepress/config.ts
+import { defineVersionedConfig } from '@viteplus/versions';
+
+export default defineVersionedConfig({
+    versionsConfig: {
+        current: 'v2.0.x',
+        versionSwitcher: { text: 'Version', includeCurrentVersion: true }
+    }
+});
+```
+
+- **Added**: [Localization](guide/features/locales) with version-aware locales.
+- **Added**: [Version-specific navigation](guide/features/navigation) and [sidebars](guide/config/sidebar).
+- **Added**: Custom URL structure through the [`rewritesHook`](guide/config/rewrites).
+- **Added**: The [`VersionSwitcher`](guide/features/switchers) component.
+- **Added**: Markdown linting and support for `vitepress@2.0.0-alpha.12`.
+- **Changed**: Configuration moved from the old `versioning` block to [`versionsConfig`](guide/config/configuration),
+  and archived content moved from `versions/` to `archive/`.
+
+## Earlier releases
+
+- [v1.0.0](v1.0.x/release) - initial release (archived docs).
+
+## See also
+
+- [Getting Started](guide/)
+- [Configuration](guide/config/configuration)
