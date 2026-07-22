@@ -183,9 +183,9 @@ export default {
 
 ## Examples and Guides
 
-- [Sidebar](./sidebar) - Learn how to customize sidebar per version
-- [Navigation](./navigation) - Learn how to customize navigation per version
-- [Localization](./locales.md) - Set up multilingual documentation
-- [Version Switcher](./switchers) - Customize the version switcher component
-- [URL Path Rewrites](./rewrites.md) - Control how URLs are generated
-- [Version Configuration](./configuration) - Learn how to configure version settings
+- [Sidebar](./config/sidebar) - Learn how to customize sidebar per version
+- [Navigation](./features/navigation) - Learn how to customize navigation per version
+- [Localization](./features/locales) - Set up multilingual documentation
+- [Version Switcher](./features/switchers) - Customize the version switcher component
+- [URL Path Rewrites](./config/rewrites) - Control how URLs are generated
+- [Version Configuration](./config/configuration) - Learn how to configure version settings

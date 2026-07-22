@@ -57,14 +57,31 @@ export default defineVersionedConfig({
 
         sidebar: {
             root: [
-                { text: 'Locales', link: '/guide/locales' },
-                { text: 'Sidebar', link: '/guide/sidebar' },
-                { text: 'Rewrites', link: '/guide/rewrites' },
-                { text: 'Navigation', link: '/guide/navigation' },
-                { text: 'Configuration', link: '/guide/configuration' },
-                { text: 'Version Switchers', link: '/guide/switchers' }
+                { text: 'Getting Started', link: '/guide/' },
+                { text: 'Release Notes', link: '/release' },
+                {
+                    text: 'Features',
+                    collapsed: false,
+                    items: [
+                        { text: 'Locales', link: '/guide/features/locales' },
+                        { text: 'Navigation', link: '/guide/features/navigation' },
+                        { text: 'Version Switchers', link: '/guide/features/switchers' }
+                    ]
+                },
+                {
+                    text: 'Configuration',
+                    collapsed: false,
+                    items: [
+                        { text: 'Configuration', link: '/guide/config/configuration' },
+                        { text: 'Sidebar', link: '/guide/config/sidebar' },
+                        { text: 'Rewrites', link: '/guide/config/rewrites' }
+                    ]
+                }
             ],
-            'v1.0.x': []
+            'v1.0.x': [
+                { text: 'Getting Started', link: '/guide/' },
+                { text: 'Release Notes', link: '/release' }
+            ]
         },
 
         socialLinks: [
@@ -73,8 +90,8 @@ export default defineVersionedConfig({
         ],
 
         docFooter: {
-            prev: false,
-            next: false
+            prev: true,
+            next: true
         },
         footer: {
             message: 'Released under the Mozilla Public License 2.0',
