@@ -68,7 +68,7 @@ archive: 'archive'  // or 'versions', 'old', etc.
 
 ### `versionSwitcher`
 
-[Version Switcher](./switchers) - Customize the version switcher component
+[Version Switcher](../features/switchers) - Customize the version switcher component
 
 ## Default Configuration
 
