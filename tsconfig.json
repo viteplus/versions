@@ -3,41 +3,40 @@
         "strict": true,
         "target": "ESNext",
         "module": "ESNext",
-        "baseUrl": ".",
         "outDir": "dist",
         "rootDir": ".",
+        "composite": false,
         "declaration": true,
         "skipLibCheck": true,
-        "importHelpers": false,
-        "isolatedModules": false,
-        "esModuleInterop": false,
+        "esModuleInterop": true,
+        "isolatedModules": true,
+        "experimentalDecorators": true,
         "moduleDetection": "force",
         "moduleResolution": "bundler",
         "resolveJsonModule": true,
-        "experimentalDecorators": true,
-        "allowSyntheticDefaultImports": true,
-        "forceConsistentCasingInFileNames": true,
+        "emitDeclarationOnly": true,
         "lib": [
-            "esnext"
+            "DOM",
+            "ESNext"
         ],
         "types": [
             "node"
         ],
         "paths": {
             "@models/*": [
-                "src/models/*"
+                "./src/models/*"
             ],
             "@constants/*": [
-                "src/constants/*"
+                "./src/constants/*"
             ],
             "@components/*": [
-                "src/components/*"
+                "./src/components/*"
             ],
             "@interfaces/*": [
-                "src/interfaces/*"
+                "./src/interfaces/*"
             ],
             "@symlinks/*": [
-                "src/modules/symlinks/*"
+                "./src/modules/symlinks/*"
             ]
         }
     },
@@ -48,5 +47,8 @@
         "dist",
         "**/*.spec.ts",
         "node_modules"
+    ],
+    "references": [
+        { "path": "./tsconfig.spec.json" }
     ]
 }
