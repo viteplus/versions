@@ -16,7 +16,57 @@ export default defineConfig([
     {
         plugins: {
             tsdoc,
-            perfectionist
+            perfectionist,
+            inline: {
+                rules: {
+                    'require-only-in-inline': {
+                        meta: {
+                            type: 'problem',
+                            docs: {
+                                description:
+                                    'Allow require() only inside the function body passed to $$inline()'
+                            },
+                            schema: [],
+                            messages: {
+                                notAllowed:
+                                    'require() is only allowed inside $$inline() function body.'
+                            }
+                        },
+                        create(context) {
+                            function isInsideInline(node) {
+                                let current = node;
+                                while (current) {
+                                    if (
+                                        current.type === 'CallExpression' &&
+                                        current.callee.type === 'Identifier' &&
+                                        current.callee.name === '$$inline'
+                                    ) {
+                                        return true;
+                                    }
+                                    current = current.parent;
+                                }
+
+                                return false;
+                            }
+
+                            return {
+                                CallExpression(node) {
+                                    if (
+                                        node.callee.type === 'Identifier' &&
+                                        node.callee.name === 'require' &&
+                                        !isInsideInline(node)
+                                    ) {
+                                        context.report({
+                                            node,
+                                            messageId: 'notAllowed'
+                                        });
+                                    }
+                                }
+                            };
+                        }
+                    }
+                }
+            }
         },
         languageOptions: {
             sourceType: 'module',
@@ -24,7 +74,10 @@ export default defineConfig([
         },
         rules: {
             // Disable strict require() rule because we allow it in $$inline
-            '@typescript-eslint/no-require-imports': 'error',
+            '@typescript-eslint/no-require-imports': 'off',
+
+            // Enable inline rule
+            'inline/require-only-in-inline': 'error',
 
             // Tsdoc
             'tsdoc/syntax': 'error',
@@ -120,7 +173,7 @@ export default defineConfig([
                 }
             ],
 
-            // TypeScript specific rules
+            // TypeScript-specific rules
             '@typescript-eslint/no-explicit-any': 'warn',
             '@typescript-eslint/explicit-function-return-type': 'error',
             '@typescript-eslint/explicit-module-boundary-types': 'warn',
