@@ -26,6 +26,14 @@
     "engines": {
         "node": ">=20"
     },
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js",
+            "require": "./dist/index.js"
+        },
+        "./components/*": "./components/*"
+    },
     "files": [
         "dist",
         "LICENSE",
