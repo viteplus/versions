@@ -3,6 +3,17 @@
 What changed in each release of `@viteplus/versions`. The current line is `v2.0.x`; for
 the previous line see [Earlier releases](#earlier-releases).
 
+## v2.0.7
+
+Packaging correctness and toolchain modernization, plus a fix so external nav links are no longer version-prefixed.
+
+- **Added**: A `package.json` [`exports`](guide/config/configuration) map for the entry point and the `./components/*`
+  subpath, so `@viteplus/versions` and its Vue components resolve correctly under modern ESM bundlers.
+- **Fixed**: External links in the [navigation](guide/features/navigation) are left untouched — `isNavItemWithLink`
+  now excludes `http(s)` links, so they are no longer rewritten with a version path prefix.
+- **Changed**: Migrated the toolchain from npm to pnpm, refactored CI/CD into dedicated workflows, modernized the
+  ESLint config, and switched `tsconfig` to project references emitting declarations only.
+
 ## v2.0.6
 
 Sidebar and routing robustness, plus a documentation "suggest changes" edit link.
