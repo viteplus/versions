@@ -1,67 +1,77 @@
-# @viteplus/versions
+# Getting Started with @viteplus/versions
 
-A plugin for VitePress that enables versioned documentation,
-including automatic versioned routes, sidebars, navigation, and a version switcher component.
+A plugin for VitePress that enables versioned documentation, including automatic versioned
+routes, sidebars, navigation, and a version switcher component.
 
-> This is based on same API like [vitepress-versioning-plugin](https://github.com/IMB11/vitepress-versioning-plugin)
+::: info
+This line follows the same API as
+[vitepress-versioning-plugin](https://github.com/IMB11/vitepress-versioning-plugin).
+:::
 
 ## Installation
 
 Install the plugin using your preferred package manager:
 
-```bash
-pnpm install @viteplus/versions
-# or
+::: code-group
+
+```bash [npm]
 npm install @viteplus/versions
-# or
+```
+
+```bash [pnpm]
+pnpm add @viteplus/versions
+```
+
+```bash [yarn]
 yarn add @viteplus/versions
 ```
+
+:::
 
 ## Basic Setup
 
 ### Ensure Relative Links
 
-All links in your `markdown` files must be relative.
-This is critical because the plugin relies on relative paths to determine the correct versioned file to link to.
+All links in your markdown files must be relative. The plugin relies on relative paths to
+resolve the correct versioned file.
 
-Example: Linking docs/guide/advanced-setup.md from docs/guide/getting-started.md:
+Linking `docs/guide/advanced-setup.md` from `docs/guide/getting-started.md`:
 
 ```text
 ./advanced-setup.md
 ```
 
-Example: Linking docs/help/faq.md from docs/guide/getting-started.md:
+Linking `docs/help/faq.md` from `docs/guide/getting-started.md`:
 
 ```text
 ../help/faq.md
 ```
 
-> [!CAUTION]
-> Absolute links like /guide/getting-started will break versioned navigation.
+::: danger
+Absolute links such as `/guide/getting-started` break versioned navigation.
+:::
 
 ### Configure Versioning
 
-Replace defineConfig in .vitepress/config.ts with defineVersionedConfig:
+Replace `defineConfig` in `.vitepress/config.ts` with `defineVersionedConfig`:
 
 ```ts
 import { defineVersionedConfig } from '@viteplus/versions';
 
 export default defineVersionedConfig({
-    root: 'docs', // root folder 
+    root: 'docs', // root folder
     title: 'SomeProject',
-    base: '/SomeProject/', // in case github page that have prefix 
+    base: '/SomeProject/', // for GitHub Pages, which serves under a prefix
     srcDir: 'src',
     versioning: {
-        latestVersion: '1.0.0',
+        latestVersion: '1.0.0'
     }
 });
 ```
 
 ### Version Switcher Component
 
-To use a custom version switcher component:
-
-Import and register it in your theme config:
+To use a custom version switcher, register it in your theme config:
 
 ```ts
 /**
@@ -97,34 +107,38 @@ export default {
 } satisfies Theme;
 ```
 
-Add it to your navbar:
+Then add it to your navbar:
 
 ```ts
 themeConfig: {
-  versionSwitcher: false, // hide default switcher
-  nav: [
-    ...,
-    {
-      component: 'VersionSwitcher', // [!code focus]
-    },
-  ]
+    versionSwitcher: false, // hide the default switcher
+    nav: [
+        // ...
+        {
+            component: 'VersionSwitcher' // [!code focus]
+        }
+    ]
 }
 ```
 
-## Troubleshooting:
+## Troubleshooting
 
-Sidebar Cannot Be an Array:
+### The sidebar cannot be an array
 
 ```ts
 // ❌ Incorrect
 sidebar: [
-  { text: '1.0.0', link: '/' },
+    { text: '1.0.0', link: '/' }
 ]
 
 // ✅ Correct
 sidebar: {
-  '/': [
-    { text: '1.0.0', link: '/' },
-  ]
+    '/': [
+        { text: '1.0.0', link: '/' }
+    ]
 }
 ```
+
+## See also
+
+- [Release Notes](../release)

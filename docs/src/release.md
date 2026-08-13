@@ -3,6 +3,20 @@
 What changed in each release of `@viteplus/versions`. The current line is `v2.0.x`; for
 the previous line see [Earlier releases](#earlier-releases).
 
+## v2.0.8
+
+A fix so custom content directory names stay out of the URL.
+
+- **Fixed**: Renaming [`sources`](guide/config/configuration#sources) or
+  [`archive`](guide/config/configuration#archive) no longer prefixes every URL with the directory
+  name. Route rewriting matched the literal strings `src/` and `archive/`, so any other name fell
+  through unrewritten — `sources: 'latest'` served the home page at `/latest/` instead of `/`. Both
+  prefixes are now read from your configuration.
+- **Fixed**: A locale prefix is stripped by length rather than by substring match, so a path that
+  repeats the directory or locale name deeper in the tree is no longer mangled.
+- **Changed**: Updated `vitepress`, `eslint`, `typescript-eslint`, `eslint-plugin-perfectionist`,
+  and `@types/node` to their current releases.
+
 ## v2.0.7
 
 Packaging correctness and toolchain modernization, plus a fix so external nav links are no longer version-prefixed.

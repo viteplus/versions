@@ -1,42 +1,96 @@
 # Sidebar Configuration
 
-The sidebar is a critical navigation element that helps users find content within each version of your documentation.
-With @viteplus/versions, you can create version-specific sidebars or use a single sidebar for all versions.
+The sidebar helps readers find content within a version. @viteplus/versions lets you share one
+sidebar across every version, or give each version its own.
 
-## The `skipVersioning` Flag
+## Shared sidebar (array)
 
-In @viteplus/versions, each sidebar item can include a special property: . `skipVersioning: true`
+An array applies the same sidebar to all versions, with version prefixes added to each link:
+
+```ts
+themeConfig: {
+    sidebar: [
+        { text: 'Guide', link: '/' },
+        { text: 'Log', link: '/log' },
+        {
+            text: 'Configuration',
+            collapsed: false,
+            items: [
+                { text: 'CLI Options', link: '/configuration/cli' },
+                { text: 'Configuration File', link: '/configuration/file' }
+            ]
+        }
+    ]
+}
+```
+
+## Version-specific sidebars (object)
+
+Key the object by version. `root` is the current version; each archived version uses its
+[`archive`](./configuration#archive) subfolder name as the key:
 
 ```ts
 themeConfig: {
     sidebar: {
         root: [
-            { text: 'Guide', link: '/', skipVersioning: true },
+            { text: 'Guide', link: '/' },
+            { text: 'Log', link: '/log' },
+            {
+                text: 'Configuration',
+                collapsed: false,
+                items: [
+                    { text: 'CLI Options', link: '/configuration/cli' },
+                    { text: 'Configuration File', link: '/configuration/file' }
+                ]
+            }
+        ],
+        'v1.0': [
+            { text: 'Guide', link: '/' },
+            { text: 'Legacy Log', link: '/log' },
+            { text: 'Legacy Config', link: '/legacy-config' }
+        ]
+    }
+}
+```
+
+::: danger Important
+Version-specific entries do not inherit from `root`. Each key must be a complete tree.
+:::
+
+## The `skipVersioning` flag
+
+Any sidebar item can set `skipVersioning: true` to opt out of version prefixing:
+
+```ts
+themeConfig: {
+    sidebar: {
+        root: [
+            { text: 'Guide', link: '/', skipVersioning: true }, // [!code focus]
             { text: 'Log', link: '/log' }
         ]
     }
 }
-
 ```
 
-When this flag is set:
+The link is then left exactly as written, whichever version the reader is on. Use it for links
+that must always point at the same page.
 
-- The link will **not** be processed by the versioning system
-- The link will remain unchanged regardless of which version the user is viewing
-- This is useful for external links or links that should always point to the same location
+::: tip
+External links starting with `http` are left alone automatically — no flag needed.
+:::
 
-> [!IMPORTANT]
-> If you don't include `skipVersioning: true`, links will be automatically processed to include the current version in the URL path.
+Without the flag, a link is rewritten to include the current version path.
 
-### Parent-Child Versioning Behavior
+### Nested items
 
-When working with nested sidebar items, it's important to understand how versioning applies:
+On a group, the version prefix is applied to the group's `base`, which carries down to every
+child link:
 
 ```ts
 const sidebar = {
     text: 'Configuration',
     collapsed: false,
-    base: '/configuration/',  // The version will be added here
+    base: '/configuration/',  // the version is added here
     items: [
         { text: 'CLI Options', link: '/configuration/cli' },
         { text: 'Configuration File', link: '/configuration/file' }
@@ -44,71 +98,12 @@ const sidebar = {
 };
 ```
 
-> In nested structures:
->
-> 1. The `skipVersioning` flag only needs to be set on the parent item
-> 2. All child items inherit this behavior automatically
-> 3. Version path prefixes are added to the `base` property, which affects all child links
-> 4. Setting on individual child items has no effect when the parent uses this flag `skipVersioning: true`
+So `skipVersioning` belongs on the parent only. Children inherit it, and setting it on a child
+of a flagged parent has no effect.
 
-::: danger :rocket: Important
-Setting on individual child items has no effect `skipVersioning: true` it set by the parent!
-:::
+## See also
 
-## Sidebar Configuration Options
-
-### 1. Global Sidebar (Array Format)
-
-You can define a single sidebar configuration that
-applies to all versions by using an array:
-
-```ts
-themeConfig: {
-  sidebar: [
-    { text: 'Guide', link: '/' },
-    { text: 'Log', link: '/log' },
-    {
-      text: 'Configuration',
-      collapsed: false,
-      items: [
-        { text: 'CLI Options', link: '/configuration/cli' },
-        { text: 'Configuration File', link: '/configuration/file' }
-      ]
-    }
-  ]
-}
-```
-
-> This format applies the same sidebar to all documentation versions.
-
-### 2. Version-specific Sidebars (Object Format)
-
-For more flexibility, you can define different sidebar items for specific versions using an object format:
-
-::: danger :rocket: Important
-Version-specific configurations do not inherit properties from the root configuration
-:::
-
-```ts
-themeConfig: {
-  sidebar: {
-    root: [
-      { text: 'Guide', link: '/' },
-      { text: 'Log', link: '/log' },
-      {
-        text: 'Configuration',
-        collapsed: false,
-        items: [
-          { text: 'CLI Options', link: '/configuration/cli' },
-          { text: 'Configuration File', link: '/configuration/file' }
-        ]
-      }
-    ],
-    'v1.0': [
-      { text: 'Guide', link: '/' },
-      { text: 'Legacy Log', link: '/log' },
-      { text: 'Legacy Config', link: '/legacy-config' }
-    ]
-  }
-}
-```
+- [Configuration Options](./configuration)
+- [Navigation](../features/navigation)
+- [URL Path Rewrites](./rewrites)
+- [Getting Started](../)

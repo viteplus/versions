@@ -31,6 +31,12 @@ archive/
 > Each locale has its own folder, and all documentation files for that language should be placed in that folder.
 > This structure applies to both current (`src/`) and archived versions.
 
+::: tip
+`src/` and `archive/` above are the defaults. If you renamed them with
+[`sources`](../config/configuration#sources) or [`archive`](../config/configuration#archive),
+use your own names — the locale layout inside them is the same, and the URLs are unaffected.
+:::
+
 ## Locale Configuration
 
 Locales are configured in your VitePress configuration file:
@@ -265,7 +271,10 @@ For example:
 - `/en/v2.0/guide/` - English documentation for version 2.0
 - `/de/v1.0/guide/` - German documentation for version 1.0
 
-The default locale (root) might omit the locale part:
+The root locale and the current version are both served without a segment of their own, so the
+English v2.0 guide above is reachable at `/guide/` when `en` is the root locale and `v2.0` is
+[`current`](../config/configuration#current). Override the order with
+[`rewritesHook`](../config/rewrites).
 
 ## Version-Specific Locale Configuration
 
@@ -296,3 +305,11 @@ const locales = {
 ```
 
 This allows complete customization of navigation and sidebar for each combination of locale and version.
+
+## See also
+
+- [Configuration Options](../config/configuration)
+- [URL Path Rewrites](../config/rewrites)
+- [Navigation](./navigation)
+- [Sidebar](../config/sidebar)
+- [Getting Started](../)

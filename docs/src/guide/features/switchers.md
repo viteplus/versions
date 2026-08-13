@@ -107,3 +107,16 @@ The `VersionSwitcher` component offers significant advantages:
 3. **Responsive Design**: Adapts to both desktop and mobile viewports with appropriate styling.
 4. **Custom Styling**: Can be styled to match your theme's design system.
 5. **Dynamic Behavior**: Shows only relevant version options based on the current context.
+
+::: tip
+The version list is built from the [`archive`](../config/configuration#archive) subfolders plus
+[`current`](../config/configuration#current), so you never list versions by hand. The switcher
+stays hidden until at least one version is archived.
+:::
+
+## See also
+
+- [Configuration Options](../config/configuration)
+- [Navigation](./navigation)
+- [Localization](./locales)
+- [Getting Started](../)
