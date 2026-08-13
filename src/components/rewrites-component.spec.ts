@@ -62,6 +62,8 @@ describe('parseRoutesComponent', () => {
         );
 
         const mockState: any = {
+            sources: 'src',
+            archive: 'archive',
             localesMap: { en: 'en', fr: 'fr' },
             versionsConfig: { hooks: { rewritesHook: mockRewritesHook } },
             vitepressConfig: {}
@@ -79,6 +81,8 @@ describe('parseRoutesComponent', () => {
         );
 
         const mockState: any = {
+            sources: 'src',
+            archive: 'archive',
             localesMap: { en: 'en', fr: 'fr' },
             versionsConfig: { hooks: { rewritesHook: mockRewritesHook } },
             vitepressConfig: {}
@@ -100,6 +104,8 @@ describe('parseRoutesComponent', () => {
         );
 
         const mockState: any = {
+            sources: 'src',
+            archive: 'archive',
             localesMap: { en: 'root' },
             versionsConfig: { hooks: { rewritesHook: mockRewritesHook } },
             vitepressConfig: {}
@@ -117,6 +123,8 @@ describe('parseRoutesComponent', () => {
 
     test('should handle src/ files without locale prefix', () => {
         const mockState: any = {
+            sources: 'src',
+            archive: 'archive',
             localesMap: { en: 'en' },
             versionsConfig: { hooks: { rewritesHook: xJet.fn() } },
             vitepressConfig: {}
@@ -137,6 +145,8 @@ describe('parseRoutesComponent', () => {
         );
 
         const mockState: any = {
+            sources: 'src',
+            archive: 'archive',
             localesMap: { en: 'en' },
             versionsList: [ 'v1.0.0', 'v2.0.0' ],
             versionsConfig: { hooks: { rewritesHook: mockRewritesHook } },
@@ -159,6 +169,8 @@ describe('parseRoutesComponent', () => {
         );
 
         const mockState: any = {
+            sources: 'src',
+            archive: 'archive',
             localesMap: { en: 'root' },
             versionsList: [ 'v1.0.0', 'v2.0.0' ],
             versionsConfig: { hooks: { rewritesHook: mockRewritesHook } },
@@ -177,6 +189,8 @@ describe('parseRoutesComponent', () => {
 
     test('should handle files that do not match src/ or archive/ patterns', () => {
         const mockState: any = {
+            sources: 'src',
+            archive: 'archive',
             localesMap: { en: 'en' },
             versionsConfig: { hooks: { rewritesHook: xJet.fn() } },
             vitepressConfig: {}
@@ -197,6 +211,8 @@ describe('parseRoutesComponent', () => {
         );
 
         const mockState: any = {
+            sources: 'src',
+            archive: 'archive',
             localesMap: { en: 'en', fr: 'fr' },
             versionsList: [ 'v1.0.0', 'v2.0.0' ],
             versionsConfig: { hooks: { rewritesHook: mockRewritesHook } },
@@ -224,6 +240,8 @@ describe('parseRoutesComponent', () => {
         );
 
         const mockState: any = {
+            sources: 'src',
+            archive: 'archive',
             localesMap: { en: 'en' },
             versionsList: [ 'v1.0.0', 'v2.0.0' ],
             versionsConfig: { hooks: { rewritesHook: mockRewritesHook } },
@@ -238,5 +256,30 @@ describe('parseRoutesComponent', () => {
 
         expect(mockRewritesHook).toHaveBeenCalledWith('docs/api/reference.md', 'v1.0.0', 'en');
         expect(result).toBe('en/v1.0.0/docs/api/reference.md');
+    });
+
+    test('should honor custom sources and archive directory names', () => {
+        const mockRewritesHook = xJet.fn(
+            (file: string, version: string, locale: string) => join(locale, version, file)
+        );
+
+        const mockState: any = {
+            sources: 'latest',
+            archive: 'versions',
+            localesMap: { en: 'root' },
+            versionsList: [ 'v1.0.0' ],
+            versionsConfig: { hooks: { rewritesHook: mockRewritesHook } },
+            vitepressConfig: {}
+        };
+
+        mockInject.mockReturnValue(mockState);
+        parseRoutesComponent();
+
+        const rewriteFn = mockState.vitepressConfig.rewrites;
+
+        expect(rewriteFn('latest/en/index.md')).toBe('index.md');
+        expect(rewriteFn('latest/guide/intro.md')).toBe('guide/intro.md');
+        expect(rewriteFn('versions/v1.0.0/en/index.md')).toBe('v1.0.0/index.md');
+        expect(rewriteFn('src/en/index.md')).toBe('src/en/index.md');
     });
 });
