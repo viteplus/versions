@@ -144,16 +144,18 @@ export function parseRoutesComponent(): void {
     const localesPrefix = Object.keys(state.localesMap);
     const localesList = Object.keys(state.localesMap);
     const versionsList = state.versionsList;
+    const sourcesPrefix = `${ state.sources }/`;
+    const archivePrefix = `${ state.archive }/`;
 
     state.vitepressConfig.rewrites = function (id: string): string {
-        // Handle src/ files
-        if (id.startsWith('src/')) {
-            const path = id.replace('src/', '');
+        // Handle sources files
+        if (id.startsWith(sourcesPrefix)) {
+            const path = id.slice(sourcesPrefix.length);
             const localeKey = localesPrefix.find(prefix => path.startsWith(prefix + '/'));
 
             if (localeKey) {
                 const locale = state.localesMap[localeKey] === 'root' ? '' : localeKey;
-                const filePath = path.replace(localeKey + '/', '');
+                const filePath = path.slice(localeKey.length + 1);
 
                 return state.versionsConfig.hooks.rewritesHook(filePath, '', locale);
             }
@@ -161,9 +163,9 @@ export function parseRoutesComponent(): void {
             return path;
         }
 
-        // Handle archive/ files
-        if (id.startsWith('archive/')) {
-            const path = id.replace('archive/', '');
+        // Handle archive files
+        if (id.startsWith(archivePrefix)) {
+            const path = id.slice(archivePrefix.length);
             const segments = path.split('/');
             const { lang, version } = extractLocale(segments, localesList, versionsList);
             const source = segments.join('/');
