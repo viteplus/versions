@@ -7,13 +7,21 @@ This guide will help you set up and configure the plugin for your documentation 
 
 Install the package using your preferred package manager:
 
-```bash
+::: code-group
+
+```bash [npm]
 npm install @viteplus/versions
-# or
-yarn add @viteplus/versions
-# or
+```
+
+```bash [pnpm]
 pnpm add @viteplus/versions
 ```
+
+```bash [yarn]
+yarn add @viteplus/versions
+```
+
+:::
 
 ## Basic Setup
 
@@ -62,13 +70,13 @@ Organize your documentation files following this structure:
 docs/
 ├── .vitepress/
 │   └── config.ts
-├── src/            // Current version docs
+├── src/            // Current version docs  ← sources
 │   ├── index.md
 │   ├── guide/
 │   │   └── ...
 │   └── api/
 │       └── ...
-└── archive/       // Archived versions
+└── archive/       // Archived versions      ← archive
     ├── v1.0/
     │   ├── index.md
     │   └── ...
@@ -76,6 +84,10 @@ docs/
         ├── index.md
         └── ...
 ```
+
+Both directory names are configurable through [`sources`](./config/configuration#sources) and
+[`archive`](./config/configuration#archive). They are filesystem locations only — renaming them
+does not change a single URL.
 
 ## Core Features
 
@@ -181,11 +193,12 @@ export default {
 | `versionsConfig.versionSwitcher`    | Configuration for the version switcher         |
 | `versionsConfig.hooks.rewritesHook` | Customize URL structure                        |
 
-## Examples and Guides
+## See also
 
-- [Sidebar](./config/sidebar) - Learn how to customize sidebar per version
-- [Navigation](./features/navigation) - Learn how to customize navigation per version
-- [Localization](./features/locales) - Set up multilingual documentation
-- [Version Switcher](./features/switchers) - Customize the version switcher component
-- [URL Path Rewrites](./config/rewrites) - Control how URLs are generated
-- [Version Configuration](./config/configuration) - Learn how to configure version settings
+- [Configuration Options](./config/configuration) - every `versionsConfig` option
+- [Sidebar](./config/sidebar) - customize the sidebar per version
+- [URL Path Rewrites](./config/rewrites) - control how URLs are generated
+- [Navigation](./features/navigation) - customize the nav bar per version
+- [Localization](./features/locales) - set up multilingual documentation
+- [Version Switcher](./features/switchers) - customize the switcher component
+- [Release Notes](../release) - what changed in each release

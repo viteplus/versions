@@ -1,93 +1,126 @@
 # Configuration Options
 
-The `versionsConfig` option is a central part of @viteplus/versions that controls how multiple
-versions of your documentation are organized, displayed, and navigated.
-This guide explains each configuration property in detail.
-
-## Basic Structure
-
-The `versionsConfig` object has the following structure:
+`versionsConfig` is the block `defineVersionedConfig` adds on top of a normal VitePress
+configuration. It controls where your versioned content lives, how the current version is
+labelled, and how versions are switched.
 
 ```ts
-const versionsConfig = {
-    versionsConfig: {
-        current: string,
-        sources: string,
-        archive: string,
-        hooks: {
-            rewritesHook: Function
-        },
-        versionSwitcher: boolean | {
-            text: string,
-            includeCurrentVersion: boolean
-        }
-    }
-}
+// .vitepress/config.ts
+import { defineVersionedConfig } from '@viteplus/versions';
+
+export default defineVersionedConfig({
+    title: 'My Documentation',
+    versionsConfig: { // [!code focus]
+        current: 'v2.0.x', // [!code focus]
+        sources: 'src', // [!code focus]
+        archive: 'archive', // [!code focus]
+        versionSwitcher: { // [!code focus]
+            text: 'Switch Version', // [!code focus]
+            includeCurrentVersion: true // [!code focus]
+        } // [!code focus]
+    } // [!code focus]
+});
 ```
 
-## Core Properties
+## Options
 
-### `current`
+| Option               | Type                                  | Purpose                                           |
+|----------------------|---------------------------------------|---------------------------------------------------|
+| `current`            | `string`                              | Label for the live version served at the root URL |
+| `sources`            | `string`                              | Directory holding the current version's content   |
+| `archive`            | `string`                              | Directory whose subfolders are archived versions  |
+| `versionSwitcher`    | `object` or `false`                   | The version dropdown; `false` disables it         |
+| `hooks.rewritesHook` | `(source, version, locale) => string` | Maps a content file to its final URL              |
+
+Every option has a default, listed under [Defaults](#defaults).
+
+## `current`
+
+The label for the version served from `sources`. It appears at the root URL and is
+highlighted in the switcher.
 
 ```ts
-current: 'latest'  // or '2.0', 'v3', etc.
+current: 'v2.0.x'  // or 'latest', 'v3', ...
 ```
 
-- **Purpose**: Defines the currently active version of your documentation
-- **Default**: `'latest'`
-- **Usage**: This version is served at the root URL path and is highlighted in the version switcher
-- **Example**: If set to, this version becomes the primary documentation shown to users `'v2.0'`
+This is a display label, not a directory name — nothing on disk has to match it.
 
-### `sources`
+## `sources`
+
+The directory holding the current version's content, relative to the docs root.
 
 ```ts
-sources: 'src'  // or 'docs', 'content', etc.
+sources: 'src'  // or 'latest', 'content', ...
 ```
 
-- **Purpose**: Specifies the directory containing your current version's documentation files
-- **Default**: `'src'`
-- **Usage**: This is where the plugin looks for the latest version of documentation
-- **Example**: Setting this to `'docs'` would make the plugin read files from the `docs/` directory
-
-### `archive`
-
-```ts
-archive: 'archive'  // or 'versions', 'old', etc.
+```text
+docs/
+└── src/          ← sources
+    ├── index.md
+    └── guide/
 ```
 
-- **Purpose**: Defines the directory where archived versions of documentation are stored
-- **Default**: `'archive'`
-- **Usage**: Each subdirectory in this folder represents a different version of documentation
-- **Example**: With `archive: 'versions'`, your project might have `versions/v1.0/`, `versions/v1.5/`, etc.
+## `archive`
 
-## Advanced Configuration
-
-### `hooks`
-
-[Rewrites](./rewrites) - Customize the `rewrites` routes
-
-### `versionSwitcher`
-
-[Version Switcher](../features/switchers) - Customize the version switcher component
-
-## Default Configuration
-
-@viteplus/versions comes with sensible defaults:
+The directory whose subfolders are treated as archived versions. Each subfolder name becomes
+that version's URL prefix and its key in the per-version [`nav`](../features/navigation) and
+[`sidebar`](./sidebar) maps.
 
 ```ts
-const config = {
+archive: 'archive'  // or 'versions', 'old', ...
+```
+
+```text
+docs/
+└── archive/      ← archive
+    ├── v1.0.x/   → /v1.0.x/
+    └── v1.5.x/   → /v1.5.x/
+```
+
+The directory is created for you, with a `.gitkeep`, if it does not exist.
+
+::: tip Directory names never reach the URL
+`sources` and `archive` are filesystem locations only. Whatever you name them, the current
+version is served at the root and archived versions at `/<subfolder>/`. With
+`sources: 'latest'` the home page is still `/`, not `/latest/`.
+:::
+
+The version switcher builds its list from the `archive` subfolders plus `current`, so
+renaming either directory needs no further configuration.
+
+## `hooks`
+
+See [URL Path Rewrites](./rewrites) for customizing how content files map to URLs.
+
+## `versionSwitcher`
+
+See [Version Switcher](../features/switchers) for the dropdown and the `VersionSwitcher`
+component.
+
+## Defaults
+
+Anything you omit falls back to:
+
+```ts
+const defaultConfiguration = {
     versionsConfig: {
         current: 'latest',
         sources: 'src',
         archive: 'archive',
         hooks: {
-            rewritesHook: rewritesHook  // Default implementation
+            rewritesHook: rewritesHook
         },
         versionSwitcher: {
             text: 'Switch Version',
             includeCurrentVersion: true
         }
     }
-}
-
+};
 ```
+
+## See also
+
+- [Getting Started](../)
+- [URL Path Rewrites](./rewrites)
+- [Sidebar](./sidebar)
+- [Version Switcher](../features/switchers)
