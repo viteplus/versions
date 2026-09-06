@@ -3,6 +3,17 @@
 What changed in each release of `@viteplus/versions`. The current line is `v2.0.x`; for
 the previous line see [Earlier releases](#earlier-releases).
 
+## v2.0.9
+
+A packaging fix so installing `@viteplus/versions` no longer pulls VitePress into your project.
+
+- **Fixed**: `vitepress` is no longer a runtime dependency. It was listed in both `dependencies`
+  (pinned to a `2.0.0-alpha` build) and `peerDependencies`, so installing `@viteplus/versions`
+  fetched its own copy of VitePress alongside the one your site already had. It is now dev-only
+  here, and the supported range is the optional peer `^1.6.4 || ^2.0.0` alone.
+- **Changed**: Updated `vitepress`, `eslint`, `typescript-eslint`, `eslint-plugin-perfectionist`,
+  `@types/node`, and `@remotex-labs/xbuild` to their current releases.
+
 ## v2.0.8
 
 A fix so custom content directory names stay out of the URL.
