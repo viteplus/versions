@@ -1,0 +1,79 @@
+.VPVersionSwitcher {
+    display: flex;
+    align-items: center;
+}
+
+.icon {
+    padding: 8px;
+}
+
+.title {
+    padding: 0 24px 0 12px;
+    line-height: 32px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--vp-c-text-1);
+}
+
+.VPScreenVersionSwitcher {
+    border-bottom: 1px solid var(--vp-c-divider);
+    height: 48px;
+    overflow: hidden;
+    transition: border-color 0.5s;
+}
+
+.VPScreenVersionSwitcher .items {
+    visibility: hidden;
+}
+
+.VPScreenVersionSwitcher.open {
+    padding-bottom: 10px;
+    height: auto;
+}
+
+.VPScreenVersionSwitcher.open .items {
+    visibility: visible;
+}
+
+.VPScreenVersionSwitcher.open .button {
+    padding-bottom: 6px;
+    color: var(--vp-c-brand-1);
+}
+
+.VPScreenVersionSwitcher.open .button-icon {
+    transform: rotate(45deg);
+}
+
+.VPScreenVersionSwitcher button .icon {
+    margin-right: 8px;
+}
+
+.button {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 4px 11px 0;
+    width: 100%;
+    line-height: 24px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--vp-c-text-1);
+    transition: color 0.25s;
+}
+
+.button:hover {
+    color: var(--vp-c-brand-1);
+}
+
+.button-icon {
+    transition: transform 0.25s;
+}
+
+.group:first-child {
+    padding-top: 0;
+}
+
+.group + .group,
+.group + .item {
+    padding-top: 4px;
+}
