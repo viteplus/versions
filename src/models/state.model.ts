@@ -25,7 +25,7 @@ import { defaultConfiguration } from '@constants/configuration.constant';
  * - Managing source and archive directories for versioned documentation.
  * - Initializing the VitePress configuration (`VitepressConfigInterface`) from
  *   a provided {@link ConfigurationInterface}.
- * - Maintaining a list of documentation versions and a map of Markdown files per version.
+ * - Maintaining a list of documentation versions and the routes each version publishes.
  * - Ensuring the necessary directories exist and are initialized.
  *
  * This service is designed as a singleton, making it safe to inject across
@@ -155,6 +155,34 @@ export class StateModel {
      */
 
     readonly localesMap: Record<string, string> = {};
+
+    /**
+     * Maps each version label to the routes that version publishes.
+     *
+     * @remarks
+     * Keys are version labels, the current one taken from `versionsConfig.current`
+     * and the archived ones from the folder names under {@link archivePath}.
+     * Values are the published routes of that version, the same strings VitePress
+     * receives back from `vitepressConfig.rewrites`.
+     *
+     * The version switcher reads this record to tell whether the page a reader is on
+     * also exists in the version they picked, so it can fall back to that version's
+     * home page instead of linking at a route that returns a 404.
+     *
+     * The record stays empty until `parseRoutesComponent` fills it.
+     *
+     * @example
+     * ```ts
+     * routesMap = {
+     *   'v2.0.x': [ 'index.md', 'release.md', 'guide/index.md' ],
+     *   'v1.0.x': [ 'v1.0.x/index.md', 'v1.0.x/release.md' ]
+     * };
+     * ```
+     *
+     * @since 2.1.0
+     */
+
+    readonly routesMap: Record<string, Array<string>> = {};
 
     /**
      * Creates an instance of `StateModel`.
