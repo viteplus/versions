@@ -102,7 +102,7 @@ function toggle(): void {
             :button="activeVersion"
             label="Switch Version"
         >
-            <div class="items">
+            <ul class="items">
                 <VPMenuLink
                     v-if="shouldShowCurrentVersion"
                     :item="createVersionMenuItem(versioningPlugin.currentVersion)"
@@ -112,7 +112,7 @@ function toggle(): void {
                     :key="version"
                     :item="createVersionMenuItem(version)"
                 />
-            </div>
+            </ul>
         </VPFlyout>
 
         <!-- Mobile dropdown -->
@@ -131,14 +131,14 @@ function toggle(): void {
                 <span class="vpi-plus button-icon" />
             </button>
 
-            <div id="navbar-group-version" class="items">
+            <ul id="navbar-group-version" class="items">
                 <VPMenuLink :item="createVersionMenuItem(versioningPlugin.currentVersion)" />
                 <VPMenuLink
                     v-for="version in versioningPlugin.versions"
                     :key="version"
                     :item="createVersionMenuItem(version)"
                 />
-            </div>
+            </ul>
         </div>
     </template>
 </template>
