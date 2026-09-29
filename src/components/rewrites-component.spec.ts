@@ -9,7 +9,7 @@ import type { MockState } from '@remotex-labs/xjet';
  */
 
 import { join } from 'path/posix';
-import { inject } from '@symlinks/services/inject.service';
+import { inject } from '@remotex-labs/xinject';
 import { parseRoutesComponent, rewritesHook } from '@components/rewrites.component';
 
 /**

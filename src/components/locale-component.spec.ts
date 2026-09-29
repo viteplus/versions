@@ -9,8 +9,8 @@ import type { MockState } from '@remotex-labs/xjet';
  */
 
 import { join } from 'path/posix';
+import { inject } from '@remotex-labs/xinject';
 import { parseLocale } from '@components/locale.component';
-import { inject } from '@symlinks/services/inject.service';
 
 /**
  * Tests

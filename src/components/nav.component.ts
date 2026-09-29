@@ -10,8 +10,8 @@ import type { NavItemWithLinkType, NavObjectType, NavType } from '@interfaces/na
  */
 
 import { join } from 'path/posix';
+import { inject } from '@remotex-labs/xinject';
 import { StateModel } from '@models/state.model';
-import { inject } from '@symlinks/services/inject.service';
 import { versionSwitcher } from '@components/switcher.component';
 
 /**
