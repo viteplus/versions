@@ -32,6 +32,8 @@ export const config: xBuildConfig = {
                 keepNames: true,
                 sourcemap: 'linked',
                 sourceRoot: `https://github.com/viteplus/versions/tree/v${ pkg.version }/`,
+                conditions: [ 'source' ],
+                treeShaking: true,
                 entryPoints: {
                     'index': 'src/index.ts'
                 }
