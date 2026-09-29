@@ -75,7 +75,7 @@ To use a custom version switcher, register it in your theme config:
 
 ```ts
 /**
- * Import will remove at compile time
+ * Type-only imports erased during TypeScript compilation.
  */
 
 import type { VNode } from '@vue/runtime-core';

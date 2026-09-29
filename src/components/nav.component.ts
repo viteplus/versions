@@ -1,5 +1,5 @@
 /**
- * Import will remove at compile time
+ * Type-only imports erased during TypeScript compilation.
  */
 
 import type { NavItemType, NavItemWithChildrenType } from '@interfaces/nav.interface';
