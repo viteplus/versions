@@ -11,7 +11,7 @@ import type { NavItemType, NavObjectType, NavType } from '@interfaces/nav.interf
  */
 
 import { join } from 'path/posix';
-import { inject } from '@symlinks/services/inject.service';
+import { inject } from '@remotex-labs/xinject';
 import { isNavItemWithChildren, isNavItemWithLink, replaceLinksRecursive } from '@components/nav.component';
 import { populateNav, normalizeNav, normalizeNavs, parseNavs, getNavForLocale } from '@components/nav.component';
 

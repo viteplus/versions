@@ -9,8 +9,8 @@ import type { PathSegmentsInterface } from '@components/interfaces/sidebar-compo
  */
 
 import { join } from 'path/posix';
+import { inject } from '@remotex-labs/xinject';
 import { StateModel } from '@models/state.model';
-import { inject } from '@symlinks/services/inject.service';
 
 /**
  * Rewrites a documentation source path using version and locale.

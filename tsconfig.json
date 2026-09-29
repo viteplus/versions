@@ -34,9 +34,6 @@
             ],
             "@interfaces/*": [
                 "./src/interfaces/*"
-            ],
-            "@symlinks/*": [
-                "./src/modules/symlinks/*"
             ]
         }
     },

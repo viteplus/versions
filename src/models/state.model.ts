@@ -11,9 +11,9 @@ import type { VersionsConfigInterface, VitepressConfigInterface } from '@interfa
  */
 
 import { join, posix } from 'path';
+import { Injectable } from '@remotex-labs/xinject';
 import { xterm } from '@remotex-labs/xansi/xterm.component';
 import { getLanguageOnly } from '@components/locale.component';
-import { Injectable } from '@symlinks/services/inject.service';
 import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'fs';
 import { defaultConfiguration } from '@constants/configuration.constant';
 

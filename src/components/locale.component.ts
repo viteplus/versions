@@ -9,8 +9,8 @@ import type { LocaleInterface } from '@interfaces/locale.interface';
  */
 
 import { join } from 'path/posix';
+import { inject } from '@remotex-labs/xinject';
 import { StateModel } from '@models/state.model';
-import { inject } from '@symlinks/services/inject.service';
 
 /**
  * Extracts the language code from a locale string.

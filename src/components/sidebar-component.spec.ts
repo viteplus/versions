@@ -10,7 +10,7 @@ import type { SidebarItemType, SidebarObjectType, SidebarType } from '@interface
  * Imports
  */
 
-import { inject } from '@symlinks/services/inject.service';
+import { inject } from '@remotex-labs/xinject';
 import { normalizeSidebar, normalizeSidebars, parseSidebars, populateSidebar } from '@components/sidebar.component';
 
 /**

@@ -10,11 +10,11 @@ import type { PartialConfigurationType } from '@interfaces/configuration.interfa
  */
 
 import { StateModel } from '@models/state.model';
+import { forceInject } from '@remotex-labs/xinject';
 import { parseNavs } from '@components/nav.component';
 import { deepMerge } from '@components/object.component';
 import { parseLocale } from '@components/locale.component';
 import { parseSidebars } from '@components/sidebar.component';
-import { forceInject } from '@symlinks/services/inject.service';
 import { parseRoutesComponent } from '@components/rewrites.component';
 import { defaultConfiguration } from '@constants/configuration.constant';
 
