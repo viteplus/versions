@@ -3,6 +3,21 @@
 What changed in each release of `@viteplus/versions`. The current line is `v2.0.x`; for
 the previous line see [Earlier releases](#earlier-releases).
 
+## v2.0.10
+
+A fix for blank pages on reload under `vitepress@2.0.0-alpha.20`, when the version switcher sits in the nav bar.
+
+- **Fixed**: The [`VersionSwitcher`](guide/features/switchers#advanced-component-method) component no longer blanks
+  the page content on a full reload. VitePress has wrapped every nav item in its own `<li>` since `alpha.20`
+  turned `VPMenuLink` into an `<li>` as well. The switcher's `<div class="items">` wrapper then left one
+  list item nested inside another with only `div` elements between them. The HTML parser closes the outer `<li>`
+  when it reaches the inner one, so the DOM that the browser builds no longer matches the server-rendered HTML, and
+  hydration fails from the nav bar down through the article. The wrapper is now a `<ul>`, which matches VitePress's
+  own menu markup. VitePress up to and including `2.0.0-alpha.19` was never affected, and neither was moving between
+  pages within the site, which does not hydrate.
+- **Changed**: Updated `eslint`, `typescript-eslint`, `eslint-plugin-tsdoc`, `eslint-plugin-perfectionist`,
+  `@types/node`, and `@remotex-labs/xbuild` to their current releases.
+
 ## v2.0.9
 
 A packaging fix so installing `@viteplus/versions` no longer pulls VitePress into your project.
