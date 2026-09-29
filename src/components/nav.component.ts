@@ -156,6 +156,7 @@ export function populateNav(items: Array<NavItemType>, version: string): Array<N
                 props: {
                     ...item.props,
                     versioningPlugin: {
+                        routes: state.routesMap,
                         versions: state.versionsList,
                         currentVersion: state.versionsConfig.current
                     }
