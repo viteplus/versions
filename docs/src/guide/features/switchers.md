@@ -102,11 +102,19 @@ export default defineVersionedConfig({
 
 The `VersionSwitcher` component offers significant advantages:
 
-1. **Preserves Navigation Context**: When switching versions, it attempts to maintain your position in the documentation by preserving the current page path.
+1. **Preserves Navigation Context**: When switching versions, it keeps your position in the documentation by carrying
+   the current page path across.
 2. **Locale Support**: Maintains the current locale when switching between versions.
 3. **Responsive Design**: Adapts to both desktop and mobile viewports with appropriate styling.
 4. **Custom Styling**: Can be styled to match your theme's design system.
 5. **Dynamic Behavior**: Shows only relevant version options based on the current context.
+
+::: danger 🏠 Missing pages
+A version rarely carries every page of the one before it. The plugin lists the routes each version
+publishes, so when the page you are reading is absent from the version you pick, the switcher links
+to that version's home page instead of a URL that would answer 404. Routes come from the same
+resolver that builds the [rewrites](../config/rewrites), so a listed route is always a served one.
+:::
 
 ::: tip
 The version list is built from the [`archive`](../config/configuration#archive) subfolders plus
