@@ -157,3 +157,26 @@ export type DeepPartialType<T> = T extends object
  */
 
 export type RequireKeysType<T, K extends keyof T> = Omit<T, K> & Required<Pick<T, K>>;
+
+/**
+ * A function that maps a documentation source path to the route VitePress publishes it at.
+ *
+ * @param id - The source path of a documentation file, relative to the docs root
+ * @returns The published route for that file, or the path unchanged when nothing rewrites it
+ *
+ * @remarks
+ * This is the shape VitePress expects from `rewrites` when it is given a function,
+ * and the shape the plugin reuses to list the routes of every version.
+ * Both readings come from one resolver, so a listed route always matches a served URL.
+ *
+ * @example
+ * ```ts
+ * const resolve: RouteResolverType = createRouteResolver();
+ * resolve('src/guide/index.md');            // 'guide/index.md'
+ * resolve('archive/v1.0.x/guide/index.md'); // 'v1.0.x/guide/index.md'
+ * ```
+ *
+ * @since 2.1.0
+ */
+
+export type RouteResolverType = (id: string) => string;

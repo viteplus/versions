@@ -38,9 +38,9 @@ export function defineVersionedConfig(userConfiguration: PartialConfigurationTyp
      * Parse components
      */
 
+    parseRoutesComponent();
     parseNavs();
     parseSidebars();
-    parseRoutesComponent();
 
     return <UserConfig> state.vitepressConfig;
 }
