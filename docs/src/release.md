@@ -3,6 +3,17 @@
 What changed in each release of `@viteplus/versions`. The current line is `v2.1.x`; for
 the previous line see [Earlier releases](#earlier-releases).
 
+## v2.1.1
+
+A peer dependency fix for VitePress 2 prereleases under npm.
+
+- **Fixed**: Installing alongside a `vitepress@2.0.0-alpha.*` release no longer fails under npm. The optional peer
+  range was `^1.6.4 || ^2.0.0`, and semver excludes prereleases from a range whose comparators carry none, so
+  `2.0.0-alpha.20` did not match. npm then fell back to `vitepress@1.6.4`, which conflicts with the VitePress 2
+  prerelease in the project root, and refused the install with `ERESOLVE`. The range is now
+  `^1.6.4 || ^2.0.0-0`, which admits the 2.0.0 prereleases while keeping the same `<3.0.0` ceiling. pnpm and yarn
+  were unaffected, since they only warn about an unmet peer.
+
 ## v2.1.0
 
 Two version switcher fixes - blank pages on reload under `vitepress@2.0.0-alpha.20`, and 404s when switching to a
