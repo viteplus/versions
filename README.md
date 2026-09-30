@@ -6,7 +6,7 @@
 [![License: MPL 2.0](https://img.shields.io/badge/License-MPL_2.0-brightgreen.svg)](https://opensource.org/licenses/MPL-2.0)
 [![CI](https://github.com/viteplus/versions/actions/workflows/ci.yml/badge.svg)](https://github.com/viteplus/versions/actions/workflows/ci.yml)
 [![Discord](https://img.shields.io/discord/1422908712116420659?logo=Discord&label=Discord)](https://discord.gg/6vgFhJTEGn)
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/viteplus/versions)
+[![Ask DeepWiki](https://img.shields.io/badge/Ask-DeepWiki-blue)](https://deepwiki.com/viteplus/versions)
 
 A VitePress plugin for versioned documentation. Call `defineVersionedConfig` instead of VitePress's
 `defineConfig` and it manages versioned routes, a per-version sidebar and navigation, and a `VersionSwitcher`
