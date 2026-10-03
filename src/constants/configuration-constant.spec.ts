@@ -2,8 +2,9 @@
  * Imports
  */
 
+import { realpathSync } from 'fs';
 import { rewritesHook } from '@components/rewrites.component';
-import { defaultConfiguration } from '@constants/configuration.constant';
+import { defaultConfiguration, scriptFileSystem } from '@constants/configuration.constant';
 
 /**
  * Tests
@@ -30,5 +31,28 @@ describe('defaultConfiguration', () => {
             text: 'Switch Version',
             includeCurrentVersion: true
         });
+    });
+
+    test('should hand the Vue SFC compiler the Node file system', () => {
+        expect(defaultConfiguration.vue?.script?.fs).toBe(scriptFileSystem);
+    });
+
+    test('should resolve vue and vitepress from the site', () => {
+        expect(defaultConfiguration.vite?.resolve?.dedupe).toEqual([ 'vue', 'vitepress' ]);
+    });
+});
+
+describe('scriptFileSystem', () => {
+    test('should report whether a file exists', () => {
+        expect(scriptFileSystem.fileExists(__filename)).toBe(true);
+        expect(scriptFileSystem.fileExists(`${ __filename }.missing`)).toBe(false);
+    });
+
+    test('should read a file as UTF-8 text', () => {
+        expect(scriptFileSystem.readFile(__filename)).toContain('scriptFileSystem');
+    });
+
+    test('should resolve the real path of a file', () => {
+        expect(scriptFileSystem.realpath(__filename)).toBe(realpathSync(__filename));
     });
 });
