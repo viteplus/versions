@@ -160,6 +160,28 @@ Full guides and the configuration reference live at
 Contributions are welcome! Open an [issue](https://github.com/viteplus/versions/issues) or a pull request on
 GitHub. See the [contributing guidelines](CONTRIBUTING.md) for setup and conventions.
 
+## Development
+
+You can start development with and without containers using instructions below:
+
+**Local Instructions**
+
+1. Install node_modules: `pnpm i`
+2. Start development server: `pnpm docs:dev`
+3. Visit `http://localhost:5173/versions/` in your browser
+
+**Podman Instructions**
+
+1. Install node_modules: `podman-compose run --rm app pnpm i`
+2. Start development server: `podman-compose up -d --build`
+3. Visit `http://localhost:5173/versions/` in your browser
+
+**Docker Instructions**
+
+1. Install node_modules: `docker compose run --rm app pnpm i`
+2. Start development server: `docker compose up -d --build`
+3. Visit `http://localhost:5173/versions/` in your browser
+
 ## Links
 
 [Documentation](https://viteplus.github.io/versions/),
