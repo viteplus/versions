@@ -1,7 +1,13 @@
 # Release Notes
 
-What changed in each release of `@viteplus/versions`. The current line is `v2.1.x`; for
-the previous line see [Earlier releases](#earlier-releases).
+What changed in the `v2.1.x` line of `@viteplus/versions`. For the lines before it see
+[Earlier releases](#earlier-releases).
+
+::: info
+This line is archived and no longer maintained. See the [current release notes](/release) for the
+`v2.2.x` line, which added versioned links to the current version and a `(latest)` tag in the
+[version switcher](/guide/features/switchers).
+:::
 
 ## v2.1.1
 
@@ -46,8 +52,8 @@ container.
 
 ## Earlier releases
 
-- [v2.0.x](v2.0.x/release) - the 2.0 line (archived docs).
-- [v1.0.0](v1.0.x/release) - initial release (archived docs).
+- [v2.0.x](/v2.0.x/release) - the 2.0 line (archived docs).
+- [v1.0.0](/v1.0.x/release) - initial release (archived docs).
 
 ## See also
 

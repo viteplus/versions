@@ -1,51 +1,48 @@
 # Release Notes
 
-What changed in each release of `@viteplus/versions`. The current line is `v2.1.x`; for
-the previous line see [Earlier releases](#earlier-releases).
+What changed in each release of `@viteplus/versions`. The current line is `v2.2.x`; for
+the previous lines see [Earlier releases](#earlier-releases).
 
-## v2.1.1
+## v2.2.0
 
-A peer dependency fix for VitePress 2 prereleases under npm.
+Versioned links to the current version, a `(latest)` tag in the version switcher, and a fix for sites whose
+TypeScript no longer exposes `ts.sys`.
 
-- **Fixed**: Installing alongside a `vitepress@2.0.0-alpha.*` release no longer fails under npm. The optional peer
-  range was `^1.6.4 || ^2.0.0`, and semver excludes prereleases from a range whose comparators carry none, so
-  `2.0.0-alpha.20` did not match. npm then fell back to `vitepress@1.6.4`, which conflicts with the VitePress 2
-  prerelease in the project root, and refused the install with `ERESOLVE`. The range is now
-  `^1.6.4 || ^2.0.0-0`, which admits the 2.0.0 prereleases while keeping the same `<3.0.0` ceiling. pnpm and yarn
-  were unaffected, since they only warn about an unmet peer.
+- **Added**: A URL that names the [`current`](guide/config/configuration#current) version now lands on the page.
+  The current version is served at the root, so `/v2.2.x/guide/` named no page and answered 404. A one-line script in
+  the page `<head>` now replaces it with `/guide/`, keeping the locale, the query string and the hash. Once the
+  version is archived, the archive serves that path itself, so a link in a README or a changelog keeps pointing at
+  the version it was written for. On a built site the script runs on `404.html`, so the host must serve that page for
+  unknown paths, as GitHub Pages, Netlify, Vercel and Cloudflare Pages do. It is left out when an archived version
+  carries the same label as `current`.
+  ([#43](https://github.com/viteplus/versions/issues/43))
 
-## v2.1.0
+- **Added**: The [`VersionSwitcher`](guide/features/switchers#marking-the-latest-version) component tags the
+  current version as the latest one, so `v2.2.x` reads as `v2.2.x (latest)` on the flyout button and in both menus.
+  A `latestLabel` prop on the nav item changes the tag, for example to translate it, and an empty string turns it
+  off. A current version that already reads as the tag, such as the default `current: 'latest'`, is shown as it is.
+  ([#44](https://github.com/viteplus/versions/issues/44))
 
-Two version switcher fixes - blank pages on reload under `vitepress@2.0.0-alpha.20`, and 404s when switching to a
-version that does not carry the page you are reading - plus a reworked switcher component and a shared injection
-container.
+- **Added**: `useVersionSwitcher` exposes `activeVersionText`, the active version with the tag applied, so a custom
+  switcher built on the composable shows the same label.
 
-- **Fixed**: The [`VersionSwitcher`](guide/features/switchers#advanced-component-method) component no longer sends you
-  to a missing page. It rewrote the version in the current URL and linked there without checking the target, so
-  switching away from a page the other version never had returned a 404. The plugin now lists the routes each version
-  publishes, and the switcher falls back to that version's home page when the current page is absent. Routes come from
-  the same resolver that builds `rewrites`, so a listed route always matches a served URL.
-- **Fixed**: The [`VersionSwitcher`](guide/features/switchers#advanced-component-method) component no longer blanks
-  the page content on a full reload. VitePress has wrapped every nav item in its own `<li>` since `alpha.20`
-  turned `VPMenuLink` into an `<li>` as well. The switcher's `<div class="items">` wrapper then left one
-  list item nested inside another with only `div` elements between them. The HTML parser closes the outer `<li>`
-  when it reaches the inner one, so the DOM that the browser builds no longer matches the server-rendered HTML, and
-  hydration fails from the nav bar down through the article. The wrapper is now a `<ul>`, which matches VitePress's
-  own menu markup. VitePress up to and including `2.0.0-alpha.19` was never affected, and neither was moving between
-  pages within the site, which does not hydrate.
-- **Added**: The [`VersionSwitcher`](guide/features/switchers#advanced-component-method) logic is published as a
-  composable. `useVersionSwitcher` and the interfaces it works with live in
-  `@viteplus/versions/components/version-switcher.component`, so a custom switcher can reuse the version list, the
-  active version and the path building without copying the component. Styles moved to
-  `components/styles/`, and the `.vue` file keeps the template alone.
-- **Changed**: Dependency injection now comes from `@remotex-labs/xinject` rather than a vendored copy of the
-  container under `src/modules/symlinks`. The package is dependency-free and joins `@remotex-labs/xansi` as the
-  second runtime dependency, and the published bundle no longer carries its own copy of the container.
-- **Changed**: Updated `eslint`, `typescript-eslint`, `eslint-plugin-tsdoc`, `eslint-plugin-perfectionist`,
-  `@types/node`, and `@remotex-labs/xbuild` to their current releases.
+- **Fixed**: The `VersionSwitcher` component compiles again under TypeScript 7, or with no TypeScript installed.
+  `defineProps<PropsInterface>()` imports its type from another file, and `@vue/compiler-sfc` reads that file
+  through `ts.sys` when it is given no `fs` option. TypeScript 7 no longer ships `ts.sys`, so the build failed with
+  `No fs option provided to compileScript`. `defineVersionedConfig` now passes Node's file system as `vue.script.fs`,
+  and a site that sets its own keeps it. ([#42](https://github.com/viteplus/versions/issues/42))
+
+- **Changed**: `vue` and `vitepress` are added to `vite.resolve.dedupe`, so a linked copy of the package resolves
+  both from the site and shares its Vue app and router.
+
+::: tip 🏷️ Upgrading
+The `(latest)` tag is on by default. Pass `props: { latestLabel: '' }` on the `VersionSwitcher` nav item to keep
+the switcher as it was.
+:::
 
 ## Earlier releases
 
+- [v2.1.x](v2.1.x/release) - the 2.1 line (archived docs).
 - [v2.0.x](v2.0.x/release) - the 2.0 line (archived docs).
 - [v1.0.0](v1.0.x/release) - initial release (archived docs).
 
