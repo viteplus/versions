@@ -34,7 +34,7 @@ const {
     isOpen,
     toggle,
     hasVersions,
-    activeVersion,
+    activeVersionText,
     availableVersions,
     createVersionMenuItem,
     shouldShowCurrentVersion
@@ -48,7 +48,7 @@ const {
             v-if="!screenMenu"
             class="VPVersionSwitcher"
             icon="vpi-versioning"
-            :button="activeVersion"
+            :button="activeVersionText"
             label="Switch Version"
         >
             <ul class="items">
