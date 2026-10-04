@@ -134,6 +134,30 @@ export interface PropsInterface {
      */
 
     screenMenu?: boolean;
+
+    /**
+     * The tag that marks the current version as the latest one.
+     *
+     * @remarks
+     * The switcher appends the tag in parentheses to the current version wherever it shows that label,
+     * so the reader can tell the latest version apart from the archived ones.
+     * When omitted, the tag reads `latest`, and an empty string turns it off.
+     * A current version whose label already equals the tag is left as it is.
+     *
+     * The plugin passes the `props` of the nav item through,
+     * so the tag is set where the component is placed in the navigation.
+     *
+     * @example
+     * ```ts
+     * const nav = [{ component: 'VersionSwitcher', props: { latestLabel: 'neueste' } }];
+     * // the current version reads 'v2.0.x (neueste)'
+     * ```
+     *
+     * @see https://github.com/viteplus/versions/issues/44
+     * @since 2.2.0
+     */
+
+    latestLabel?: string;
 }
 
 /**
@@ -157,6 +181,7 @@ export interface VersionMenuItemInterface {
      *
      * @remarks
      * The version label is used verbatim, so the menu reads the same as the archive folders.
+     * The current version alone carries the tag of {@link PropsInterface.latestLabel}.
      *
      * @example
      * ```ts
@@ -250,6 +275,25 @@ export interface VersionSwitcherInterface {
      */
 
     activeVersion: ComputedRef<string>;
+
+    /**
+     * The label of the active version as the switcher shows it.
+     *
+     * @remarks
+     * This is {@link VersionSwitcherInterface.activeVersion} with the tag of {@link PropsInterface.latestLabel}
+     * appended when the active version is the current one.
+     * The flyout button renders it, while every path helper keeps working with the bare label.
+     *
+     * @example
+     * ```ts
+     * // on /de/guide/index.md
+     * activeVersionText.value; // 'v2.0.x (latest)'
+     * ```
+     *
+     * @since 2.2.0
+     */
+
+    activeVersionText: ComputedRef<string>;
 
     /**
      * The archived versions that the reader can switch to from the current page.
@@ -443,6 +487,45 @@ export function useVersionSwitcher(props: PropsInterface): VersionSwitcherInterf
     });
 
     /**
+     * Builds the label that the switcher shows for a version.
+     *
+     * @param version - The version label to display
+     * @returns The label, tagged as the latest one when it names the current version
+     *
+     * @remarks
+     * The tag comes from {@link PropsInterface.latestLabel} and defaults to `latest`.
+     * An empty tag, or a current version that already reads as the tag, leaves the label as it is,
+     * so the default `current: 'latest'` never shows as `latest (latest)`.
+     *
+     * @example
+     * ```ts
+     * versionText('v2.0.x'); // 'v2.0.x (latest)'
+     * versionText('v1.0.x'); // 'v1.0.x'
+     * ```
+     *
+     * @since 2.2.0
+     */
+
+    function versionText(version: string): string {
+        const tag = props.latestLabel ?? 'latest';
+        if (!tag || version !== props.versioningPlugin.currentVersion) return version;
+        if (version.toLowerCase() === tag.toLowerCase()) return version;
+
+        return `${ version } (${ tag })`;
+    }
+
+    /**
+     * The label of the active version as the switcher shows it.
+     *
+     * @remarks
+     * The flyout button renders it, while every path helper keeps working with the bare label.
+     *
+     * @since 2.2.0
+     */
+
+    const activeVersionText = computed(() => versionText(activeVersion.value));
+
+    /**
      * The archived versions that the reader can switch to from the current page.
      *
      * @remarks
@@ -632,7 +715,7 @@ export function useVersionSwitcher(props: PropsInterface): VersionSwitcherInterf
 
     function createVersionMenuItem(version: string): VersionMenuItemInterface {
         return {
-            text: version,
+            text: versionText(version),
             link: buildVersionPath(version)
         };
     }
@@ -655,6 +738,7 @@ export function useVersionSwitcher(props: PropsInterface): VersionSwitcherInterf
         toggle,
         hasVersions,
         activeVersion,
+        activeVersionText,
         availableVersions,
         createVersionMenuItem,
         shouldShowCurrentVersion
