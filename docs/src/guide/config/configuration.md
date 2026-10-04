@@ -45,6 +45,18 @@ current: 'v2.0.x'  // or 'latest', 'v3', ...
 
 This is a display label, not a directory name — nothing on disk has to match it.
 
+The label also works as a URL prefix. A link to `/v2.0.x/guide/` sends the reader to `/guide/`
+while `v2.0.x` is current, and keeps working once `v2.0.x` is archived, since the archive then
+serves that path itself. Link to the versioned URL from a README or a changelog, and the link
+always lands on the version it was written for.
+
+::: tip
+The redirect is a one-line script in the page `<head>`. On a built site it runs on the `404.html`
+that VitePress builds, so it needs a host that serves that page for unknown paths, as GitHub Pages,
+Netlify, Vercel and Cloudflare Pages do. It is left out when an archived version carries the same
+label as `current`, since every path under that label is then a real page.
+:::
+
 ## `sources`
 
 The directory holding the current version's content, relative to the docs root.
