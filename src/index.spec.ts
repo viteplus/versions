@@ -16,6 +16,7 @@ import { parseLocale } from '@components/locale.component';
 import { parseSidebars } from '@components/sidebar.component';
 import { parseRoutesComponent } from '@components/rewrites.component';
 import { defaultConfiguration } from '@constants/configuration.constant';
+import { parseCurrentVersionRedirect } from '@components/redirect.component';
 
 /**
  * Tests
@@ -27,6 +28,7 @@ describe('defineVersionedConfig', () => {
     let mockParseLocale: MockState<any>;
     let mockParseSidebar: MockState<any>;
     let mockParseRoutes: MockState<any>;
+    let mockParseRedirect: MockState<any>;
 
     beforeEach(() => {
         xJet.resetAllMocks();
@@ -35,6 +37,7 @@ describe('defineVersionedConfig', () => {
         mockParseLocale = xJet.mock(parseLocale).mockImplementation(<any> (() => {}));
         mockParseSidebar = xJet.mock(parseSidebars).mockImplementation(<any> (() => {}));
         mockParseRoutes = xJet.mock(parseRoutesComponent).mockImplementation(<any> (() => {}));
+        mockParseRedirect = xJet.mock(parseCurrentVersionRedirect).mockImplementation(<any> (() => {}));
     });
 
     test('should merge user configuration with default and return VitePress config', () => {
@@ -55,6 +58,7 @@ describe('defineVersionedConfig', () => {
         expect(mockParseLocale).toHaveBeenCalled();
         expect(mockParseSidebar).toHaveBeenCalled();
         expect(mockParseRoutes).toHaveBeenCalled();
+        expect(mockParseRedirect).toHaveBeenCalled();
 
         expect(result).toBe(mockState.vitepressConfig);
     });

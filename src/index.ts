@@ -17,6 +17,7 @@ import { parseLocale } from '@components/locale.component';
 import { parseSidebars } from '@components/sidebar.component';
 import { parseRoutesComponent } from '@components/rewrites.component';
 import { defaultConfiguration } from '@constants/configuration.constant';
+import { parseCurrentVersionRedirect } from '@components/redirect.component';
 
 /**
  * Export interfaces
@@ -41,6 +42,7 @@ export function defineVersionedConfig(userConfiguration: PartialConfigurationTyp
     parseRoutesComponent();
     parseNavs();
     parseSidebars();
+    parseCurrentVersionRedirect();
 
     return <UserConfig> state.vitepressConfig;
 }
