@@ -31,7 +31,7 @@ import { rewritesHook } from '@components/rewrites.component';
  * ```
  *
  * @see https://github.com/viteplus/versions/issues/42
- * @since 2.1.2
+ * @since 2.2.0
  */
 
 export const scriptFileSystem = {
