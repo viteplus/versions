@@ -109,6 +109,21 @@ The `VersionSwitcher` component offers significant advantages:
 4. **Custom Styling**: Can be styled to match your theme's design system.
 5. **Dynamic Behavior**: Shows only relevant version options based on the current context.
 
+### Marking the Latest Version
+
+The switcher tags the current version as the latest one, both on the flyout button and in the menu,
+so `v2.1.x` reads as `v2.1.x (latest)`. Set `latestLabel` in the nav item's `props` to change the tag,
+for example to translate it, or set it to an empty string to turn it off:
+
+```ts
+nav: [
+    { component: 'VersionSwitcher', props: { latestLabel: 'neueste' } } // [!code focus]
+]
+```
+
+A current version that already reads as the tag, such as the default `current: 'latest'`, is shown
+as it is rather than as `latest (latest)`.
+
 ::: danger 🏠 Missing pages
 A version rarely carries every page of the one before it. The plugin lists the routes each version
 publishes, so when the page you are reading is absent from the version you pick, the switcher links
