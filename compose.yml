@@ -1,0 +1,9 @@
+services:
+  app:
+    build: .
+    working_dir: /app
+    volumes:
+      - .:/app:z
+    ports:
+      - 5173:5173
+    init: true
