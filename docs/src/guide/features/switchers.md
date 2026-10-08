@@ -124,6 +124,57 @@ nav: [
 A current version that already reads as the tag, such as the default `current: 'latest'`, is shown
 as it is rather than as `latest (latest)`.
 
+### Changing the Label
+
+The switcher reads `Switch Version` on the mobile menu button and in the accessible label of the
+desktop flyout. Set `label` in the nav item's `props` to change it:
+
+```ts
+nav: [
+    { component: 'VersionSwitcher', props: { label: 'Version wechseln' } } // [!code focus]
+]
+```
+
+### Translating the Switcher
+
+Each locale has its own `nav`, so give each one its own `VersionSwitcher` with its own `label` and
+`latestLabel`:
+
+```ts
+export default defineVersionedConfig({
+    versionsConfig: {
+        current: 'v2.3.x',
+        versionSwitcher: false // [!code focus]
+    },
+    locales: {
+        root: {
+            lang: 'en',
+            label: 'English',
+            themeConfig: {
+                nav: [
+                    { component: 'VersionSwitcher' } // [!code focus]
+                ]
+            }
+        },
+        de: {
+            lang: 'de',
+            label: 'Deutsch',
+            themeConfig: {
+                nav: [
+                    { component: 'VersionSwitcher', props: { label: 'Version wechseln', latestLabel: 'neueste' } } // [!code focus]
+                ]
+            }
+        }
+    }
+});
+```
+
+::: warning 🌐 Keep the switcher out of the global nav
+Items of the global `themeConfig.nav` are added to the nav of every locale, and so is the
+[basic dropdown](#basic-configuration-method). Set `versionSwitcher: false` and place the component
+only in each locale's `nav`, or every language shows the same untranslated switcher.
+:::
+
 ::: danger 🏠 Missing pages
 A version rarely carries every page of the one before it. The plugin lists the routes each version
 publishes, so when the page you are reading is absent from the version you pick, the switcher links
