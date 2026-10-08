@@ -49,7 +49,7 @@ const {
             class="VPVersionSwitcher"
             icon="vpi-versioning"
             :button="activeVersionText"
-            label="Switch Version"
+            :label="label ?? 'Switch Version'"
         >
             <ul class="items">
                 <VPMenuLink
@@ -75,7 +75,7 @@ const {
             >
         <span class="button-text">
           <span class="vpi-versioning icon" />
-          Switch Version
+          {{ label ?? 'Switch Version' }}
         </span>
                 <span class="vpi-plus button-icon" />
             </button>
