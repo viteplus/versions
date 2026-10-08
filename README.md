@@ -155,6 +155,93 @@ export default defineVersionedConfig({
 Full guides and the configuration reference live at
 **[viteplus.github.io/versions](https://viteplus.github.io/versions/)**.
 
+## Development with Docker
+
+The `docker/` folder holds a `node:24-alpine` development environment, so working on the plugin needs only
+Docker - no local Node.js or pnpm. The repo is mounted into the container, so edits on your machine are picked
+up live, while the dependencies are installed inside the image and never touch your local `node_modules`.
+
+Run every command from the repo root. One line installs, builds in watch mode, and serves the docs:
+
+```bash
+docker compose -f docker/compose.yml up
+```
+
+This starts two services:
+
+- `watch` - `pnpm dev` (`xBuild -w`), rebuilding `dist/` on every change under `src/`.
+- `docs` - `pnpm docs:dev`, serving the documentation at
+  [http://localhost:5173/versions/](http://localhost:5173/versions/) with hot reload, including changes to
+  the `VersionSwitcher` component. The site is served under its `/versions/` base path, and
+  `http://localhost:5173/` redirects there.
+
+To serve only the docs, without the watch build, start the `docs` service alone. It serves the last build in
+`dist/`, so changes under `src/` are not rebuilt:
+
+```bash
+docker compose -f docker/compose.yml up docs
+```
+
+Run any other command through the `cli` service:
+
+```bash
+docker compose -f docker/compose.yml run --rm cli pnpm test
+docker compose -f docker/compose.yml run --rm cli pnpm lint
+docker compose -f docker/compose.yml run --rm cli pnpm build -w
+docker compose -f docker/compose.yml run --rm cli pnpm docs:build
+docker compose -f docker/compose.yml run --rm cli          # a shell inside the container
+```
+
+`run` publishes no ports, so a dev server started with it cannot be reached from your browser - serve the docs
+with `up` as shown above. If you do need a server through `run`, publish the port and listen on every interface:
+
+```bash
+docker compose -f docker/compose.yml run --rm --service-ports docs
+docker compose -f docker/compose.yml run --rm -p 5173:5173 cli pnpm docs:dev --host 0.0.0.0
+```
+
+The dependencies are part of the image, so rebuild it after changing `package.json` or `pnpm-lock.yaml`.
+`-V` swaps the containers' `node_modules` for the freshly installed one:
+
+```bash
+docker compose -f docker/compose.yml up --build -V
+```
+
+The container runs as the image's unprivileged `node` user (uid 1000), and pnpm is pinned to the version that wrote the
+lockfile - pass `--build-arg PNPM_VERSION=<version>` to `build` to change it.
+
+### Using Podman
+
+The same files work with [Podman](https://podman.io/). Use `podman compose` in place of `docker compose`,
+which runs the compose file through `docker-compose` or `podman-compose`, whichever is installed:
+
+```bash
+podman compose -f docker/compose.yml up
+podman compose -f docker/compose.yml run --rm cli pnpm test
+```
+
+On Linux, Podman runs rootless, so the container's `node` user is not your user and cannot write to the mounted
+repo. Map your user onto it before running any command:
+
+```bash
+export PODMAN_USERNS=keep-id:uid=1000,gid=1000
+```
+
+On hosts with SELinux enforcing (Fedora, RHEL), the container is also denied access to the mounted repo until it
+is relabeled - add `:z` to the repo mount in `docker/compose.yml`:
+
+```yaml
+- ${PWD}:/app:z
+```
+
+`podman-compose` may not support `-V`. After changing the dependencies, remove the containers and their
+`node_modules` volumes instead, then rebuild:
+
+```bash
+podman compose -f docker/compose.yml down -v
+podman compose -f docker/compose.yml up --build
+```
+
 ## Contributing
 
 Contributions are welcome! Open an [issue](https://github.com/viteplus/versions/issues) or a pull request on
