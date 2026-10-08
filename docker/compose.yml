@@ -1,0 +1,42 @@
+# Develop inside node:24-alpine with the repo mounted at /app.
+# Run it from the repo root: the repo is mounted from ${PWD}, and the build context `..`
+# resolves from this docker/ folder.
+#
+#   docker compose -f docker/compose.yml up                      rebuild on change, serve the docs on :5173
+#   docker compose -f docker/compose.yml run --rm cli pnpm test  any other command (build, lint, docs:build, sh, ...)
+#   docker compose -f docker/compose.yml up --build -V           after changing package.json or the lockfile
+
+name: viteplus-versions
+
+x-node: &node
+    build:
+        # The repo root, so the image can install from package.json and the lockfile
+        context: ..
+        dockerfile: docker/Dockerfile
+    image: viteplus-versions-dev
+    init: true
+    volumes:
+        # The folder compose is run from, which is the repo root
+        - ${PWD}:/app
+        # An anonymous volume over the repo's node_modules. Docker fills a new one from the
+        # image, so the container uses the image's dependencies and never the host's
+        # (built for macOS/Windows). Compose keeps it when it recreates a container, so pass
+        # -V (--renew-anon-volumes) to `up` after the dependencies change
+        - /app/node_modules
+
+services:
+    watch:
+        <<: *node
+        command: pnpm dev
+
+    docs:
+        <<: *node
+        # The docs import the package from dist/, so wait for the first build
+        command: sh -c 'until [ -f dist/index.js ]; do sleep 1; done; exec pnpm docs:dev --host 0.0.0.0 --port 5173'
+        ports:
+            - 5173:5173
+
+    cli:
+        <<: *node
+        profiles: [ cli ]
+        command: sh
