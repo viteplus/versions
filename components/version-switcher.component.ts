@@ -158,6 +158,29 @@ export interface PropsInterface {
      */
 
     latestLabel?: string;
+
+    /**
+     * The label of the switcher button.
+     *
+     * @remarks
+     * The desktop flyout shows it as the accessible label of its button,
+     * and the mobile dropdown shows it as the text of its button.
+     * When omitted, it reads `Switch Version`.
+     *
+     * The plugin passes the `props` of the nav item through,
+     * so the label is set where the component is placed in the navigation.
+     *
+     * @example
+     * ```ts
+     * const nav = [{ component: 'VersionSwitcher', props: { label: 'Version wechseln' } }];
+     * // the button reads 'Version wechseln'
+     * ```
+     *
+     * @see https://github.com/viteplus/versions/issues/51
+     * @since 2.3.0
+     */
+
+    label?: string;
 }
 
 /**
