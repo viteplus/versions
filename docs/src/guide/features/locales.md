@@ -211,6 +211,29 @@ const locales = {
 }
 ```
 
+## Version Switcher per Locale
+
+Items of the global `themeConfig.nav` are added to every locale, so a `VersionSwitcher` placed there
+reads the same in every language. Place it in each locale's `nav` instead, and translate it with the
+`label` and `latestLabel` props:
+
+```ts
+const locales = {
+    locales: {
+        de: {
+            themeConfig: {
+                nav: [
+                    { component: 'VersionSwitcher', props: { label: 'Version wechseln', latestLabel: 'neueste' } } // [!code focus]
+                ]
+            }
+        }
+    }
+}
+```
+
+Set `versionsConfig.versionSwitcher` to `false` as well, since the basic dropdown it adds is shared by
+every locale. See [Translating the Switcher](./switchers#translating-the-switcher).
+
 ## Sidebar Configuration
 
 Sidebar works similarly to navigation:
