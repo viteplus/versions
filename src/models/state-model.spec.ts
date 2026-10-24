@@ -80,10 +80,10 @@ describe('StateModel', () => {
             expect(init({ latest: 'v2.x' }).latest).toBe('v2.x');
         });
 
-        test('should give every version but the latest a locale entry, since the latest is served at the root', () => {
+        test('should give every version a locale entry, the latest one included', () => {
             const state = init({ latest: 'v2.x' });
 
-            expect(Object.keys(state.vitepressConfig.locales).sort()).toEqual([ 'next', 'root', 'v1.x' ]);
+            expect(Object.keys(state.vitepressConfig.locales).sort()).toEqual([ 'next', 'root', 'v1.x', 'v2.x' ]);
         });
 
         test('should reject a latest that names no version', () => {

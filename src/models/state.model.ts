@@ -159,8 +159,8 @@ export class StateModel {
      *
      * @remarks
      * It is `versionsConfig.latest`, or `versionsConfig.current` when that is empty.
-     * Its pages are served at the root of the site without a version segment,
-     * and the switchers tag this version as the latest one.
+     * Its pages are served under its name like every version, its home page is also published at the root,
+     * and an address that names no version moves to it. The switchers tag this version as the latest one.
      *
      * @example
      * ```ts
@@ -299,7 +299,7 @@ export class StateModel {
      *
      * state.versionsList;                         // [ 'v2.0.x', 'v1.0.x' ]
      * state.latest;                               // 'v2.0.x'
-     * Object.keys(state.vitepressConfig.locales); // [ 'root', 'v1.0.x' ], since the latest one is served at the root
+     * Object.keys(state.vitepressConfig.locales); // [ 'root', 'v2.0.x', 'v1.0.x' ]
      * ```
      *
      * @see versionDirs
@@ -358,7 +358,7 @@ export class StateModel {
             for (const key of keys) {
                 const index = getLanguageOnly(userLocales[key].lang ?? key);
                 for (const version of this.versionsList) {
-                    if (key === rootLocaleKey || version === this.latest) continue;
+                    if (key === rootLocaleKey) continue;
                     const versionPath = posix.join(index, version);
                     locales[versionPath] = {};
                 }
@@ -373,7 +373,7 @@ export class StateModel {
         }
 
         for (const version of this.versionsList) {
-            if (version !== this.latest) locales[version] = {};
+            locales[version] = {};
         }
     }
 
