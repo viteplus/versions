@@ -261,6 +261,25 @@ describe('normalizeSidebars', () => {
         expect(result['en/v1']['en/v1']).toBeDefined();
     });
 
+    test('should give the root the sidebar of the latest version, and every other version the root sidebar', () => {
+        const state = {
+            latest: 'v2',
+            versionsList: [ 'next', 'v2', 'v1' ],
+            localesMap: {},
+            configuration: {
+                locales: {},
+                themeConfig: { sidebar: { root: [{ text: 'Generic' }], v2: [{ text: 'V2' }] } }
+            },
+            vitepressConfig: { locales: { root: {}, next: {}, v1: {} } }
+        } as unknown as StateModel;
+
+        const result = normalizeSidebars(state);
+
+        expect(result.root).toEqual({ '/': [{ text: 'V2' }] });
+        expect(result.next).toEqual({ next: [{ text: 'Generic' }] });
+        expect(result.v1).toEqual({ v1: [{ text: 'Generic' }] });
+    });
+
     test('should handle missing parent sidebar gracefully', () => {
         mockState.vitepressConfig.locales['de/v1'] = {};
         delete mockState.configuration.themeConfig?.sidebar;
