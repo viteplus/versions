@@ -89,10 +89,77 @@ export interface VersionsSwitcherInterface {
 }
 
 /**
+ * The settings of a single documentation version.
+ *
+ * @remarks
+ * `versionsConfig.versions` keys these settings by version name,
+ * which is the `current` label for the sources and the folder name for an archived version.
+ * The name always stays the URL segment of the version.
+ *
+ * @example
+ * ```ts
+ * const versions: Record<string, VersionOptionsInterface> = {
+ *     'v1.x': { label: 'v1.x (LTS)' },
+ *     'v0.x': { path: 'legacy/v0' }
+ * };
+ * ```
+ *
+ * @see https://github.com/viteplus/versions/issues/55
+ * @since 3.0.0
+ */
+
+export interface VersionOptionsInterface {
+    /**
+     * The text that the version switchers show for the version.
+     *
+     * @remarks
+     * When omitted, the switchers show the version name.
+     * The URL keeps the version name either way, so a label can change without moving any page.
+     *
+     * @example
+     * ```ts
+     * const options: VersionOptionsInterface = { label: 'v1.x (LTS)' };
+     * // the switcher reads 'v1.x (LTS)', and the pages stay under /v1.x/
+     * ```
+     *
+     * @since 3.0.0
+     */
+
+    label: string;
+
+    /**
+     * The folder that holds the pages of the version, relative to the documentation root.
+     *
+     * @remarks
+     * Set it to publish a version whose pages live outside the archive folder,
+     * such as a worktree of a release branch checked out inside the documentation root.
+     * The version joins the published versions under its name, so its pages are served at `/<name>/`.
+     *
+     * VitePress builds only the files under its source directory,
+     * so the folder has to exist inside the documentation root, the folder that holds `sources` and `archive`.
+     * A name that the current version or an archive folder already carries fails the build,
+     * since both would publish under one URL.
+     *
+     * @example
+     * ```ts
+     * const options: VersionOptionsInterface = { path: 'legacy/v0' };
+     * // docs/legacy/v0/guide/index.md is served at /v0.x/guide/
+     * ```
+     *
+     * @see https://github.com/viteplus/versions/issues/55
+     * @since 3.0.0
+     */
+
+    path: string;
+}
+
+/**
  * Configuration for documentation versions.
  *
  * @remarks
- * - `current` specifies the currently active version.
+ * - `current` specifies the label of the version in `sources`.
+ * - `latest` specifies the stable version, which is served at the root of the site.
+ * - `versions` holds per-version settings such as the switcher label.
  * - `sources` is the folder or path where current versioned sources reside.
  * - `archive` is the folder or path for archived versions.
  * - `hooks` allows for custom rewriting logic per version.
@@ -101,12 +168,14 @@ export interface VersionsSwitcherInterface {
  * @example
  * ```ts
  * const versionsConfig: VersionsConfigInterface = {
- *   current: "2.0",
+ *   current: "next",
+ *   latest: "2.0",
  *   sources: "src",
  *   archive: "archive",
  *   hooks: {
  *     rewritesHook: (source, version) => `/v${version}/${source}`
  *   },
+ *   versions: { "1.0": { label: "1.0 (LTS)" } },
  *   versionSwitcher: { text: "Version", includeCurrentVersion: true }
  * };
  * ```
@@ -116,16 +185,46 @@ export interface VersionsSwitcherInterface {
 
 export interface VersionsConfigInterface {
     /**
-     * The currently active documentation version.
+     * The label of the version that the `sources` folder holds.
      *
      * @remarks
-     * Used to determine which version to serve by default and which version
-     * should be highlighted in the version switcher.
+     * It is the stable version, served at the root, unless {@link VersionsConfigInterface.latest} names another one.
+     * Otherwise, the pages of the sources publish under this label, like the pages of an archived version.
+     *
+     * @example
+     * ```ts
+     * const versionsConfig = { current: 'next', latest: 'v2.0.x' };
+     * // src/guide/index.md is served at /next/guide/
+     * ```
      *
      * @since 2.0.0
      */
 
     current: string;
+
+    /**
+     * The name of the stable version.
+     *
+     * @remarks
+     * Its pages are served at the root of the site without a version segment,
+     * and the version switchers tag it as the latest one.
+     * Every other version is served under its own name.
+     * Set it to an archived version while the sources hold documentation for an unreleased release.
+     * When empty, the stable version is {@link VersionsConfigInterface.current}.
+     *
+     * The name has to be `current` or an archive folder, or the configuration fails to load.
+     *
+     * @example
+     * ```ts
+     * const versionsConfig = { current: 'next', latest: 'v2.x' };
+     * // archive/v2.x/guide.md is served at /guide, and src/guide.md at /next/guide
+     * ```
+     *
+     * @see https://github.com/viteplus/versions/issues/55
+     * @since 3.0.0
+     */
+
+    latest: string;
 
     /**
      * The folder or path where the current versioned sources reside.
@@ -168,6 +267,27 @@ export interface VersionsConfigInterface {
      */
 
     versionSwitcher: false | VersionsSwitcherInterface;
+
+    /**
+     * The per-version settings, keyed by version name.
+     *
+     * @remarks
+     * A key has to be `current`, an archive folder, or a version that carries its own `path`,
+     * or the configuration fails to load, so a misspelled name never goes unnoticed.
+     * A version without an entry keeps the defaults of {@link VersionOptionsInterface}.
+     *
+     * @example
+     * ```ts
+     * const versionsConfig = { versions: { 'v1.x': { label: 'v1.x (LTS)' } } };
+     * ```
+     *
+     * @see VersionOptionsInterface
+     * @see https://github.com/viteplus/versions/issues/55
+     *
+     * @since 3.0.0
+     */
+
+    versions: Record<string, VersionOptionsInterface>;
 }
 
 /**
