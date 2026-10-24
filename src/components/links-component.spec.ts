@@ -23,7 +23,7 @@ function link(href: string): any {
 }
 
 describe('versionLink', () => {
-    const move = (href: string, version = 'next'): string => versionLink(href, version, 'v2.x', versions, [ 'de' ]);
+    const move = (href: string): string => versionLink(href, 'next', versions, [ 'de' ]);
 
     test.each`
         href                        | expected
@@ -54,23 +54,6 @@ describe('versionLink', () => {
         ${ '/logo.png#top' }
     `('should leave $href unchanged', ({ href }: any) => {
         expect(move(href)).toBe(href);
-    });
-
-    test.each`
-        href                      | expected
-        ${ '/v2.x/release' }      | ${ '/release' }
-        ${ '/v2.x' }              | ${ '/' }
-        ${ '/v2.x/' }             | ${ '/' }
-        ${ '/v2.x#top' }          | ${ '/#top' }
-        ${ '/de/v2.x/guide' }     | ${ '/de/guide' }
-        ${ '/de/v2.x' }           | ${ '/de/' }
-    `('should point $href, which names the latest version, at the root as $expected', ({ href, expected }: any) => {
-        expect(move(href)).toBe(expected);
-        expect(move(href, '')).toBe(expected);
-    });
-
-    test('should leave a link on a page of the latest version unchanged', () => {
-        expect(move('/guide', '')).toBe('/guide');
     });
 });
 
@@ -103,8 +86,7 @@ describe('parseVersionLinks', () => {
         ${ 'de/v1.x/index.md' } | ${ '/guide' }    | ${ '/v1.x/guide' }
         ${ 'src/guide.md' }     | ${ '/release' }  | ${ '/next/release' }
         ${ 'v1.x/index.md' }    | ${ 'https://a' } | ${ 'https://a' }
-        ${ 'src/release.md' }   | ${ '/v2.x/x' }   | ${ '/x' }
-        ${ 'guide.md' }         | ${ '/v2.x/x' }   | ${ '/x' }
+        ${ 'src/release.md' }   | ${ '/v2.x/x' }   | ${ '/v2.x/x' }
         ${ 'guide.md' }         | ${ '/guide' }    | ${ '/guide' }
         ${ 'legacy/index.md' }  | ${ '/guide' }    | ${ '/guide' }
         ${ undefined }          | ${ '/guide' }    | ${ '/guide' }
