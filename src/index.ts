@@ -15,9 +15,9 @@ import { parseNavs } from '@components/nav.component';
 import { deepMerge } from '@components/object.component';
 import { parseLocale } from '@components/locale.component';
 import { parseSidebars } from '@components/sidebar.component';
+import { parseVersionLinks } from '@components/links.component';
 import { parseRoutesComponent } from '@components/rewrites.component';
 import { defaultConfiguration } from '@constants/configuration.constant';
-import { parseCurrentVersionRedirect } from '@components/redirect.component';
 
 /**
  * Export interfaces
@@ -40,9 +40,9 @@ export function defineVersionedConfig(userConfiguration: PartialConfigurationTyp
      */
 
     parseRoutesComponent();
+    parseVersionLinks();
     parseNavs();
     parseSidebars();
-    parseCurrentVersionRedirect();
 
     return <UserConfig> state.vitepressConfig;
 }
