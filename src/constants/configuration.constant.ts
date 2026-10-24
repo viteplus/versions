@@ -48,10 +48,11 @@ export const scriptFileSystem = {
  * This includes:
  * - Empty `locales` and `rewrites` mappings.
  * - A `versionsConfig` with:
- *   - `current` set to `"latest"`.
+ *   - `current` set to `"latest"`, and an empty `latest` that makes `current` the stable version.
  *   - `sources` pointing to `"src"`.
  *   - `archive` pointing to `"archive"`.
  *   - `hooks.rewritesHook` bound to the default {@link rewritesHook}.
+ *   - Empty `versions` settings, so every version keeps its name as its label.
  *   - A `versionSwitcher` enabled with label `"Switch Version"` and
  *     `includeCurrentVersion` set to `true`.
  * - A `vue.script.fs` that reads the file system through Node, see {@link scriptFileSystem}.
@@ -81,6 +82,7 @@ export const defaultConfiguration: ConfigurationInterface = {
     rewrites: {},
     versionsConfig: {
         current: 'latest',
+        latest: '',
         sources: 'src',
         archive: 'archive',
         hooks: {
@@ -89,7 +91,8 @@ export const defaultConfiguration: ConfigurationInterface = {
         versionSwitcher: {
             text: 'Switch Version',
             includeCurrentVersion: true
-        }
+        },
+        versions: {}
     },
     vue: {
         script: {

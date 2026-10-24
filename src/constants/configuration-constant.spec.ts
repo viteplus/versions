@@ -20,6 +20,8 @@ describe('defaultConfiguration', () => {
         expect(defaultConfiguration.versionsConfig.current).toBe('latest');
         expect(defaultConfiguration.versionsConfig.sources).toBe('src');
         expect(defaultConfiguration.versionsConfig.archive).toBe('archive');
+        expect(defaultConfiguration.versionsConfig.latest).toBe('');
+        expect(defaultConfiguration.versionsConfig.versions).toEqual({});
     });
 
     test('should use rewritesHook as the default hook', () => {
