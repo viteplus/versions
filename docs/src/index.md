@@ -25,7 +25,7 @@ features:
     details: Configure different navigation menus and sidebars for each version of your documentation.
   - icon: 🌿
     title: Release Branching
-    details: Draft the next release at /next/ while readers land on the stable version, with permanent links for every older one.
+    details: Draft the next release at /next/ while readers land on the stable version, with a permanent URL for every version.
   - icon: 🔄
     title: Version Switcher Component
     details: Allow users to easily switch between different versions of your documentation.

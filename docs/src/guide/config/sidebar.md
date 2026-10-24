@@ -58,8 +58,8 @@ themeConfig: {
 Version-specific entries do not inherit from `root`. Each key must be a complete tree.
 :::
 
-The [`latest`](./configuration#latest) version is served at the root, so its own key, when it has one,
-is the sidebar of the root pages. Every other version without a key keeps `root`.
+Every version, the [`latest`](./configuration#latest) one included, uses its own key when it has one,
+and every version without a key keeps `root`.
 
 ## The `skipVersioning` flag
 

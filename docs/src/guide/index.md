@@ -47,7 +47,7 @@ export default defineVersionedConfig({
   // Versioning configuration
   versionsConfig: {
     current: 'next',      // Label of the version in sources
-    latest: 'v2.0',       // The stable version, served at the root
+    latest: 'v2.0',       // The stable version, opened at the root
     sources: 'src',       // Current version source directory
     archive: 'archive',   // Archive directory for older versions
     versions: {
@@ -84,13 +84,13 @@ docs/
     ├── v1.0/                                          → /v1.0/
     │   ├── index.md
     │   └── ...
-    └── v2.0/                                          → /    (the latest version)
+    └── v2.0/                                          → /v2.0/  (the latest version, also opened at /)
         ├── index.md
         └── ...
 ```
 
-The [`latest`](./config/configuration#latest) version is served at the root, and every other version under its own name.
-Leave `latest` out and the current version is the latest one, served at the root.
+Every version is served under its own name, and `/` opens the home page of the [`latest`](./config/configuration#latest) version.
+Leave `latest` out and the current version is the latest one.
 Both directory names are configurable through [`sources`](./config/configuration#sources) and
 [`archive`](./config/configuration#archive). They are filesystem locations only, so renaming them
 does not change a single URL.
@@ -149,8 +149,8 @@ export default defineVersionedConfig({
 ### Stable and Unreleased Versions
 
 Point [`latest`](./config/configuration#latest) at an archived version while `sources` holds the docs of a coming release.
-Readers keep landing on the stable version at `/`, the coming one is reviewed at `/next/`,
-and every older version keeps a permanent URL under its name.
+Readers keep landing on the stable version at `/`, which shows its versioned URL such as `/v2.0/`,
+the coming one is reviewed at `/next/`, and every version keeps a permanent URL under its name.
 
 ### Automatic Path Rewriting
 
@@ -200,7 +200,7 @@ export default {
 | Option                              | Description                                         |
 |-------------------------------------|-----------------------------------------------------|
 | `versionsConfig.current`            | Label of the version in `sources` (e.g., "next")    |
-| `versionsConfig.latest`             | The stable version, served at the root              |
+| `versionsConfig.latest`             | The stable version, opened at the root              |
 | `versionsConfig.versions`           | Per-version settings: a switcher `label`, a `path`  |
 | `versionsConfig.sources`            | Directory containing current version docs           |
 | `versionsConfig.archive`            | Directory containing archived versions              |
