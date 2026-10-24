@@ -85,8 +85,8 @@ export interface VersioningPluginInterface {
      * The name of the stable version.
      *
      * @remarks
-     * Its pages are served at the root without a version segment, so a page with no version segment belongs to it.
-     * The switcher tags it with {@link PropsInterface.latestLabel}.
+     * The switcher tags it with {@link PropsInterface.latestLabel},
+     * and a page with no version segment, such as the home page at the root, belongs to it.
      *
      * @example
      * ```ts
@@ -279,7 +279,7 @@ export interface VersionSwitcherInterface {
      *
      * @remarks
      * The version sits in the first segment of the page path, or in the second one when a locale leads it.
-     * A page with no version segment belongs to the stable version, which is served at the root.
+     * A page with no version segment, such as the home page at the root, belongs to the stable version.
      *
      * @example
      * ```ts
@@ -402,10 +402,9 @@ export function useVersionSwitcher(props: PropsInterface): VersionSwitcherInterf
     function createVersionMenuItem(version: string): VersionMenuItemInterface {
         const page = segments.value.filter((segment: string) => !versions.value.has(segment));
         const index = page[0] === locale.value ? 1 : 0;
-        const prefix = version === props.versioningPlugin.latestVersion ? [] : [ version ];
-        const home = `/${ [ ...page.slice(0, index), ...prefix, '' ].join('/') }`;
+        const home = `/${ [ ...page.slice(0, index), version, '' ].join('/') }`;
 
-        page.splice(index, 0, ...prefix);
+        page.splice(index, 0, version);
         const path = page.join('/');
         const routes = props.versioningPlugin.routes?.[version];
 
