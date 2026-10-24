@@ -15,15 +15,16 @@ import { useData, useRouter } from 'vitepress';
  * The versioning state that the plugin hands to the theme.
  *
  * @remarks
- * The plugin builds this object at configuration time and injects it into the theme layout,
+ * The plugin builds this object at configuration time and passes it to every `VersionSwitcher` nav item,
  * so the switcher reads the published versions from its prop instead of the site configuration.
  *
  * @example
  * ```ts
  * const versioningPlugin: VersioningPluginInterface = {
  *     routes: { 'v1.0.x': [ 'v1.0.x/guide/index.md' ] },
- *     versions: new Set([ 'v1.0.x' ]),
- *     currentVersion: 'v2.0.x'
+ *     labels: { 'v1.0.x': 'v1.0.x (LTS)' },
+ *     versions: [ 'next', 'v2.0.x', 'v1.0.x' ],
+ *     latestVersion: 'v2.0.x'
  * };
  * ```
  *
@@ -32,12 +33,11 @@ import { useData, useRouter } from 'vitepress';
 
 export interface VersioningPluginInterface {
     /**
-     * The routes that every version publishes, keyed by version label.
+     * The routes that every version publishes, keyed by version name.
      *
      * @remarks
-     * A route is written exactly as VitePress serves it,
-     * so it keeps its version prefix and the `.md` extension of its source file.
-     * An older plugin ships no such record, and the switcher then trusts every path it builds.
+     * A route is written exactly as VitePress serves it, with its version prefix and the `.md` extension.
+     * Without this record, the switcher trusts every path it builds.
      *
      * @example
      * ```ts
@@ -51,40 +51,53 @@ export interface VersioningPluginInterface {
     routes?: Record<string, Array<string>>;
 
     /**
-     * The archived versions that the site publishes.
+     * The text to show for each version, keyed by version name.
      *
      * @remarks
-     * The current version is not a member of this set,
-     * so the switcher adds it to the menu as a separate entry.
+     * A version missing from the record shows its name.
+     *
+     * @example
+     * ```ts
+     * const { labels } = versioningPlugin;
+     * labels; // { 'v1.0.x': 'v1.0.x (LTS)' }
+     * ```
+     *
+     * @since 3.0.0
+     */
+
+    labels?: Record<string, string>;
+
+    /**
+     * The names of every published version, in menu order.
      *
      * @example
      * ```ts
      * const { versions } = versioningPlugin;
-     * versions; // Set { 'v1.0.x', 'v0.9.x' }
+     * versions; // [ 'next', 'v2.0.x', 'v1.0.x' ]
      * ```
      *
      * @since 2.1.0
      */
 
-    versions: Set<string>;
+    versions: Array<string>;
 
     /**
-     * The label of the version that the site serves at its root.
+     * The name of the stable version.
      *
      * @remarks
-     * A path built for this version carries no version segment at all,
-     * which is why the switcher strips every version segment before it rebuilds a path.
+     * Its pages are served at the root without a version segment, so a page with no version segment belongs to it.
+     * The switcher tags it with {@link PropsInterface.latestLabel}.
      *
      * @example
      * ```ts
-     * const { currentVersion } = versioningPlugin;
-     * currentVersion; // 'v2.0.x'
+     * const { latestVersion } = versioningPlugin;
+     * latestVersion; // 'v2.0.x'
      * ```
      *
-     * @since 2.1.0
+     * @since 3.0.0
      */
 
-    currentVersion: string;
+    latestVersion: string;
 }
 
 /**
@@ -108,7 +121,7 @@ export interface PropsInterface {
      * @example
      * ```ts
      * const { versioningPlugin } = props;
-     * versioningPlugin; // { versions: Set { 'v1.0.x' }, currentVersion: 'v2.0.x' }
+     * versioningPlugin; // { versions: [ 'v2.0.x', 'v1.0.x' ], latestVersion: 'v2.0.x' }
      * ```
      *
      * @see VersioningPluginInterface
@@ -136,21 +149,17 @@ export interface PropsInterface {
     screenMenu?: boolean;
 
     /**
-     * The tag that marks the current version as the latest one.
+     * The tag that marks the stable version as the latest one.
      *
      * @remarks
-     * The switcher appends the tag in parentheses to the current version wherever it shows that label,
-     * so the reader can tell the latest version apart from the archived ones.
+     * The switcher appends the tag in parentheses to the label of the stable version.
      * When omitted, the tag reads `latest`, and an empty string turns it off.
-     * A current version whose label already equals the tag is left as it is.
-     *
-     * The plugin passes the `props` of the nav item through,
-     * so the tag is set where the component is placed in the navigation.
+     * A label that already equals the tag is left as it is.
      *
      * @example
      * ```ts
      * const nav = [{ component: 'VersionSwitcher', props: { latestLabel: 'neueste' } }];
-     * // the current version reads 'v2.0.x (neueste)'
+     * // the stable version reads 'v2.0.x (neueste)'
      * ```
      *
      * @see https://github.com/viteplus/versions/issues/44
@@ -166,9 +175,6 @@ export interface PropsInterface {
      * The desktop flyout shows it as the accessible label of its button,
      * and the mobile dropdown shows it as the text of its button.
      * When omitted, it reads `Switch Version`.
-     *
-     * The plugin passes the `props` of the nav item through,
-     * so the label is set where the component is placed in the navigation.
      *
      * @example
      * ```ts
@@ -187,8 +193,7 @@ export interface PropsInterface {
  * The shape of a single entry of the version menu.
  *
  * @remarks
- * `VPMenuLink` of the default theme consumes this shape as it is,
- * so an entry needs no further mapping before it renders.
+ * `VPMenuLink` of the default theme consumes this shape as it is.
  *
  * @example
  * ```ts
@@ -202,14 +207,10 @@ export interface VersionMenuItemInterface {
     /**
      * The label that the entry shows.
      *
-     * @remarks
-     * The version label is used verbatim, so the menu reads the same as the archive folders.
-     * The current version alone carries the tag of {@link PropsInterface.latestLabel}.
-     *
      * @example
      * ```ts
      * const { text } = item;
-     * text; // 'v1.0.x'
+     * text; // 'v1.0.x (LTS)'
      * ```
      *
      * @since 2.1.0
@@ -235,10 +236,6 @@ export interface VersionMenuItemInterface {
 /**
  * The bindings that {@link useVersionSwitcher} exposes to the template.
  *
- * @remarks
- * Only what the template renders is exposed.
- * Every path helper stays inside the composable, since each one reads the props and the route.
- *
  * @example
  * ```ts
  * const { hasVersions, toggle } = useVersionSwitcher(props);
@@ -251,9 +248,6 @@ export interface VersionSwitcherInterface {
     /**
      * Whether the mobile dropdown is open.
      *
-     * @remarks
-     * The desktop flyout keeps its own open state, so this ref drives the mobile layout alone.
-     *
      * @example
      * ```ts
      * isOpen.value; // false while the dropdown is collapsed
@@ -265,11 +259,10 @@ export interface VersionSwitcherInterface {
     isOpen: Ref<boolean>;
 
     /**
-     * Whether the site publishes any archived version.
+     * Whether the site publishes more than one version.
      *
      * @remarks
-     * The component renders nothing while the set is empty,
-     * so a site with no archive keeps its navigation bar unchanged.
+     * The component renders nothing otherwise, so a site with a single version keeps its navigation bar unchanged.
      *
      * @example
      * ```ts
@@ -282,11 +275,11 @@ export interface VersionSwitcherInterface {
     hasVersions: ComputedRef<boolean>;
 
     /**
-     * The version label that the current page belongs to.
+     * The version that the current page belongs to.
      *
      * @remarks
-     * The version sits in the first segment, or in the second one when a locale leads the path.
-     * A page with no version segment belongs to the current version.
+     * The version sits in the first segment of the page path, or in the second one when a locale leads it.
+     * A page with no version segment belongs to the stable version, which is served at the root.
      *
      * @example
      * ```ts
@@ -300,16 +293,11 @@ export interface VersionSwitcherInterface {
     activeVersion: ComputedRef<string>;
 
     /**
-     * The label of the active version as the switcher shows it.
-     *
-     * @remarks
-     * This is {@link VersionSwitcherInterface.activeVersion} with the tag of {@link PropsInterface.latestLabel}
-     * appended when the active version is the current one.
-     * The flyout button renders it, while every path helper keeps working with the bare label.
+     * The label of the active version as the switcher button shows it.
      *
      * @example
      * ```ts
-     * // on /de/guide/index.md
+     * // on /de/v2.0.x/guide/index.md
      * activeVersionText.value; // 'v2.0.x (latest)'
      * ```
      *
@@ -319,15 +307,12 @@ export interface VersionSwitcherInterface {
     activeVersionText: ComputedRef<string>;
 
     /**
-     * The archived versions that the reader can switch to from the current page.
-     *
-     * @remarks
-     * The active version is left out, so the menu never links to the page the reader already reads.
+     * The versions that the reader can switch to, without the active one.
      *
      * @example
      * ```ts
      * // on /de/v1.0.x/guide/index.md
-     * availableVersions.value; // [ 'v0.9.x' ]
+     * availableVersions.value; // [ 'next', 'v2.0.x' ]
      * ```
      *
      * @since 2.1.0
@@ -336,37 +321,19 @@ export interface VersionSwitcherInterface {
     availableVersions: ComputedRef<Array<string>>;
 
     /**
-     * Whether the desktop menu needs an entry for the current version.
-     *
-     * @remarks
-     * The entry appears only while the reader is on an archived page,
-     * since the current version is the active one everywhere else.
-     *
-     * @example
-     * ```ts
-     * shouldShowCurrentVersion.value; // true on an archived page
-     * ```
-     *
-     * @since 2.1.0
-     */
-
-    shouldShowCurrentVersion: ComputedRef<boolean>;
-
-    /**
      * Builds the menu entry that links to a version.
      *
-     * @param version - The version label that the entry points at
-     * @returns A {@link VersionMenuItemInterface} carrying the label and the path of that version
+     * @param version - The name of the version that the entry points at
+     * @returns A {@link VersionMenuItemInterface} with the label of the version and the path of the current page in it
      *
      * @remarks
-     * The template calls this for every entry it renders,
-     * so an entry is built at render time and always points at the page the reader is on.
+     * The link keeps the locale and the page of the reader.
+     * When the version never published that page, the link falls back to the home page of the version.
      *
      * @example
      * ```ts
-     * // on /de/guide/index.md
-     * createVersionMenuItem('v1.0.x');
-     * // { text: 'v1.0.x', link: '/de/v1.0.x/guide/index.md' }
+     * // on /de/v2.0.x/guide/index.md
+     * createVersionMenuItem('v1.0.x'); // { text: 'v1.0.x (LTS)', link: '/de/v1.0.x/guide/index.md' }
      * ```
      *
      * @since 2.1.0
@@ -377,12 +344,8 @@ export interface VersionSwitcherInterface {
     /**
      * Opens or closes the mobile dropdown.
      *
-     * @remarks
-     * Only the mobile layout calls this, since the desktop flyout keeps its own open state.
-     *
      * @example
      * ```ts
-     * isOpen.value; // false
      * toggle();
      * isOpen.value; // true
      * ```
@@ -400,10 +363,7 @@ export interface VersionSwitcherInterface {
  * @returns The bindings that the template renders {@link VersionSwitcherInterface}
  *
  * @remarks
- * The composable reads the router and the site data of the running site,
- * so the setup function of the component is the only place that may call it.
- * Every menu entry is rebuilt on render, which keeps the links pointed at the page the reader is on
- * as the reader moves through the site.
+ * The composable reads the router and the site data, so only the setup function of the component may call it.
  *
  * @example
  * ```ts
@@ -420,350 +380,45 @@ export function useVersionSwitcher(props: PropsInterface): VersionSwitcherInterf
     const { site } = useData();
     const isOpen = ref(false);
 
-    /**
-     * The archived version labels as a set.
-     *
-     * @remarks
-     * Every segment of every path the switcher handles is tested against this set
-     * to tell a version apart from an ordinary segment.
-     *
-     * @example
-     * ```ts
-     * const versions = versionSet.value;
-     * versions.has('v1.0.x'); // true
-     * versions.has('guide');  // false
-     * ```
-     *
-     * @since 2.1.0
-     */
-
-    const versionSet = computed(() => new Set([ ...props.versioningPlugin.versions ]));
-
-    /**
-     * Whether the site publishes any archived version.
-     *
-     * @remarks
-     * The component renders nothing while the set is empty.
-     *
-     * @since 2.1.0
-     */
-
-    const hasVersions = computed(() => versionSet.value.size > 0);
-
-    /**
-     * The prefix of the active locale, without its slashes.
-     *
-     * @remarks
-     * The root locale has no prefix of its own, so this value is an empty string there
-     * and no path the switcher builds gains a locale segment.
-     *
-     * @example
-     * ```ts
-     * currentLocale.value; // 'de'
-     * ```
-     *
-     * @since 2.1.0
-     */
-
-    const currentLocale = computed(() => {
-        const { locales, localeIndex } = site.value;
-
-        return locales[localeIndex ?? '']?.link?.replace(/\//g, '') || '';
-    });
-
-    /**
-     * The relative path of the current page, split on the slash.
-     *
-     * @remarks
-     * VitePress reports the source path here, so the last segment still carries its `.md` extension,
-     * and a route of {@link VersioningPluginInterface.routes} matches it as written.
-     *
-     * @example
-     * ```ts
-     * pathSegments.value; // [ 'de', 'v1.0.x', 'guide', 'index.md' ]
-     * ```
-     *
-     * @since 2.1.0
-     */
-
-    const pathSegments = computed(() => router.route.data.relativePath.split('/'));
-
-    /**
-     * The version label that the current page belongs to.
-     *
-     * @remarks
-     * The version sits in the first segment, or in the second one when a locale leads the path.
-     * A page with no version segment belongs to the current version.
-     *
-     * @since 2.1.0
-     */
+    const versions = computed(() => new Set(props.versioningPlugin.versions));
+    const locale = computed(() => site.value.locales[site.value.localeIndex ?? '']?.link?.replace(/\//g, '') || '');
+    const segments = computed(() => router.route.data.relativePath.split('/'));
 
     const activeVersion = computed(() => {
-        const { currentVersion } = props.versioningPlugin;
-        const segments = pathSegments.value;
-        const locale = currentLocale.value;
+        const [ first, second ] = segments.value;
+        const candidate = first === locale.value ? second : first;
 
-        // Determine which segment might be the version
-        const versionCandidate = segments[0] === locale ? segments[1] : segments[0];
-
-        return versionSet.value.has(versionCandidate) ? versionCandidate : currentVersion;
+        return versions.value.has(candidate) ? candidate : props.versioningPlugin.latestVersion;
     });
-
-    /**
-     * Builds the label that the switcher shows for a version.
-     *
-     * @param version - The version label to display
-     * @returns The label, tagged as the latest one when it names the current version
-     *
-     * @remarks
-     * The tag comes from {@link PropsInterface.latestLabel} and defaults to `latest`.
-     * An empty tag, or a current version that already reads as the tag, leaves the label as it is,
-     * so the default `current: 'latest'` never shows as `latest (latest)`.
-     *
-     * @example
-     * ```ts
-     * versionText('v2.0.x'); // 'v2.0.x (latest)'
-     * versionText('v1.0.x'); // 'v1.0.x'
-     * ```
-     *
-     * @since 2.2.0
-     */
 
     function versionText(version: string): string {
         const tag = props.latestLabel ?? 'latest';
-        if (!tag || version !== props.versioningPlugin.currentVersion) return version;
-        if (version.toLowerCase() === tag.toLowerCase()) return version;
+        const label = props.versioningPlugin.labels?.[version] ?? version;
+        const tagged = tag && version === props.versioningPlugin.latestVersion && label.toLowerCase() !== tag.toLowerCase();
 
-        return `${ version } (${ tag })`;
+        return tagged ? `${ label } (${ tag })` : label;
     }
-
-    /**
-     * The label of the active version as the switcher shows it.
-     *
-     * @remarks
-     * The flyout button renders it, while every path helper keeps working with the bare label.
-     *
-     * @since 2.2.0
-     */
-
-    const activeVersionText = computed(() => versionText(activeVersion.value));
-
-    /**
-     * The archived versions that the reader can switch to from the current page.
-     *
-     * @remarks
-     * The active version is left out, so the menu never links to the page the reader already reads.
-     *
-     * @since 2.1.0
-     */
-
-    const availableVersions = computed(() =>
-        Array.from(props.versioningPlugin.versions).filter(v => v !== activeVersion.value)
-    );
-
-    /**
-     * Whether the desktop menu needs an entry for the current version.
-     *
-     * @remarks
-     * The entry appears only while the reader is on an archived page.
-     *
-     * @since 2.1.0
-     */
-
-    const shouldShowCurrentVersion = computed(() =>
-        activeVersion.value !== props.versioningPlugin.currentVersion
-    );
-
-    /**
-     * Tells whether the leading segment of a path is the active locale.
-     *
-     * @param segments - The path segments to inspect
-     * @returns `true` when the first segment matches the active locale
-     *
-     * @remarks
-     * The root locale resolves to an empty prefix, which matches no segment,
-     * so a path under the root locale always reports `false`.
-     *
-     * @example
-     * ```ts
-     * isLocaleFirst([ 'de', 'guide', 'index.md' ]); // true
-     * isLocaleFirst([ 'guide', 'index.md' ]);       // false
-     * ```
-     *
-     * @since 2.1.0
-     */
-
-    function isLocaleFirst(segments: Array<string>): boolean {
-        return segments[0] === currentLocale.value;
-    }
-
-    /**
-     * Strips every version segment out of a path.
-     *
-     * @param segments - The path segments to filter
-     * @returns The segments that name no version
-     *
-     * @remarks
-     * The result is the version-free form of the path,
-     * which the switcher then rebuilds for the version the reader picked.
-     *
-     * @example
-     * ```ts
-     * removeVersionSegments([ 'de', 'v1.0.x', 'guide', 'index.md' ]);
-     * // [ 'de', 'guide', 'index.md' ]
-     * ```
-     *
-     * @since 2.1.0
-     */
-
-    function removeVersionSegments(segments: Array<string>): Array<string> {
-        return segments.filter(seg => !versionSet.value.has(seg));
-    }
-
-    /**
-     * Tells whether a version publishes the given path.
-     *
-     * @param version - The version label to look the path up in
-     * @param path - The path to check, with its leading slash
-     * @returns `true` when the version publishes the path, or when the plugin lists no routes
-     *
-     * @remarks
-     * The plugin lists the routes of every version, so the switcher can check a link before it renders.
-     * An older plugin, or the component used on its own, ships no such list,
-     * and the check then passes for every path.
-     *
-     * @example
-     * ```ts
-     * routeExists('v1.0.x', '/v1.0.x/guide/index.md'); // true
-     * routeExists('v1.0.x', '/v1.0.x/api/index.md');   // false
-     * ```
-     *
-     * @since 2.1.0
-     */
-
-    function routeExists(version: string, path: string): boolean {
-        const routes = props.versioningPlugin.routes?.[version];
-        if (!routes) return true;
-
-        return routes.includes(path.replace(/^\//, ''));
-    }
-
-    /**
-     * Builds the home path of a version.
-     *
-     * @param version - The version label to build the home path for
-     * @returns The path of that version's home, with a trailing slash
-     *
-     * @remarks
-     * The path keeps the locale of the current page and drops every other segment.
-     * The current version takes no version segment, so its home is the locale root.
-     *
-     * @example
-     * ```ts
-     * // on /de/v1.0.x/guide/index.md
-     * versionHome('v0.9.x'); // '/de/v0.9.x/'
-     * versionHome('v2.0.x'); // '/de/'
-     * ```
-     *
-     * @since 2.1.0
-     */
-
-    function versionHome(version: string): string {
-        const { currentVersion } = props.versioningPlugin;
-        const baseSegments = removeVersionSegments(pathSegments.value);
-        const locale = isLocaleFirst(baseSegments) ? baseSegments[0] : '';
-        const segments = [ locale, version === currentVersion ? '' : version ].filter(Boolean);
-
-        return segments.length ? `/${ segments.join('/') }/` : '/';
-    }
-
-    /**
-     * Builds the path of the current page in another version.
-     *
-     * @param version - The version label to move the current page to
-     * @returns The path of the page in that version, or that version's home when the page is missing there
-     *
-     * @remarks
-     * The switcher drops every version segment first,
-     * then puts the picked version behind the locale where the path carries one, and in front otherwise.
-     * The current version takes no segment at all, since the site serves it at its root.
-     *
-     * A reader who leaves a page that the other version never published would land on a dead link,
-     * so {@link routeExists} checks the path and {@link versionHome} takes over when the check fails.
-     *
-     * @example
-     * ```ts
-     * // on /de/v1.0.x/guide/index.md
-     * buildVersionPath('v2.0.x'); // '/de/guide/index.md'
-     * buildVersionPath('v0.9.x'); // '/de/v0.9.x/' when v0.9.x has no guide page
-     * ```
-     *
-     * @see routeExists
-     * @see versionHome
-     *
-     * @since 2.1.0
-     */
-
-    function buildVersionPath(version: string): string {
-        const { currentVersion } = props.versioningPlugin;
-        const baseSegments = removeVersionSegments(pathSegments.value);
-        const hasLocale = isLocaleFirst(baseSegments);
-
-        let newSegments: Array<string>;
-
-        if (version === currentVersion) {
-            newSegments = baseSegments;
-        } else if (hasLocale) {
-            newSegments = [ baseSegments[0], version, ...baseSegments.slice(1) ];
-        } else {
-            newSegments = [ version, ...baseSegments ];
-        }
-
-        const path = `/${ newSegments.join('/') }`;
-
-        return routeExists(version, path) ? path : versionHome(version);
-    }
-
-    /**
-     * Builds the menu entry that links to a version.
-     *
-     * @param version - The version label that the entry points at
-     * @returns A {@link VersionMenuItemInterface} carrying the label and the path of that version
-     *
-     * @remarks
-     * The template calls this for every entry it renders.
-     *
-     * @since 2.1.0
-     */
 
     function createVersionMenuItem(version: string): VersionMenuItemInterface {
-        return {
-            text: versionText(version),
-            link: buildVersionPath(version)
-        };
-    }
+        const page = segments.value.filter((segment: string) => !versions.value.has(segment));
+        const index = page[0] === locale.value ? 1 : 0;
+        const prefix = version === props.versioningPlugin.latestVersion ? [] : [ version ];
+        const home = `/${ [ ...page.slice(0, index), ...prefix, '' ].join('/') }`;
 
-    /**
-     * Opens or closes the mobile dropdown.
-     *
-     * @remarks
-     * Only the mobile layout calls this.
-     *
-     * @since 2.1.0
-     */
+        page.splice(index, 0, ...prefix);
+        const path = page.join('/');
+        const routes = props.versioningPlugin.routes?.[version];
 
-    function toggle(): void {
-        isOpen.value = !isOpen.value;
+        return { text: versionText(version), link: !routes || routes.includes(path) ? `/${ path }` : home };
     }
 
     return {
         isOpen,
-        toggle,
-        hasVersions,
+        hasVersions: computed(() => versions.value.size > 1),
         activeVersion,
-        activeVersionText,
-        availableVersions,
+        activeVersionText: computed(() => versionText(activeVersion.value)),
+        availableVersions: computed(() => [ ...versions.value ].filter(version => version !== activeVersion.value)),
         createVersionMenuItem,
-        shouldShowCurrentVersion
+        toggle: () => (isOpen.value = !isOpen.value)
     };
 }

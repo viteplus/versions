@@ -36,8 +36,7 @@ const {
     hasVersions,
     activeVersionText,
     availableVersions,
-    createVersionMenuItem,
-    shouldShowCurrentVersion
+    createVersionMenuItem
 } = useVersionSwitcher(props);
 </script>
 
@@ -52,10 +51,6 @@ const {
             :label="label ?? 'Switch Version'"
         >
             <ul class="items">
-                <VPMenuLink
-                    v-if="shouldShowCurrentVersion"
-                    :item="createVersionMenuItem(versioningPlugin.currentVersion)"
-                />
                 <VPMenuLink
                     v-for="version in availableVersions"
                     :key="version"
@@ -81,7 +76,6 @@ const {
             </button>
 
             <ul id="navbar-group-version" class="items">
-                <VPMenuLink :item="createVersionMenuItem(versioningPlugin.currentVersion)" />
                 <VPMenuLink
                     v-for="version in versioningPlugin.versions"
                     :key="version"
