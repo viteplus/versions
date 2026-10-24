@@ -411,7 +411,7 @@ function createVersionedLocale(baseLocale: LocaleInterface, isRoot: boolean, lan
 
 export function parseLocale(): void {
     const state = inject(StateModel);
-    const { latest, versionsList, vitepressConfig, configuration, localesMap } = state;
+    const { versionsList, vitepressConfig, configuration, localesMap } = state;
     const { locales } = vitepressConfig;
     const userLocales = configuration.locales;
     const hasRootInUserLocales = 'root' in userLocales;
@@ -434,7 +434,6 @@ export function parseLocale(): void {
 
         // Create versioned locale entries
         for (const version of versionsList) {
-            if (version === latest) continue;
             const versionedKey = isRoot ? version : join(key, version);
             locales[versionedKey] = createVersionedLocale(baseLocale, isRoot, lang);
         }

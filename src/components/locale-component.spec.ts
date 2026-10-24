@@ -138,21 +138,6 @@ describe('parseLocale', () => {
         });
     });
 
-    test('should give the latest version no versioned locale entry, since it is served at the root', () => {
-        const mockState: any = {
-            latest: 'v2.0',
-            localesMap: { '/': 'root', de: 'de' },
-            versionsList: [ 'v1.0', 'v2.0' ],
-            configuration: { locales: { '/': { lang: 'en-US' }, de: { lang: 'de-DE' } } },
-            vitepressConfig: { locales: {} }
-        };
-
-        mockInject.mockReturnValue(mockState);
-        parseLocale();
-
-        expect(Object.keys(mockState.vitepressConfig.locales).sort()).toEqual([ 'de', 'de/v1.0', 'root', 'v1.0' ]);
-    });
-
     test('should handle empty versionsList', () => {
         const mockState: any = {
             localesMap: { '/': 'root' },
