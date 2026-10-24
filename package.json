@@ -62,13 +62,14 @@
         "@remotex-labs/xinject": "^1.0.0"
     },
     "devDependencies": {
-        "eslint": "^10.12.0",
+        "eslint": "^10.13.0",
         "vitepress": "^2.0.0-alpha.20",
         "markdownlint-cli": "^0.49.1",
-        "typescript-eslint": "^8.71.1",
+        "typescript-eslint": "^8.72.0",
         "eslint-plugin-tsdoc": "^0.5.4",
-        "eslint-plugin-perfectionist": "^5.12.1",
-        "@types/node": "^26.6.4",
+        "eslint-plugin-perfectionist": "^5.13.0",
+        "@types/node": "^26.6.5",
+        "@types/markdown-it": "^14.1.2",
         "@viteplus/versions": "^2.3.0",
         "@remotex-labs/xjet": "^1.5.6",
         "@remotex-labs/xbuild": "^3.1.1"
