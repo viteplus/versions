@@ -40,8 +40,8 @@ themeConfig: {
 ```
 
 `v1.0` uses its own items; every other version falls back to `root`.
-The [`latest`](../config/configuration#latest) version is served at the root, so its own key, when it has one,
-is the nav of the root pages.
+The root home page shows the nav of the [`latest`](../config/configuration#latest) version,
+since that is the page it holds.
 
 ::: danger Important
 Version-specific entries do not inherit from `root`. Each key must be a complete tree.

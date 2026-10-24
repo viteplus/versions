@@ -25,7 +25,7 @@ export default defineVersionedConfig({
 | Option               | Type                                  | Purpose                                                   |
 |----------------------|---------------------------------------|-----------------------------------------------------------|
 | `current`            | `string`                              | Label of the version in `sources`                         |
-| `latest`             | `string`                              | The stable version, served at the root URL                |
+| `latest`             | `string`                              | The stable version, the one readers open at the root URL  |
 | `versions`           | `object`                              | Per-version settings: a switcher `label`, a source `path` |
 | `sources`            | `string`                              | Directory holding the current version's content           |
 | `archive`            | `string`                              | Directory whose subfolders are archived versions          |
@@ -36,17 +36,17 @@ Every option has a default, listed under [Defaults](#defaults).
 
 ## How versions map to URLs
 
-Every version is a name and a folder. The latest version is served at the root,
-and every other version under its own name:
+Every version is a name and a folder, and every version is served under its name, the latest one included:
 
 | Content                       | URL with `current: 'next'` and `latest: 'v2.x'` |
 |-------------------------------|-------------------------------------------------|
-| `archive/v2.x/guide.md`       | `/guide`                                        |
+| `archive/v2.x/guide.md`       | `/v2.x/guide`                                   |
 | `src/guide.md`                | `/next/guide`                                   |
 | `archive/v1.x/guide.md`       | `/v1.x/guide`                                   |
+| (the root)                    | `/`, showing `/v2.x/` in the address bar        |
 
-Without `latest`, the current version is the stable one and is served at the root,
-which is how every 2.x release worked.
+So a link to a page always names its version, and stays valid when a newer version becomes the latest one.
+The root shows the latest version's home page, see [`latest`](#latest).
 
 ## `current`
 
@@ -56,14 +56,14 @@ The label of the version that `sources` holds.
 current: 'v2.0.x'  // or 'next', 'latest', ...
 ```
 
-While it is also the [`latest`](#latest) version, its pages are served at the root.
-Otherwise they are served under the label, so with `current: 'next'` the guide of the sources lives at `/next/guide`.
+The pages of the sources are served under the label, so with `current: 'next'` the guide lives at `/next/guide`.
+It is also the stable version unless [`latest`](#latest) names another one.
 The label is a URL segment and a switcher entry, not a directory name, so nothing on disk has to match it.
 
 ## `latest`
 
 The name of the stable version: the current label, or the name of an archive folder.
-Its pages are served at the root, and the switcher tags it `(latest)`.
+It is the version readers open at the root, and the switcher tags it `(latest)`.
 
 ```ts
 versionsConfig: {
@@ -76,11 +76,16 @@ Leave it out, or set it to `''`, to keep the current version as the stable one.
 Set it to an archive folder while `sources` holds documentation for a release that is not out yet,
 the way release branching works: the coming version is reviewed at `/next/`, and readers keep landing on the stable one.
 
-::: tip Links that name the latest version
-A link written as `/v2.x/release` in your markdown points at the root while `v2.x` is the latest version,
-since that is where its pages live. Once a newer version becomes the latest one, the same link points at `/v2.x/release` again.
-Links in `config.ts`, such as nav and sidebar entries, are not rewritten.
-:::
+### The root URL
+
+When the build ends, the latest version's home page is copied to the root, `index.html`,
+and to the root of every locale, so any static server answers `/`.
+A small script in every page then rewrites the address to `/v2.x/` without reloading the page,
+so the address bar always names the version a reader is on.
+
+On a host that answers an unknown path with the `404.html` that VitePress builds,
+as GitHub Pages, Netlify, Vercel, Cloudflare Pages and `vitepress preview` do,
+an address without a version, such as a 2.x link to `/guide`, moves to `/v2.x/guide` the same way.
 
 ## `versions`
 
@@ -161,7 +166,7 @@ The directory is created for you, with a `.gitkeep`, if it does not exist.
 
 ::: tip Directory names never reach the URL
 `sources` and `archive` are filesystem locations only. With `sources: 'content'` the current version
-is still served at the root, or under its `current` label when another version is the latest one.
+is still served under its `current` label.
 :::
 
 The version switcher builds its list from `current`, the `archive` subfolders, and the versions with a `path`,

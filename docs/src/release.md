@@ -11,16 +11,15 @@ Release branching: draft the next release in `src` while readers keep landing on
 ```ts
 versionsConfig: {
     current: 'next',     // src is served at /next/
-    latest: 'v2.x',      // archive/v2.x is served at /
+    latest: 'v2.x',      // archive/v2.x is served at /v2.x/ and opened at /
     versions: {
         'v1.x': { label: 'v1.x (LTS)' }
     }
 }
 ```
 
-- **Added**: The [`latest`](guide/config/configuration#latest) option names the stable version, the one served at the root.
-  Every other version, the current one included, is served under its own name, so the sources can hold the docs of a
-  release that is not out yet. Without `latest`, the current version is the stable one and URLs stay as in 2.x,
+- **Added**: The [`latest`](guide/config/configuration#latest) option names the stable version, the one readers open at
+  the root. The sources can then hold the docs of a release that is not out yet, under their `current` label,
   see [How versions map to URLs](guide/config/configuration#how-versions-map-to-urls).
 
 - **Added**: [`versions`](guide/config/configuration#versions) holds per-version settings. A
@@ -31,25 +30,26 @@ versionsConfig: {
   such as a worktree of a release branch checked out inside the docs root.
 
 - **Added**: Absolute links in markdown stay inside the version of the page that holds them, so `/guide/` in an
-  archived page leads to that version's guide. A link that names the latest version, such as `/v2.x/release`,
-  points at the root while that version is the latest one. VitePress's dead link check sees the rewritten links.
-
-- **Added**: A sidebar or nav keyed by the latest version's name applies to the root pages, where that version is
-  served, see [Sidebar](guide/config/sidebar#version-specific-sidebars-object).
+  archived page leads to that version's guide. VitePress's dead link check sees the rewritten links.
 
 - **Added**: A version setup that would publish the wrong pages fails the build with a message that names the
   problem: two versions with one name, a misspelled `latest` or `versions` key, or a `path` outside the docs root,
   see [Errors that stop the build](guide/config/configuration#errors-that-stop-the-build).
 
+- **Changed**: Every version is served under its own name, the current one included, so a link always names the version
+  it was written for. The root opens the latest version's home page and shows `/v2.x/` in the address bar without
+  reloading the page, see [The root URL](guide/config/configuration#the-root-url). This replaces the 2.2.0 script that
+  reloaded `/<current>/…` at the root.
+
 - **Changed**: The switchers tag the [`latest`](guide/features/switchers#marking-the-latest-version) version with
-  `(latest)`, and the basic `versionSwitcher` dropdown links it to `/`.
+  `(latest)`.
 
 - **Changed**: Every page of every version runs through the
   [`rewritesHook`](guide/config/rewrites#the-hook), including pages of the sources without a locale folder,
   which 2.x served at their own path without calling the hook.
 
-- **Removed**: The script that sent `/<current>/…` to the root, added in 2.2.0. A link to the latest version's name
-  inside your markdown is now rewritten at build time instead, and nothing runs in the browser.
+- **Migration**: The current version's pages move from the root to `/<current>/`. An old link such as `/guide` still
+  opens the page on a host that serves `404.html` for unknown paths, and the address bar then shows the new URL.
 
 - **Migration**: An archive folder that carries the `current` label now stops the build, since both would publish
   under one URL. Set `current` to the version that the sources hold, or rename the folder.
@@ -59,11 +59,11 @@ versionsConfig: {
 
 ## Earlier releases
 
-- [v2.3.x](v2.3.x/release) - the 2.3 line (archived docs).
-- [v2.2.x](v2.2.x/release) - the 2.2 line (archived docs).
-- [v2.1.x](v2.1.x/release) - the 2.1 line (archived docs).
-- [v2.0.x](v2.0.x/release) - the 2.0 line (archived docs).
-- [v1.0.0](v1.0.x/release) - initial release (archived docs).
+- [v2.3.x](/v2.3.x/release) - the 2.3 line (archived docs).
+- [v2.2.x](/v2.2.x/release) - the 2.2 line (archived docs).
+- [v2.1.x](/v2.1.x/release) - the 2.1 line (archived docs).
+- [v2.0.x](/v2.0.x/release) - the 2.0 line (archived docs).
+- [v1.0.0](/v1.0.x/release) - initial release (archived docs).
 
 ## See also
 

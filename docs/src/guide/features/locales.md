@@ -292,13 +292,14 @@ When using locales with versioning, URLs are structured as:
 
 For example, with `en` as the root locale and `latest: 'v2.0'`:
 
-- `/guide/` - English documentation for version 2.0, the latest version
-- `/de/guide/` - German documentation for version 2.0
+- `/v2.0/guide/` - English documentation for version 2.0, the latest version
+- `/de/v2.0/guide/` - German documentation for version 2.0
 - `/de/v1.0/guide/` - German documentation for version 1.0
 - `/de/next/guide/` - German documentation for the current version, labelled `next`
 
-The root locale and the [`latest`](../config/configuration#latest) version are both served without a segment of their own.
-Every other version keeps its segment in every locale, and the language switcher keeps both the version and the page.
+The root locale is served without a segment of its own, and every version keeps its segment in every locale.
+`/` and `/de/` open the home page of the [`latest`](../config/configuration#the-root-url) version,
+and the language switcher keeps both the version and the page.
 Override the order with [`rewritesHook`](../config/rewrites).
 
 ## Version-Specific Locale Configuration

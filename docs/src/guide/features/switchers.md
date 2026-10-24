@@ -40,7 +40,7 @@ When enabled, the plugin automatically:
 - Creates a dropdown menu in your navigation bar with the specified label
 - Lists every version as a menu item linking to its home page, showing its [label](#version-labels)
 - Optionally lists the [`latest`](../config/configuration#latest) version first, tagged `(latest)`
-  and linking to `/` (controlled by `includeCurrentVersion`)
+  (controlled by `includeCurrentVersion`)
 
 ### Limitations
 
