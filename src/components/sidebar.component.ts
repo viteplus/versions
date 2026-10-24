@@ -397,6 +397,9 @@ export function normalizeSidebar(state: StateModel, results: Record<string, Side
  * appropriate sidebar items, either directly defined or inherited from parent locales.
  * This enables consistent navigation across all versions and locales.
  *
+ * The latest version is served at the root, so a sidebar keyed by its name replaces the sidebar of each root locale,
+ * after every other version has inherited the root sidebar.
+ *
  * @example
  * ```ts
  * const state = new StateModel({
@@ -480,6 +483,12 @@ export function normalizeSidebars(state: StateModel): Record<string, SidebarObje
             extractLocale(segments, localesList, versionsList);
             normalizedSidebar[index][safeJoin(index, ...segments)] = [ ...items ];
         }
+    }
+
+    const unversioned = (key: string): string => safeJoin(...key.split('/').filter(segment => segment !== state.latest)) || '/';
+    for (const lang of new Set([ '', ...localesList.filter(key => key !== 'root') ])) {
+        const own = normalizedSidebar[safeJoin(lang, state.latest)];
+        if (own) normalizedSidebar[lang || 'root'] = Object.fromEntries(Object.entries(own).map(([ key, items ]) => [ unversioned(key), items ]));
     }
 
     return normalizedSidebar;
