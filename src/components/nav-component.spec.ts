@@ -508,6 +508,50 @@ describe('parseNavs', () => {
             { text: 'some text', items: expect.any(Array) }
         ]);
     });
+
+    test('should give the root the nav keyed by the latest version, and keep the root nav for every other version', () => {
+        const mockState = {
+            latest: 'v2.0.x',
+            versionsList: [ 'next', 'v2.0.x' ],
+            versionsConfig: { current: 'next', versionSwitcher: false },
+            localesMap: {},
+            configuration: {
+                locales: {},
+                themeConfig: { nav: { root: [{ text: 'Generic', link: '/guide' }], 'v2.0.x': [{ text: 'V2', link: '/guide' }] } }
+            },
+            vitepressConfig: { locales: { root: {}, next: {} } }
+        } as unknown as StateModel;
+
+        mockInject.mockReturnValue(mockState);
+        parseNavs();
+        const { locales } = mockState.vitepressConfig;
+
+        expect(locales.root.themeConfig?.nav).toEqual([{ text: 'V2', link: '/guide' }]);
+        expect(locales.next.themeConfig?.nav).toEqual([{ text: 'Generic', link: '/next/guide' }]);
+    });
+
+    test('should keep the root nav unversioned for the latest version and prefix every other version', () => {
+        const mockState = {
+            latest: 'v2.0.x',
+            versionsList: [ 'next', 'v2.0.x' ],
+            versionsConfig: { current: 'next', versionSwitcher: false },
+            localesMap: { '/': 'root', de: 'de' },
+            configuration: {
+                locales: {},
+                themeConfig: { nav: [{ text: 'Guide', link: '/guide/' }] as NavItemType[] }
+            },
+            vitepressConfig: { locales: { root: {}, de: {}, next: {}, 'de/next': {} } }
+        } as unknown as StateModel;
+
+        mockInject.mockReturnValue(mockState);
+        parseNavs();
+        const { locales } = mockState.vitepressConfig;
+
+        expect(locales.root.themeConfig?.nav).toEqual([{ text: 'Guide', link: '/guide/' }]);
+        expect(locales.de.themeConfig?.nav).toEqual([{ text: 'Guide', link: '/de/guide/' }]);
+        expect(locales.next.themeConfig?.nav).toEqual([{ text: 'Guide', link: '/next/guide/' }]);
+        expect(locales['de/next'].themeConfig?.nav).toEqual([{ text: 'Guide', link: '/de/next/guide/' }]);
+    });
 });
 
 describe('getNavForLocale', () => {

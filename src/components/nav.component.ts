@@ -157,8 +157,9 @@ export function populateNav(items: Array<NavItemType>, version: string): Array<N
                     ...item.props,
                     versioningPlugin: {
                         routes: state.routesMap,
+                        labels: state.labels,
                         versions: state.versionsList,
-                        currentVersion: state.versionsConfig.current
+                        latestVersion: state.latest
                     }
                 }
             };
@@ -266,7 +267,7 @@ export function normalizeNavs(state: StateModel): Record<string, Array<NavItemTy
         normalizeNav(globalResults, state.configuration.themeConfig.nav as NavType);
     }
 
-    const switcher = versionSwitcher(state.versionsConfig, state.versionsList, state.versionsConfig.current);
+    const switcher = versionSwitcher(state.versionsConfig, state.versionsList, state.latest, state.labels);
     if(switcher) globalResults.root.push(switcher);
 
     if (!localesKeys.length) return globalResults;
@@ -354,10 +355,9 @@ export function getNavForLocale(navs: Record<string, Array<NavItemType>>, key: s
  * - Iterates through all locales defined in `vitepressConfig.locales`.
  * - For each locale:
  *   - Falls back to global navigation (`navs.root`) if locale-specific navigation is not defined.
+ *   - A root locale serves the latest version, so it takes the navigation keyed by that version first.
  *   - Ensures the locale’s `themeConfig` exists.
  *   - Populates the locale’s `themeConfig.nav` using {@link populateNav}, applying versioning where applicable.
- *
- * This function ensures that all locales have a fully initialized and version-aware navigation structure.
  *
  * @example
  * ```ts
@@ -372,9 +372,10 @@ export function parseNavs(): void {
     const state = inject(StateModel);
     const { vitepressConfig: { locales } } = state;
     const navs = normalizeNavs(state);
+    const rootLocales = [ 'root', ...Object.values(state.localesMap) ];
 
     for (const [ key, locale ] of Object.entries(locales)) {
-        const nav = getNavForLocale(navs, key);
+        const nav = getNavForLocale(navs, rootLocales.includes(key) ? join(key === 'root' ? '' : key, state.latest) : key);
 
         locale.themeConfig ??= {};
         locale.themeConfig.nav = populateNav(nav, key);
