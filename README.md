@@ -19,7 +19,8 @@ VitePress v1.6.4 and the v2.x line.
 
 ## Key Features
 
-- **Versioned routes**: serve the current docs from `src/` at the root and each `archive/` subfolder as a frozen, separately-routed version.
+- **Versioned routes**: serve the stable version at the root and every other version - the docs in `src/` and each `archive/` subfolder - under its own name.
+- **Release branching**: draft the next release at `/next/` with `latest` pointing at the stable version, and label versions such as `v1.x (LTS)`.
 - **Per-version navigation**: give every version its own nav and sidebar, or share one configuration across all of them.
 - **Version switcher**: a built-in `VersionSwitcher` component that lists every version and switches between them.
 - **Version-aware localization**: full multi-language support, with locale and version combined into clean URLs.
@@ -66,6 +67,26 @@ export default defineVersionedConfig({
 Current-version content lives in `docs/src` and is served at the site root; each subfolder of `docs/archive`
 becomes a frozen version. `defineVersionedConfig` wires the routing - you do not set `srcDir` yourself.
 
+## Stable and unreleased versions
+
+Point `latest` at an archived version while `docs/src` holds the docs of a release that is not out yet:
+
+```ts
+export default defineVersionedConfig({
+    versionsConfig: {
+        current: 'next',    // docs/src is served at /next/
+        latest: 'v2.x',     // docs/archive/v2.x is served at /
+        versions: {
+            'v1.x': { label: 'v1.x (LTS)' },        // switcher label
+            'v0.x': { path: 'legacy/v0' }           // a version from its own folder
+        }
+    }
+});
+```
+
+Absolute links in your markdown stay inside the version of the page that holds them, and a misspelled version
+name fails the build. See [Configuration Options](https://viteplus.github.io/versions/guide/config/configuration).
+
 ## Theme setup
 
 Register the `VersionSwitcher` component in your theme so it can be placed in the nav or used directly.
@@ -89,7 +110,7 @@ export default {
 docs/
 ├── .vitepress/
 │   └── config.ts
-├── src/            // current version content (served at the root)
+├── src/            // current version content (at the root, or under its label when another version is latest)
 │   ├── index.md
 │   └── guide/
 └── archive/        // archived versions (each subfolder is one frozen version)
@@ -114,13 +135,13 @@ export default defineVersionedConfig({
 ## Version-specific navigation
 
 `nav` and `sidebar` each accept an array (shared by every version) or an object keyed by version, where `root`
-is the current version. Version-specific entries are self-contained and do not inherit from `root`.
+is the default for every version without its own key. Version-specific entries are self-contained and do not inherit from `root`.
 
 ```ts
 export default defineVersionedConfig({
     themeConfig: {
         nav: {
-            // Default navigation for the current version
+            // Default navigation for every version without its own key
             root: [
                 { text: 'Home', link: '/' },
                 { text: 'Guide', link: '/guide/' }
