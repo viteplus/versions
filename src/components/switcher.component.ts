@@ -18,7 +18,7 @@ import type { NavItemWithChildrenType, NavItemWithLinkType } from '@interfaces/n
  * @remarks
  * - If `themeConfig.versionSwitcher === false`, no switcher is created.
  * - The returned navigation item contains child links for each version in `versions` other than `latest`.
- * - If `includeCurrentVersion` is enabled, a link to the root, where `latest` is served, comes first,
+ * - If `includeCurrentVersion` is enabled, a link to the home page of `latest` comes first,
  *   tagged `(latest)` unless its label already reads `latest`.
  * - All version links have `skipVersioning: true` to prevent further prefixing.
  *
@@ -37,7 +37,7 @@ import type { NavItemWithChildrenType, NavItemWithLinkType } from '@interfaces/n
  * // → {
  * //   text: "Versions",
  * //   items: [
- * //     { link: "/", text: "v2.0.0 (latest)", skipVersioning: true },
+ * //     { link: "/v2.0.0/", text: "v2.0.0 (latest)", skipVersioning: true },
  * //     { link: "/next/", text: "next", skipVersioning: true },
  * //     { link: "/v1.5.0/", text: "v1.5.0 (LTS)", skipVersioning: true }
  * //   ]
@@ -55,7 +55,7 @@ export function versionSwitcher(
 
     const { text, includeCurrentVersion } = themeConfig.versionSwitcher;
     const item = (version: string, label = labels[version] ?? version): NavItemWithLinkType =>
-        ({ text: label, link: version === latest ? '/' : `/${ version }/`, skipVersioning: true });
+        ({ text: label, link: `/${ version }/`, skipVersioning: true });
 
     const items = versions.filter(version => version !== latest).map(version => item(version));
     if (includeCurrentVersion) {
