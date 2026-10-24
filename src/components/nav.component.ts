@@ -355,7 +355,8 @@ export function getNavForLocale(navs: Record<string, Array<NavItemType>>, key: s
  * - Iterates through all locales defined in `vitepressConfig.locales`.
  * - For each locale:
  *   - Falls back to global navigation (`navs.root`) if locale-specific navigation is not defined.
- *   - A root locale serves the latest version, so it takes the navigation keyed by that version first.
+ *   - A root locale only holds the home page of the latest version and the `404` page,
+ *     so it takes the navigation of the latest version, with every link pointed into that version.
  *   - Ensures the locale’s `themeConfig` exists.
  *   - Populates the locale’s `themeConfig.nav` using {@link populateNav}, applying versioning where applicable.
  *
@@ -375,9 +376,9 @@ export function parseNavs(): void {
     const rootLocales = [ 'root', ...Object.values(state.localesMap) ];
 
     for (const [ key, locale ] of Object.entries(locales)) {
-        const nav = getNavForLocale(navs, rootLocales.includes(key) ? join(key === 'root' ? '' : key, state.latest) : key);
+        const version = rootLocales.includes(key) ? join(key === 'root' ? '' : key, state.latest) : key;
 
         locale.themeConfig ??= {};
-        locale.themeConfig.nav = populateNav(nav, key);
+        locale.themeConfig.nav = populateNav(getNavForLocale(navs, version), version);
     }
 }
