@@ -40,9 +40,17 @@ themeConfig: {
 ```
 
 `v1.0` uses its own items; every other version falls back to `root`.
+The [`latest`](../config/configuration#latest) version is served at the root, so its own key, when it has one,
+is the nav of the root pages.
 
 ::: danger Important
 Version-specific entries do not inherit from `root`. Each key must be a complete tree.
+:::
+
+::: warning Locales
+With [`locales`](./locales) configured, the version keys of the global `nav` are not read.
+Put them in the locale's own `nav` instead, as shown in
+[Version-Specific Locale Configuration](./locales#version-specific-locale-configuration).
 :::
 
 ## The `skipVersioning` flag
@@ -62,7 +70,7 @@ Links starting with `http` are already left alone, so the flag is only needed fo
 links that must always resolve to the same page.
 :::
 
-Without it, an internal link is rewritten to include the current version path.
+Without it, an internal link is rewritten to include the path of the version the reader is on.
 
 ## See also
 
