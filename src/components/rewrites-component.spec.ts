@@ -63,8 +63,8 @@ describe('createRouteResolver', () => {
         ${ 'src/guide/intro.md' }               | ${ 'v2.0.x/guide/intro.md' }
         ${ 'src/en/index.md' }                  | ${ 'v2.0.x/index.md' }
         ${ 'src/de/index.md' }                  | ${ 'de/v2.0.x/index.md' }
-        ${ 'archive/v1.0.x/docs/api/ref.md' }   | ${ 'docs/api/ref.md' }
-        ${ 'archive/v1.0.x/de/index.md' }       | ${ 'de/index.md' }
+        ${ 'archive/v1.0.x/docs/api/ref.md' }   | ${ 'v1.0.x/docs/api/ref.md' }
+        ${ 'archive/v1.0.x/de/index.md' }       | ${ 'de/v1.0.x/index.md' }
         ${ 'legacy/v0/de/index.md' }            | ${ 'de/v0.x/index.md' }
         ${ 'legacy/v00/index.md' }              | ${ 'legacy/v00/index.md' }
         ${ 'srcs/index.md' }                    | ${ 'srcs/index.md' }

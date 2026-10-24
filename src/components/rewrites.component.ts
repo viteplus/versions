@@ -50,14 +50,12 @@ export function rewritesHook(source: string, version: string, locale: string): s
  * A path under a folder of {@link StateModel.versionDirs} belongs to that version.
  * The resolver drops the folder, takes a leading locale folder off the rest,
  * and hands both to the `rewritesHook` of `versionsConfig`, which decides the final segment order.
- * The latest version from {@link StateModel.latest} passes an empty version, so it is served at the root.
  * Every other path stays untouched.
  *
  * @example
  * ```ts
  * const resolve = createRouteResolver();
  * resolve('src/guide/index.md');            // 'next/guide/index.md'
- * resolve('archive/v2.0.x/guide/index.md'); // 'guide/index.md' while v2.0.x is the latest
  * resolve('archive/v1.0.x/de/index.md');    // 'de/v1.0.x/index.md'
  * resolve('public/logo.png');               // 'public/logo.png'
  * ```
@@ -68,7 +66,7 @@ export function rewritesHook(source: string, version: string, locale: string): s
 
 export function createRouteResolver(): RouteResolverType {
     const state = inject(StateModel);
-    const { latest, localesMap, versionsConfig } = state;
+    const { localesMap, versionsConfig } = state;
     const localesList = Object.keys(localesMap);
     const folders = Object.entries(state.versionDirs);
 
@@ -76,8 +74,7 @@ export function createRouteResolver(): RouteResolverType {
         const match = folders.find(([ , folder ]) => id.startsWith(`${ folder }/`));
         if (!match) return id;
 
-        const [ name, folder ] = match;
-        const version = name === latest ? '' : name;
+        const [ version, folder ] = match;
         const path = id.slice(folder.length + 1);
         const localeKey = localesList.find(prefix => path.startsWith(`${ prefix }/`));
         if (!localeKey) return versionsConfig.hooks.rewritesHook(path, version, '');
