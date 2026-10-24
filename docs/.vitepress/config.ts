@@ -39,7 +39,7 @@ export default defineVersionedConfig({
         ]
     ],
     versionsConfig: {
-        current: 'v2.3.x',
+        current: 'v3.0.x',
         versionSwitcher: false
     },
     themeConfig: {
