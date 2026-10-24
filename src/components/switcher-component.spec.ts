@@ -21,10 +21,10 @@ describe('versionSwitcher', () => {
         };
 
         const result = versionSwitcher(themeConfig, [ 'latest', 'v1.0.0' ], 'latest');
-        expect(result?.items[0]).toEqual({ link: '/', text: 'latest', skipVersioning: true });
+        expect(result?.items[0]).toEqual({ link: '/latest/', text: 'latest', skipVersioning: true });
     });
 
-    test('should link the latest version to the root and list it once', () => {
+    test('should list the latest version first and only once', () => {
         const themeConfig: any = {
             versionSwitcher: { text: 'Versions', includeCurrentVersion: true }
         };
@@ -33,7 +33,7 @@ describe('versionSwitcher', () => {
         expect(result).toEqual({
             text: 'Versions',
             items: [
-                { link: '/', text: 'v2.0.0 (latest)', skipVersioning: true },
+                { link: '/v2.0.0/', text: 'v2.0.0 (latest)', skipVersioning: true },
                 { text: 'v1.5.0', link: '/v1.5.0/', skipVersioning: true }
             ]
         });
@@ -46,7 +46,7 @@ describe('versionSwitcher', () => {
 
         const result = versionSwitcher(themeConfig, [ 'next', 'v2.0.0', 'v1.5.0' ], 'v2.0.0');
         expect(result?.items).toEqual([
-            { link: '/', text: 'v2.0.0 (latest)', skipVersioning: true },
+            { link: '/v2.0.0/', text: 'v2.0.0 (latest)', skipVersioning: true },
             { text: 'next', link: '/next/', skipVersioning: true },
             { text: 'v1.5.0', link: '/v1.5.0/', skipVersioning: true }
         ]);
@@ -60,7 +60,7 @@ describe('versionSwitcher', () => {
         const labels = { 'v2.0.0': 'Two', 'v1.5.0': 'v1.5.0 (LTS)' };
         const result = versionSwitcher(themeConfig, [ 'v2.0.0', 'v1.5.0' ], 'v2.0.0', labels);
         expect(result?.items).toEqual([
-            { link: '/', text: 'Two (latest)', skipVersioning: true },
+            { link: '/v2.0.0/', text: 'Two (latest)', skipVersioning: true },
             { text: 'v1.5.0 (LTS)', link: '/v1.5.0/', skipVersioning: true }
         ]);
     });
