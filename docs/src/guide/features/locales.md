@@ -29,7 +29,8 @@ archive/
 ```
 
 > Each locale has its own folder, and all documentation files for that language should be placed in that folder.
-> This structure applies to both current (`src/`) and archived versions.
+> This structure applies to the current version (`src/`), to archived versions, and to versions with their own
+> [`path`](../config/configuration#path).
 
 ::: tip
 `src/` and `archive/` above are the defaults. If you renamed them with
@@ -289,15 +290,16 @@ When using locales with versioning, URLs are structured as:
 /{locale}/{version}/{path}
 ```
 
-For example:
+For example, with `en` as the root locale and `latest: 'v2.0'`:
 
-- `/en/v2.0/guide/` - English documentation for version 2.0
+- `/guide/` - English documentation for version 2.0, the latest version
+- `/de/guide/` - German documentation for version 2.0
 - `/de/v1.0/guide/` - German documentation for version 1.0
+- `/de/next/guide/` - German documentation for the current version, labelled `next`
 
-The root locale and the current version are both served without a segment of their own, so the
-English v2.0 guide above is reachable at `/guide/` when `en` is the root locale and `v2.0` is
-[`current`](../config/configuration#current). Override the order with
-[`rewritesHook`](../config/rewrites).
+The root locale and the [`latest`](../config/configuration#latest) version are both served without a segment of their own.
+Every other version keeps its segment in every locale, and the language switcher keeps both the version and the page.
+Override the order with [`rewritesHook`](../config/rewrites).
 
 ## Version-Specific Locale Configuration
 

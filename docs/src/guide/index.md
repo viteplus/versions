@@ -46,9 +46,13 @@ export default defineVersionedConfig({
   
   // Versioning configuration
   versionsConfig: {
-    current: 'latest',  // Label for current version
-    sources: 'src',     // Current version source directory
-    archive: 'versions', // Archive directory for older versions
+    current: 'next',      // Label of the version in sources
+    latest: 'v2.0',       // The stable version, served at the root
+    sources: 'src',       // Current version source directory
+    archive: 'archive',   // Archive directory for older versions
+    versions: {
+      'v1.0': { label: 'v1.0 (LTS)' }  // Per-version switcher label
+    },
     versionSwitcher: {
       text: 'Version',
       includeCurrentVersion: true
@@ -70,23 +74,25 @@ Organize your documentation files following this structure:
 docs/
 ├── .vitepress/
 │   └── config.ts
-├── src/            // Current version docs  ← sources
+├── src/            // Current version docs  ← sources   → /next/
 │   ├── index.md
 │   ├── guide/
 │   │   └── ...
 │   └── api/
 │       └── ...
 └── archive/       // Archived versions      ← archive
-    ├── v1.0/
+    ├── v1.0/                                          → /v1.0/
     │   ├── index.md
     │   └── ...
-    └── v2.0/
+    └── v2.0/                                          → /    (the latest version)
         ├── index.md
         └── ...
 ```
 
+The [`latest`](./config/configuration#latest) version is served at the root, and every other version under its own name.
+Leave `latest` out and the current version is the latest one, served at the root.
 Both directory names are configurable through [`sources`](./config/configuration#sources) and
-[`archive`](./config/configuration#archive). They are filesystem locations only — renaming them
+[`archive`](./config/configuration#archive). They are filesystem locations only, so renaming them
 does not change a single URL.
 
 ## Core Features
@@ -140,10 +146,16 @@ export default defineVersionedConfig({
 });
 ```
 
+### Stable and Unreleased Versions
+
+Point [`latest`](./config/configuration#latest) at an archived version while `sources` holds the docs of a coming release.
+Readers keep landing on the stable version at `/`, the coming one is reviewed at `/next/`,
+and every older version keeps a permanent URL under its name.
+
 ### Automatic Path Rewriting
 
 URLs are automatically structured based on versions and locales, creating clean,
-predictable paths.
+predictable paths. Absolute links in your markdown, such as `/guide/`, stay inside the version of the page that holds them.
 
 ## Advanced Configuration
 
@@ -185,13 +197,15 @@ export default {
 
 ## Key Configuration Options
 
-| Option                              | Description                                    |
-|-------------------------------------|------------------------------------------------|
-| `versionsConfig.current`            | Label for the current version (e.g., "latest") |
-| `versionsConfig.sources`            | Directory containing current version docs      |
-| `versionsConfig.archive`            | Directory containing archived versions         |
-| `versionsConfig.versionSwitcher`    | Configuration for the version switcher         |
-| `versionsConfig.hooks.rewritesHook` | Customize URL structure                        |
+| Option                              | Description                                         |
+|-------------------------------------|-----------------------------------------------------|
+| `versionsConfig.current`            | Label of the version in `sources` (e.g., "next")    |
+| `versionsConfig.latest`             | The stable version, served at the root              |
+| `versionsConfig.versions`           | Per-version settings: a switcher `label`, a `path`  |
+| `versionsConfig.sources`            | Directory containing current version docs           |
+| `versionsConfig.archive`            | Directory containing archived versions              |
+| `versionsConfig.versionSwitcher`    | Configuration for the version switcher              |
+| `versionsConfig.hooks.rewritesHook` | Customize URL structure                             |
 
 ## See also
 

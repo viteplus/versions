@@ -17,7 +17,7 @@ const config = {
         // other version settings...
         versionSwitcher: { // [!code focus]
             text: 'Switch Version',           // [!code focus] The display label for the dropdown
-            includeCurrentVersion: true       // [!code focus] Whether to include current version in the dropdown
+            includeCurrentVersion: true       // [!code focus] Whether to list the latest version first, tagged (latest)
         } // [!code focus]
     }
 }
@@ -38,8 +38,9 @@ When enabled, the plugin automatically:
 
 - Builds a list of all available versions from your documentation
 - Creates a dropdown menu in your navigation bar with the specified label
-- Lists all versions as menu items
-- Optionally includes the current version in the dropdown (controlled by `includeCurrentVersion`)
+- Lists every version as a menu item linking to its home page, showing its [label](#version-labels)
+- Optionally lists the [`latest`](../config/configuration#latest) version first, tagged `(latest)`
+  and linking to `/` (controlled by `includeCurrentVersion`)
 
 ### Limitations
 
@@ -111,8 +112,9 @@ The `VersionSwitcher` component offers significant advantages:
 
 ### Marking the Latest Version
 
-The switcher tags the current version as the latest one, both on the flyout button and in the menu,
-so `v2.1.x` reads as `v2.1.x (latest)`. Set `latestLabel` in the nav item's `props` to change the tag,
+The switcher tags the [`latest`](../config/configuration#latest) version, both on the flyout button and in the menu,
+so `v2.1.x` reads as `v2.1.x (latest)`. Without `latest`, that is the current version.
+Set `latestLabel` in the nav item's `props` to change the tag,
 for example to translate it, or set it to an empty string to turn it off:
 
 ```ts
@@ -121,8 +123,22 @@ nav: [
 ]
 ```
 
-A current version that already reads as the tag, such as the default `current: 'latest'`, is shown
+A latest version whose label already reads as the tag, such as the default `current: 'latest'`, is shown
 as it is rather than as `latest (latest)`.
+
+### Version Labels
+
+Both switchers show a version's [`label`](../config/configuration#label) instead of its name when it has one:
+
+```ts
+versionsConfig: {
+    versions: {
+        'v1.x': { label: 'v1.x (LTS)' } // [!code focus]
+    }
+}
+```
+
+The menu entry reads `v1.x (LTS)`, and its link still points at `/v1.x/`.
 
 ### Changing the Label
 
@@ -143,7 +159,7 @@ Each locale has its own `nav`, so give each one its own `VersionSwitcher` with i
 ```ts
 export default defineVersionedConfig({
     versionsConfig: {
-        current: 'v2.3.x',
+        current: 'v3.0.x',
         versionSwitcher: false // [!code focus]
     },
     locales: {
@@ -183,9 +199,10 @@ resolver that builds the [rewrites](../config/rewrites), so a listed route is al
 :::
 
 ::: tip
-The version list is built from the [`archive`](../config/configuration#archive) subfolders plus
-[`current`](../config/configuration#current), so you never list versions by hand. The switcher
-stays hidden until at least one version is archived.
+The version list is built from [`current`](../config/configuration#current), the
+[`archive`](../config/configuration#archive) subfolders, and the versions with a
+[`path`](../config/configuration#path), so you never list versions by hand.
+The switcher stays hidden until there is more than one version.
 :::
 
 ## See also

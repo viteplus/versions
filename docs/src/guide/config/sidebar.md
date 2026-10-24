@@ -5,7 +5,7 @@ sidebar across every version, or give each version its own.
 
 ## Shared sidebar (array)
 
-An array applies the same sidebar to all versions, with version prefixes added to each link:
+An array applies the same sidebar to all versions, with each link pointed at the version the reader is on:
 
 ```ts
 themeConfig: {
@@ -26,8 +26,9 @@ themeConfig: {
 
 ## Version-specific sidebars (object)
 
-Key the object by version. `root` is the current version; each archived version uses its
-[`archive`](./configuration#archive) subfolder name as the key:
+Key the object by version name. `root` is the default for every version without a key of its own,
+and any version, including the current one, can have a key: the `current` label, an
+[`archive`](./configuration#archive) subfolder name, or the name of a version with a [`path`](./configuration#path):
 
 ```ts
 themeConfig: {
@@ -57,6 +58,9 @@ themeConfig: {
 Version-specific entries do not inherit from `root`. Each key must be a complete tree.
 :::
 
+The [`latest`](./configuration#latest) version is served at the root, so its own key, when it has one,
+is the sidebar of the root pages. Every other version without a key keeps `root`.
+
 ## The `skipVersioning` flag
 
 Any sidebar item can set `skipVersioning: true` to opt out of version prefixing:
@@ -79,7 +83,7 @@ that must always point at the same page.
 External links starting with `http` are left alone automatically — no flag needed.
 :::
 
-Without the flag, a link is rewritten to include the current version path.
+Without the flag, a link is rewritten to include the path of the version the reader is on.
 
 ### Nested items
 
