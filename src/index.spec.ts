@@ -14,6 +14,7 @@ import { forceInject } from '@remotex-labs/xinject';
 import { parseNavs } from '@components/nav.component';
 import { parseLocale } from '@components/locale.component';
 import { parseSidebars } from '@components/sidebar.component';
+import { parseLatestEntry } from '@components/latest.component';
 import { parseVersionLinks } from '@components/links.component';
 import { parseRoutesComponent } from '@components/rewrites.component';
 import { defaultConfiguration } from '@constants/configuration.constant';
@@ -29,6 +30,7 @@ describe('defineVersionedConfig', () => {
     let mockParseSidebar: MockState<any>;
     let mockParseRoutes: MockState<any>;
     let mockParseLinks: MockState<any>;
+    let mockParseLatest: MockState<any>;
 
     beforeEach(() => {
         xJet.resetAllMocks();
@@ -38,6 +40,7 @@ describe('defineVersionedConfig', () => {
         mockParseSidebar = xJet.mock(parseSidebars).mockImplementation(<any> (() => {}));
         mockParseRoutes = xJet.mock(parseRoutesComponent).mockImplementation(<any> (() => {}));
         mockParseLinks = xJet.mock(parseVersionLinks).mockImplementation(<any> (() => {}));
+        mockParseLatest = xJet.mock(parseLatestEntry).mockImplementation(<any> (() => {}));
     });
 
     test('should merge user configuration with default and return VitePress config', () => {
@@ -59,6 +62,7 @@ describe('defineVersionedConfig', () => {
         expect(mockParseSidebar).toHaveBeenCalled();
         expect(mockParseRoutes).toHaveBeenCalled();
         expect(mockParseLinks).toHaveBeenCalled();
+        expect(mockParseLatest).toHaveBeenCalled();
 
         expect(result).toBe(mockState.vitepressConfig);
     });
