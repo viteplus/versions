@@ -15,6 +15,7 @@ import { parseNavs } from '@components/nav.component';
 import { deepMerge } from '@components/object.component';
 import { parseLocale } from '@components/locale.component';
 import { parseSidebars } from '@components/sidebar.component';
+import { parseLatestEntry } from '@components/latest.component';
 import { parseVersionLinks } from '@components/links.component';
 import { parseRoutesComponent } from '@components/rewrites.component';
 import { defaultConfiguration } from '@constants/configuration.constant';
@@ -41,6 +42,7 @@ export function defineVersionedConfig(userConfiguration: PartialConfigurationTyp
 
     parseRoutesComponent();
     parseVersionLinks();
+    parseLatestEntry();
     parseNavs();
     parseSidebars();
 
