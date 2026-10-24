@@ -2,7 +2,6 @@
  * Type-only imports erased during TypeScript compilation.
  */
 
-import type { Dirent } from 'fs';
 import type { ConfigurationInterface } from '@interfaces/configuration.interface';
 import type { VersionsConfigInterface, VitepressConfigInterface } from '@interfaces/configuration.interface';
 
@@ -10,11 +9,11 @@ import type { VersionsConfigInterface, VitepressConfigInterface } from '@interfa
  * Imports
  */
 
-import { join, posix } from 'path';
 import { Injectable } from '@remotex-labs/xinject';
 import { xterm } from '@remotex-labs/xansi/xterm.component';
 import { getLanguageOnly } from '@components/locale.component';
 import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'fs';
+import { isAbsolute, join, posix, relative, resolve, sep } from 'path';
 import { defaultConfiguration } from '@constants/configuration.constant';
 
 /**
@@ -119,16 +118,77 @@ export class StateModel {
     readonly vitepressConfig: VitepressConfigInterface;
 
     /**
-     * List of all available documentation versions.
+     * The names of every published version.
      *
      * @remarks
-     * This array is populated during initialization (`init()`) by reading the archive
-     * and sources directories. Each element is a version string (e.g., `"1.0"`, `"2.0"`).
+     * These are the names of {@link versionDirs} in the order that `init()` adds them:
+     * the current version first, then every folder under {@link archivePath},
+     * then every version that `versionsConfig.versions` gives its own `path`.
+     *
+     * @example
+     * ```ts
+     * state.versionsList; // [ 'next', 'v2.x', 'v1.x' ]
+     * ```
      *
      * @since 2.0.0
      */
 
-    readonly versionsList: Array<string> = [];
+    get versionsList(): Array<string> {
+        return Object.keys(this.versionDirs);
+    }
+
+    /**
+     * Maps each version name to its folder, relative to {@link root} and in POSIX form.
+     *
+     * @remarks
+     * The rewrites read every page of a version from this folder and publish it under the version name.
+     *
+     * @example
+     * ```ts
+     * state.versionDirs; // { next: 'src', 'v2.x': 'archive/v2.x', 'v0.x': 'legacy/v0' }
+     * ```
+     *
+     * @see https://github.com/viteplus/versions/issues/55
+     * @since 3.0.0
+     */
+
+    readonly versionDirs: Record<string, string> = {};
+
+    /**
+     * The name of the stable version.
+     *
+     * @remarks
+     * It is `versionsConfig.latest`, or `versionsConfig.current` when that is empty.
+     * Its pages are served at the root of the site without a version segment,
+     * and the switchers tag this version as the latest one.
+     *
+     * @example
+     * ```ts
+     * state.latest; // 'v2.x'
+     * ```
+     *
+     * @see https://github.com/viteplus/versions/issues/55
+     * @since 3.0.0
+     */
+
+    latest: string = '';
+
+    /**
+     * Maps each version name to the text that the switchers show for it.
+     *
+     * @remarks
+     * The text is the `label` of `versionsConfig.versions`, falling back to the version name.
+     *
+     * @example
+     * ```ts
+     * state.labels; // { 'v2.x': 'v2.x', 'v1.x': 'v1.x (LTS)' }
+     * ```
+     *
+     * @see https://github.com/viteplus/versions/issues/55
+     * @since 3.0.0
+     */
+
+    readonly labels: Record<string, string> = {};
 
     /**
      * Maps locale keys to their effective base paths.
@@ -160,8 +220,7 @@ export class StateModel {
      * Maps each version label to the routes that version publishes.
      *
      * @remarks
-     * Keys are version labels, the current one taken from `versionsConfig.current`
-     * and the archived ones from the folder names under {@link archivePath}.
+     * Keys are the names of {@link versionsList}.
      * Values are the published routes of that version, the same strings VitePress
      * receives back from `vitepressConfig.rewrites`.
      *
@@ -174,7 +233,7 @@ export class StateModel {
      * @example
      * ```ts
      * routesMap = {
-     *   'v2.0.x': [ 'index.md', 'release.md', 'guide/index.md' ],
+     *   'v2.0.x': [ 'v2.0.x/index.md', 'v2.0.x/guide/index.md' ],
      *   'v1.0.x': [ 'v1.0.x/index.md', 'v1.0.x/release.md' ]
      * };
      * ```
@@ -213,122 +272,61 @@ export class StateModel {
         this.sourcesPath = join(this.root, this.sources);
         this.archivePath = join(this.root, this.archive);
 
-        if (!existsSync(this.sourcesPath)) {
-            console.error(xterm.red('[ viteplus ]'), `Source directory ${ this.sourcesPath } does not exist\n`);
-            throw new Error(`Source directory ${ this.sourcesPath } does not exist`);
-        }
+        if (!existsSync(this.sourcesPath)) this.fail(`Source directory ${ this.sourcesPath } does not exist`);
 
         this.makeArchiveDirectory(this.archivePath);
         this.vitepressConfig = this.createVitepressConfig();
     }
 
     /**
-     * Initializes the state model by scanning archive directory and setting up locale configuration.
+     * Initializes the state model by collecting the published versions and setting up the locale entries.
      *
-     * @returns The current instance for method chaining.
+     * @returns The current instance for method chaining
+     *
+     * @throws Error - When two versions share a name, when a `path` is no folder inside {@link root},
+     * or when `versionsConfig.latest` or a key of `versionsConfig.versions` names no version
      *
      * @remarks
-     * This method performs the initial setup sequence for a multi-version documentation system
-     * by discovering available versions and preparing the locale infrastructure. It executes
-     * three primary operations:
-     *
-     * 1. **Root Locale Initialization**: Sets up the root locale entry in {@link vitepressConfig.locales}
-     *    with an empty theme configuration, establishing the foundation for all locale-specific settings
-     * 2. **Version Discovery**: Scans {@link archivePath} using {@link readdirSync} to identify all
-     *    subdirectories, which represent available documentation versions. Each subdirectory name
-     *    is added to {@link versionsList}
-     * 3. **Locale Map Setup**: Calls {@link initializeLocalesMap} to establish the locale mapping
-     *    structure and populate versioned locale entries
-     *
-     * The archive directory structure is expected to contain version folders:
-     * ```
-     * archive/
-     *   ├── v1.0/
-     *   ├── v2.0/
-     *   └── latest/
-     * ```
-     *
-     * Each subdirectory discovered becomes a version entry, enabling the system to generate
-     * versioned locale configurations and routing structures for multi-version documentation.
-     *
-     * The root locale is initialized first to ensure a consistent base exists before user-defined
-     * locale configurations are applied through {@link initializeLocalesMap}.
-     *
-     * Method chaining support allows for fluent initialization patterns, making it easy to
-     * combine multiple setup operations in a readable sequence.
+     * Every version is a name and a folder in {@link versionDirs}:
+     * the current version reads from `sources`, an archived version from its folder under {@link archivePath},
+     * and a version with its own `path` from that folder.
+     * A misspelled name fails the build instead of leaving a version unpublished.
      *
      * @example
      * ```ts
-     * // Basic initialization
-     * const state = new StateModel(config);
-     * state.init();
-     *
-     * console.log(state.versionsList);
-     * // ['v1.0', 'v2.0', 'v3.0', 'latest']
-     *
-     * console.log(state.vitepressConfig.locales['root']);
-     * // { themeConfig: {} }
-     *
-     * // Method chaining pattern
-     * const state = new StateModel(config)
-     *   .init();
-     *
-     * console.log(`Initialized with ${state.versionsList.length} versions`);
-     *
-     * // Use case: Dynamic version detection
-     * const config = {
-     *   versionsConfig: {
-     *     sources: 'src',
-     *     archive: 'versions'
-     *   },
-     *   locales: {
-     *     root: { lang: 'en-US', label: 'English' },
-     *     '/de/': { lang: 'de-DE', label: 'Deutsch' }
-     *   }
-     * };
-     *
+     * // archive/ holds v1.0.x, and versionsConfig.current is 'v2.0.x'
      * const state = new StateModel(config).init();
      *
-     * // Archive structure:
-     * // versions/
-     * //   ├── v1.0.0/
-     * //   ├── v2.0.0/
-     * //   └── latest/
-     *
-     * console.log(state.versionsList);
-     * // ['v1.0.0', 'v2.0.0']
-     *
-     * // Locale entries created for each version
-     * console.log(Object.keys(state.vitepressConfig.locales));
-     * // ['root', 'v1.0.0', 'v2.0.0', 'latest', '/de/', 'de/v1.0.0', 'de/v2.0.0']
-     *
-     * // Use case: Error handling
-     * try {
-     *   const state = new StateModel(config).init();
-     *   if (state.versionsList.length === 0) {
-     *     console.warn('No versions found in archive');
-     *   }
-     * } catch (error) {
-     *   console.error('Failed to initialize state:', error);
-     * }
+     * state.versionsList;                         // [ 'v2.0.x', 'v1.0.x' ]
+     * state.latest;                               // 'v2.0.x'
+     * Object.keys(state.vitepressConfig.locales); // [ 'root', 'v1.0.x' ], since the latest one is served at the root
      * ```
      *
-     * @see archivePath
-     * @see readdirSync
-     * @see versionsList
-     * @see vitepressConfig
+     * @see versionDirs
      * @see initializeLocalesMap
      *
      * @since 2.0.0
      */
 
     init(): this {
+        const { current, latest, versions } = this.versionsConfig;
         this.vitepressConfig.locales.root = { themeConfig: {} };
-        const versionFolders = readdirSync(this.archivePath, { withFileTypes: true })
-            .filter((entry: Dirent) => entry.isDirectory())
-            .map((entry: Dirent) => entry.name);
 
-        this.versionsList.push(...versionFolders);
+        this.addVersion(current, this.sources);
+        for (const entry of readdirSync(this.archivePath, { withFileTypes: true })) {
+            if (entry.isDirectory()) this.addVersion(entry.name, posix.join(this.archive, entry.name));
+        }
+
+        for (const [ name, { path }] of Object.entries(versions)) {
+            if (path) this.addVersion(name, this.versionFolder(name, path));
+        }
+
+        for (const name of [ latest, ...Object.keys(versions) ]) {
+            if (name && !this.versionDirs[name]) this.fail(`Version ${ name } is neither the current version nor an archive folder`);
+        }
+
+        this.latest = latest || current;
+        for (const version of this.versionsList) this.labels[version] = versions[version]?.label ?? version;
         this.initializeLocalesMap();
 
         return this;
@@ -360,7 +358,7 @@ export class StateModel {
             for (const key of keys) {
                 const index = getLanguageOnly(userLocales[key].lang ?? key);
                 for (const version of this.versionsList) {
-                    if(key === rootLocaleKey) continue;
+                    if (key === rootLocaleKey || version === this.latest) continue;
                     const versionPath = posix.join(index, version);
                     locales[versionPath] = {};
                 }
@@ -375,8 +373,73 @@ export class StateModel {
         }
 
         for (const version of this.versionsList) {
-            locales[version] = {};
+            if (version !== this.latest) locales[version] = {};
         }
+    }
+
+    /**
+     * Publishes a version from a folder.
+     *
+     * @param name - The name of the version, which becomes its URL segment
+     * @param folder - The folder of the version, relative to {@link root}
+     *
+     * @throws Error - When another version already carries the name
+     *
+     * @remarks
+     * Two versions with one name would publish over each other's pages,
+     * such as an archive folder named after the current version.
+     *
+     * @since 3.0.0
+     */
+
+    private addVersion(name: string, folder: string): void {
+        const taken = this.versionDirs[name];
+        if (taken) this.fail(`Version ${ name } is published from both ${ taken } and ${ folder }, rename one of them`);
+
+        this.versionDirs[name] = folder;
+    }
+
+    /**
+     * Resolves the `path` of a version to its folder relative to {@link root}.
+     *
+     * @param name - The name of the version, for the error message
+     * @param path - The `path` setting of the version
+     * @returns The folder in POSIX form
+     *
+     * @throws Error - When the path is no existing folder inside {@link root}
+     *
+     * @remarks
+     * VitePress builds only the files under its source directory, so a folder outside {@link root} is rejected.
+     *
+     * @since 3.0.0
+     */
+
+    private versionFolder(name: string, path: string): string {
+        const folder = relative(this.root, resolve(this.root, path)).split(sep).join('/');
+        if (!folder || folder.startsWith('..') || isAbsolute(folder) || !existsSync(join(this.root, folder))) {
+            this.fail(`Path ${ path } of version ${ name } has to be an existing folder inside ${ this.root }`);
+        }
+
+        return folder;
+    }
+
+    /**
+     * Reports a configuration error and stops loading the configuration.
+     *
+     * @param message - The description of the error
+     *
+     * @throws Error - Always, carrying the given message
+     *
+     * @remarks
+     * The message goes to the console in red first,
+     * so it stays visible above the stack trace that VitePress prints for the thrown error.
+     *
+     * @since 3.0.0
+     */
+
+    private fail(message: string): never {
+        console.error(xterm.red('[ viteplus ]'), `${ message }\n`);
+        throw new Error(message);
     }
 
     /**
