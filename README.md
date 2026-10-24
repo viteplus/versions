@@ -19,7 +19,7 @@ VitePress v1.6.4 and the v2.x line.
 
 ## Key Features
 
-- **Versioned routes**: serve the stable version at the root and every other version - the docs in `src/` and each `archive/` subfolder - under its own name.
+- **Versioned routes**: serve every version - the docs in `src/` and each `archive/` subfolder - under its own name, and open the stable one at `/`.
 - **Release branching**: draft the next release at `/next/` with `latest` pointing at the stable version, and label versions such as `v1.x (LTS)`.
 - **Per-version navigation**: give every version its own nav and sidebar, or share one configuration across all of them.
 - **Version switcher**: a built-in `VersionSwitcher` component that lists every version and switches between them.
@@ -64,8 +64,8 @@ export default defineVersionedConfig({
 });
 ```
 
-Current-version content lives in `docs/src` and is served at the site root; each subfolder of `docs/archive`
-becomes a frozen version. `defineVersionedConfig` wires the routing - you do not set `srcDir` yourself.
+Current-version content lives in `docs/src` and is served under its `current` label; each subfolder of `docs/archive`
+becomes a frozen version, and `/` opens the latest one. `defineVersionedConfig` wires the routing - you do not set `srcDir` yourself.
 
 ## Stable and unreleased versions
 
@@ -75,7 +75,7 @@ Point `latest` at an archived version while `docs/src` holds the docs of a relea
 export default defineVersionedConfig({
     versionsConfig: {
         current: 'next',    // docs/src is served at /next/
-        latest: 'v2.x',     // docs/archive/v2.x is served at /
+        latest: 'v2.x',     // docs/archive/v2.x is served at /v2.x/ and opened at /
         versions: {
             'v1.x': { label: 'v1.x (LTS)' },        // switcher label
             'v0.x': { path: 'legacy/v0' }           // a version from its own folder
@@ -110,7 +110,7 @@ export default {
 docs/
 ├── .vitepress/
 │   └── config.ts
-├── src/            // current version content (at the root, or under its label when another version is latest)
+├── src/            // current version content (served under its current label)
 │   ├── index.md
 │   └── guide/
 └── archive/        // archived versions (each subfolder is one frozen version)
