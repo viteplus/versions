@@ -172,7 +172,7 @@ export type RequireKeysType<T, K extends keyof T> = Omit<T, K> & Required<Pick<T
  * @example
  * ```ts
  * const resolve: RouteResolverType = createRouteResolver();
- * resolve('src/guide/index.md');            // 'guide/index.md'
+ * resolve('src/guide/index.md');            // 'v2.0.x/guide/index.md'
  * resolve('archive/v1.0.x/guide/index.md'); // 'v1.0.x/guide/index.md'
  * ```
  *
