@@ -2,120 +2,83 @@
  * Imports
  */
 
-import { copyFileSync, existsSync } from 'fs';
 import { inject } from '@remotex-labs/xinject';
-import { latestScript, parseLatestEntry } from '@components/latest.component';
+import { readFileSync, writeFileSync } from 'fs';
+import { parseLatestEntry } from '@components/latest.component';
 
 /**
  * Tests
  */
 
-function runScript(script: string, pathname: string, search = '', hash = ''): string | undefined {
-    let target: string | undefined;
-    const events: Array<any> = [];
-    const history: any = { state: null, replaceState: (state: any, title: string, url: string) => (history.state = state, target = url) };
-    class PopStateEvent { constructor(readonly type: string, readonly init: any) {} }
-
-    new Function('location', 'history', 'dispatchEvent', 'PopStateEvent', script)(
-        { pathname, search, hash }, history, (event: any) => events.push(event), PopStateEvent
-    );
-
-    // the router ignores a popstate event whose state is null
-    expect(events.map(event => [ event.type, event.init.state !== null ])).toEqual(target ? [[ 'popstate', true ]] : []);
-
-    return target;
-}
-
-describe('latestScript', () => {
-    const versions = [ 'v2.0.x', 'v1.0.x' ];
-
-    test.each`
-        base            | pathname                 | expected
-        ${ '/' }        | ${ '/' }                 | ${ '/v2.0.x/' }
-        ${ '/' }        | ${ '/index.html' }       | ${ '/v2.0.x/index.html' }
-        ${ '/' }        | ${ '/guide/' }           | ${ '/v2.0.x/guide/' }
-        ${ '/' }        | ${ '/de/' }              | ${ '/de/v2.0.x/' }
-        ${ '/' }        | ${ '/de' }               | ${ '/de/v2.0.x/' }
-        ${ '/' }        | ${ '/de/guide/' }        | ${ '/de/v2.0.x/guide/' }
-        ${ '/docs/' }   | ${ '/docs/' }            | ${ '/docs/v2.0.x/' }
-        ${ '/docs/' }   | ${ '/docs/de/guide/' }   | ${ '/docs/de/v2.0.x/guide/' }
-    `('should move $pathname under $base to $expected', ({ base, pathname, expected }: any) => {
-        expect(runScript(latestScript(base, 'v2.0.x', versions, [ 'de' ]), pathname)).toBe(expected);
-    });
-
-    test.each`
-        pathname
-        ${ '/v2.0.x/guide/' }
-        ${ '/v1.0.x/' }
-        ${ '/v1.0.x' }
-        ${ '/de/v1.0.x/guide/' }
-        ${ '/v2.0.x/missing.html' }
-    `('should leave $pathname, which names a version, alone', ({ pathname }: any) => {
-        expect(runScript(latestScript('/', 'v2.0.x', versions, [ 'de' ]), pathname)).toBeUndefined();
-    });
-
-    test('should leave a path outside the base alone', () => {
-        expect(runScript(latestScript('/docs/', 'v2.0.x', versions, []), '/guide/')).toBeUndefined();
-    });
-
-    test('should keep the query string and the hash', () => {
-        expect(runScript(latestScript('/', 'v2.0.x', versions, []), '/guide/', '?a=1', '#setup')).toBe('/v2.0.x/guide/?a=1#setup');
-    });
-
-    test('should escape every value so the script cannot close its tag', () => {
-        expect(latestScript('/</script>/', '</script>', [ '</script>' ], [ '</script>' ])).not.toContain('</');
-    });
-});
-
 describe('parseLatestEntry', () => {
     let state: any;
+    const userPlugin = { name: 'user' };
+    const siteConfig = { outDir: '/out' };
+    const plugin = (): any => state.vitepressConfig.vite.plugins.at(-1);
 
     beforeEach(() => {
         xJet.restoreAllMocks();
 
         state = {
             latest: 'v2.0.x',
-            versionsList: [ 'v2.0.x', 'v1.0.x' ],
             localesMap: { '/': 'root', de: 'de' },
-            vitepressConfig: { base: '/docs' }
+            vitepressConfig: { base: '/docs/', vite: { plugins: [ userPlugin ] } }
         };
 
         xJet.mock(inject).mockReturnValue(state);
+        xJet.mock(readFileSync).mockReturnValue(<any> '<head></head>');
+        xJet.mock(writeFileSync).mockImplementation(() => undefined);
     });
 
-    test('should add the script after the user head entries', () => {
-        const userHead = [[ 'meta', { name: 'theme-color', content: '#fff' }]];
-        state.vitepressConfig.head = userHead;
-
+    test.each`
+        originalUrl                | url
+        ${ '/docs/' }              | ${ '/docs/v2.0.x/' }
+        ${ '/docs/index.html?a' }  | ${ '/docs/v2.0.x/' }
+        ${ '/docs/de' }            | ${ '/docs/de/v2.0.x/' }
+    `('should point the dev page of the root $originalUrl at $url', ({ originalUrl, url }: any) => {
         parseLatestEntry();
-        const [ tag, , script ] = state.vitepressConfig.head[1];
 
-        expect(state.vitepressConfig.head[0]).toBe(userHead[0]);
-        expect(tag).toBe('script');
-        expect(runScript(script, '/docs/de/guide/')).toBe('/docs/de/v2.0.x/guide/');
+        expect(state.vitepressConfig.vite.plugins[0]).toBe(userPlugin);
+        expect(plugin().transformIndexHtml('<head>', { originalUrl })).toContain(`"${ url }"`);
     });
 
-    test('should copy the latest home page to the root of the site and of every locale, then run the user hook', async () => {
+    test('should leave a dev page below the root untouched', () => {
+        parseLatestEntry();
+
+        expect(plugin().transformIndexHtml('<head>', { originalUrl: '/docs/v1.0.x/guide' })).toBe('<head>');
+    });
+
+    test('should copy the latest home page to every root with its versioned address, then run the user hook', async () => {
         const userBuildEnd = xJet.fn();
         state.vitepressConfig.buildEnd = userBuildEnd;
-        xJet.mock(existsSync).mockImplementation((path: any) => String(path).includes('v2.0.x'));
-        xJet.mock(copyFileSync).mockImplementation(() => undefined);
 
         parseLatestEntry();
-        await state.vitepressConfig.buildEnd({ outDir: '/out' });
+        await state.vitepressConfig.buildEnd(siteConfig);
 
-        expect(copyFileSync).toHaveBeenNthCalledWith(1, '/out/v2.0.x/index.html', '/out/index.html');
-        expect(copyFileSync).toHaveBeenNthCalledWith(2, '/out/de/v2.0.x/index.html', '/out/de/index.html');
-        expect(userBuildEnd).toHaveBeenCalledWith({ outDir: '/out' });
+        expect(readFileSync).toHaveBeenCalledWith('/out/de/v2.0.x/index.html', 'utf8');
+        expect(writeFileSync).toHaveBeenNthCalledWith(1, '/out/index.html', expect.stringContaining('"/docs/v2.0.x/"'), { flag: 'wx' });
+        expect(writeFileSync).toHaveBeenNthCalledWith(2, '/out/de/index.html', expect.stringContaining('"/docs/de/v2.0.x/"'), { flag: 'wx' });
+        expect(userBuildEnd).toHaveBeenCalledWith(siteConfig);
     });
 
-    test('should keep a root page that the site already publishes', async () => {
-        xJet.mock(existsSync).mockReturnValue(true);
-        xJet.mock(copyFileSync).mockImplementation(() => undefined);
+    test('should skip a root that already holds a page, and a locale without a latest home page', async () => {
+        xJet.mock(writeFileSync).mockImplementation((path: any) => {
+            const code = path === '/out/index.html' ? 'EEXIST' : 'ENOENT';
+            throw Object.assign(new Error(code), { code });
+        });
 
         parseLatestEntry();
-        await state.vitepressConfig.buildEnd({ outDir: '/out' });
 
-        expect(copyFileSync).not.toHaveBeenCalled();
+        await expect(state.vitepressConfig.buildEnd(siteConfig)).resolves.toBeUndefined();
+    });
+
+    test('should report any other error', async () => {
+        xJet.mock(writeFileSync).mockImplementation(() => {
+            throw Object.assign(new Error('denied'), { code: 'EACCES' });
+        });
+
+        parseLatestEntry();
+
+        await expect(state.vitepressConfig.buildEnd(siteConfig)).rejects.toThrow('denied');
     });
 });
