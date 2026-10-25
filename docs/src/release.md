@@ -48,8 +48,8 @@ versionsConfig: {
   [`rewritesHook`](guide/config/rewrites#the-hook), including pages of the sources without a locale folder,
   which 2.x served at their own path without calling the hook.
 
-- **Migration**: The current version's pages move from the root to `/<current>/`. An old link such as `/guide` still
-  opens the page on a host that serves `404.html` for unknown paths, and the address bar then shows the new URL.
+- **Migration**: The current version's pages move from the root to `/<current>/`, so an old link such as `/guide`
+  now answers 404. Only `/` still opens the latest version.
 
 - **Migration**: An archive folder that carries the `current` label now stops the build, since both would publish
   under one URL. Set `current` to the version that the sources hold, or rename the folder.

@@ -78,14 +78,10 @@ the way release branching works: the coming version is reviewed at `/next/`, and
 
 ### The root URL
 
-When the build ends, the latest version's home page is copied to the root, `index.html`,
-and to the root of every locale, so any static server answers `/`.
-A small script in every page then rewrites the address to `/v2.x/` without reloading the page,
-so the address bar always names the version a reader is on.
-
-On a host that answers an unknown path with the `404.html` that VitePress builds,
-as GitHub Pages, Netlify, Vercel, Cloudflare Pages and `vitepress preview` do,
-an address without a version, such as a 2.x link to `/guide`, moves to `/v2.x/guide` the same way.
+The root of the site and of every locale opens the latest version's home page,
+and the address changes to `/v2.x/` before the page starts, without a redirect or a reload.
+This works on `vitepress dev` and on any static host, since the build copies that home page to the root `index.html`.
+A page that the site already publishes at the root is kept.
 
 ## `versions`
 
