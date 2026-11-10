@@ -3,6 +3,11 @@
 @viteplus/versions is a powerful VitePress plugin that enables versioned documentation with seamless navigation, localization support, and automatic route generation.
 This guide will help you set up and configure the plugin for your documentation needs.
 
+::: info Community project
+This is a community project and is not affiliated with or endorsed by `VoidZero`, `Vite`, `VitePress`, or `Vite+`.
+See [#59](https://github.com/viteplus/versions/issues/59#issuecomment-6780832222) for the background of the name.
+:::
+
 ## Installation
 
 Install the package using your preferred package manager:

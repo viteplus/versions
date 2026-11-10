@@ -33,3 +33,9 @@ features:
     title: VitePress Compatible
     details: Works with VitePress v1.6.4 and above, maintaining all native VitePress features.
 ---
+
+::: info Community project
+@viteplus/versions is a community project and is not affiliated with or endorsed by `VoidZero`, `Vite`, `VitePress`, or `Vite+`.
+The `viteplus` GitHub organization and the `@viteplus` npm scope are independent; the name only means "plugins for
+Vite and VitePress". See [#59](https://github.com/viteplus/versions/issues/59#issuecomment-6780832222).
+:::
