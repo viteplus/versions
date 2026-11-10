@@ -16,11 +16,12 @@ describe('StateModel', () => {
     const mockExistsSync = xJet.mock(existsSync);
     const mockWriteFileSync = xJet.mock(writeFileSync);
 
-    mockMkdirSync.mockImplementation(<any> (() => {}));
-    mockWriteFileSync.mockImplementation(<any> (() => {}));
-
     beforeEach(() => {
         xJet.resetAllMocks();
+
+        // resetting drops the implementations, so stub them again to keep the real ones off the disk
+        mockMkdirSync.mockImplementation(<any> (() => {}));
+        mockWriteFileSync.mockImplementation(<any> (() => {}));
     });
 
     test('should throw if sourcesPath does not exist', () => {
@@ -80,12 +81,6 @@ describe('StateModel', () => {
             expect(init({ latest: 'v2.x' }).latest).toBe('v2.x');
         });
 
-        test('should give every version a locale entry, the latest one included', () => {
-            const state = init({ latest: 'v2.x' });
-
-            expect(Object.keys(state.vitepressConfig.locales).sort()).toEqual([ 'next', 'root', 'v1.x', 'v2.x' ]);
-        });
-
         test('should reject a latest that names no version', () => {
             expect(() => init({ latest: 'v3.x' })).toThrow(/Version v3.x is neither/);
         });
@@ -141,6 +136,9 @@ describe('StateModel', () => {
             ${ 'a name that an archive folder carries' } | ${ { 'v1.x': { path: 'legacy/v1' } } }     | ${ /Version v1.x is published from both archive\/v1.x and legacy\/v1/ }
             ${ 'a folder outside the root' }             | ${ { 'v0.x': { path: '../legacy/v0' } } }  | ${ /has to be an existing folder inside/ }
             ${ 'the root itself' }                       | ${ { 'v0.x': { path: '.' } } }             | ${ /has to be an existing folder inside/ }
+            ${ 'a folder inside the sources' }           | ${ { 'v0.x': { path: 'src/legacy' } } }    | ${ /Version v0.x in src\/legacy overlaps version next in src/ }
+            ${ 'an archive folder' }                     | ${ { 'v0.x': { path: 'archive/v1.x' } } }  | ${ /Version v0.x in archive\/v1.x overlaps version v1.x in archive\/v1.x/ }
+            ${ 'a folder that holds an archive folder' } | ${ { 'v0.x': { path: 'archive' } } }       | ${ /Version v0.x in archive overlaps version v1.x in archive\/v1.x/ }
         `('should reject a path on $case', ({ versions, message }: any) => {
             expect(() => init(versions)).toThrow(message);
         });
@@ -184,25 +182,66 @@ describe('StateModel', () => {
         expect(state.vitepressConfig).toEqual({ customKey: 'customValue' });
     });
 
-    test('vitepressConfig should include non-excluded properties from configuration', () => {
-        mockExistsSync.mockReturnValue(true);
-        const customConfig = {
-            customKey: 'customValue',
-            versionsConfig: {
-                current: 'latest',
-                sources: 'src',
-                archive: 'archive',
-                hooks: {
-                    rewritesHook: () => ''
-                },
-                versionSwitcher: {
-                    text: 'Switch Version',
-                    includeCurrentVersion: true
-                }
-            }
-        };
+    describe('the locale prefixes that init resolves', () => {
+        function init(locales: Record<string, unknown>): StateModel {
+            const configuration: any = { ...defaultConfiguration, locales };
 
-        const state = new StateModel(customConfig as any);
-        expect(state.vitepressConfig).toEqual({ customKey: 'customValue' });
+            return new StateModel(configuration).init();
+        }
+
+        beforeEach(() => {
+            mockExistsSync.mockReturnValue(true);
+            xJet.mock(readdirSync).mockReturnValue(<any> []);
+        });
+
+        test('should take the language of a locale as its prefix and the root key as the root locale', () => {
+            const state = init({ de: { lang: 'de-DE' }, root: { lang: 'en-US' } });
+
+            expect(state.localesMap).toEqual({ de: 'de', en: 'root' });
+            expect(state.localePrefixes).toEqual({ de: 'de', root: '' });
+            expect(state.localeSegments).toEqual([ 'de' ]);
+        });
+
+        test('should take the first locale as the root one when there is no root key', () => {
+            const state = init({ en: { lang: 'en' }, fr: { lang: 'fr-CA' } });
+
+            expect(state.localePrefixes).toEqual({ en: '', fr: 'fr' });
+        });
+
+        test('should take the prefix from a link without its slashes', () => {
+            const state = init({ root: { lang: 'en' }, german: { lang: 'de-DE', link: '/deutsch/' } });
+
+            expect(state.localesMap).toEqual({ en: 'root', deutsch: 'german' });
+            expect(state.localeSegments).toEqual([ 'deutsch' ]);
+        });
+
+        test.each`
+            case                                 | locales                                                           | message
+            ${ 'two locales with one language' } | ${ { root: { lang: 'en' }, zh: { lang: 'zh-CN' }, tw: { lang: 'zh-TW' } } } | ${ /Locales zh and tw share the prefix zh/ }
+            ${ 'a link of two segments' }        | ${ { root: { lang: 'en' }, cn: { lang: 'zh', link: '/zh/cn/' } } }        | ${ /Locale cn has the prefix zh\/cn/ }
+            ${ 'a prefix that names a version' }  | ${ { root: { lang: 'en' }, x: { lang: 'x', link: '/latest/' } } }        | ${ /Locale x and a version share the name latest/ }
+        `('should reject $case', ({ locales, message }: any) => {
+            xJet.spyOn(console, 'error').mockImplementation(() => undefined);
+
+            expect(() => init(locales)).toThrow(message);
+        });
+
+        test('should leave the locale entries to parseLocale', () => {
+            expect(init({ root: { lang: 'en' }, de: { lang: 'de' } }).vitepressConfig.locales).toEqual({});
+        });
+    });
+
+    test.each`
+        sources
+        ${ './src' }
+        ${ 'src/' }
+        ${ './src/' }
+    `('should read the sources $sources as src', ({ sources }: any) => {
+        mockExistsSync.mockReturnValue(true);
+        xJet.mock(readdirSync).mockReturnValue(<any> []);
+        const configuration: any = { ...defaultConfiguration };
+        configuration.versionsConfig = { ...defaultConfiguration.versionsConfig, sources };
+
+        expect(new StateModel(configuration).init().versionDirs).toEqual({ latest: 'src' });
     });
 });
