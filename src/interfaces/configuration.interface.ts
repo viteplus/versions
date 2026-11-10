@@ -13,12 +13,13 @@ import type { DeepPartialType, RequireKeysType } from '@interfaces/function.inte
  * @remarks
  * The `rewritesHook` function allows you to programmatically rewrite
  * paths or content based on the documentation version and locale being served.
+ * Its output has to start with `<locale>/<version>/`, or `<version>/` for the root locale.
  *
  * @example
  * ```ts
  * const hooks: VersionsHooksInterface = {
  *   rewritesHook: (source, version, locale) =>
- *     `${version}/${locale}/${source}`
+ *     join(locale, version, source.replace(/^old-guide\//, 'guide/'))
  * };
  * ```
  *
@@ -36,8 +37,10 @@ export interface VersionsHooksInterface {
      * @returns The rewritten path string, which can be used for routing or file organization.
      *
      * @remarks
-     * This hook is invoked whenever paths need to be version- and locale-aware,
-     * allowing complete control over URL or file structure.
+     * This hook is invoked whenever paths need to be version- and locale-aware.
+     * It may reshape the source part freely, but the locale and the version stay the first segments,
+     * since the locale entries, the navigation, the switchers, and the root URL look for them there.
+     * A hook that moves them fails the build.
      *
      * @since 2.0.0
      */
@@ -173,7 +176,7 @@ export interface VersionOptionsInterface {
  *   sources: "src",
  *   archive: "archive",
  *   hooks: {
- *     rewritesHook: (source, version) => `/v${version}/${source}`
+ *     rewritesHook: (source, version, locale) => join(locale, version, source.toLowerCase())
  *   },
  *   versions: { "1.0": { label: "1.0 (LTS)" } },
  *   versionSwitcher: { text: "Version", includeCurrentVersion: true }
@@ -313,7 +316,7 @@ export interface VersionsConfigInterface {
  *     current: "2.0",
  *     sources: "src",
  *     archive: "archive",
- *     hooks: { rewritesHook: (src, ver) => `/v${ver}/${src}` },
+ *     hooks: { rewritesHook: (src, ver, locale) => join(locale, ver, src.toLowerCase()) },
  *     versionSwitcher: { text: "Version", includeCurrentVersion: true }
  *   }
  * };
