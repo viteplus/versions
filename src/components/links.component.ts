@@ -10,7 +10,6 @@ import type { MarkdownRenderer } from 'vitepress';
 
 import { inject } from '@remotex-labs/xinject';
 import { StateModel } from '@models/state.model';
-import { createRouteResolver } from '@components/rewrites.component';
 
 /**
  * Moves an absolute page link into a version.
@@ -55,6 +54,7 @@ export function versionLink(href: string, version: string, versions: Array<strin
  * @remarks
  * Every version publishes its pages under its own name, so a link such as `/guide` would leave the version.
  * A markdown-it core rule reads the version from the published path of the page,
+ * which VitePress hands to markdown-it as `env.relativePath` once `rewrites` has run,
  * and passes every link of the page through {@link versionLink}.
  * The rule runs while VitePress parses the page, before the dead link check reads the links,
  * so content written with root links keeps pointing into its own version.
@@ -74,9 +74,7 @@ export function versionLink(href: string, version: string, versions: Array<strin
 
 export function parseVersionLinks(): void {
     const state = inject(StateModel);
-    const resolve = createRouteResolver();
-    const { versionsList, localesMap } = state;
-    const locales = Object.keys(localesMap).filter(key => localesMap[key] !== 'root').map(key => key.replace(/^\/+|\/+$/g, ''));
+    const { versionsList, localeSegments } = state;
     const { config, ...markdown } = state.vitepressConfig.markdown ?? {};
 
     state.vitepressConfig.markdown = {
@@ -84,12 +82,12 @@ export function parseVersionLinks(): void {
         async config(md: MarkdownRenderer): Promise<void> {
             md.core.ruler.push('viteplus_version_links', ({ env, tokens }) => {
                 const page: string | undefined = env?.relativePath;
-                const version = page && resolve(page).split('/').slice(0, 2).find(segment => versionsList.includes(segment));
+                const version = page?.split('/').slice(0, 2).find(segment => versionsList.includes(segment));
                 if (!version) return;
 
                 for (const token of tokens.flatMap(block => block.children ?? [])) {
                     const href = token.type === 'link_open' && token.attrGet('href');
-                    if (href) token.attrSet('href', versionLink(href, version, versionsList, locales));
+                    if (href) token.attrSet('href', versionLink(href, version, versionsList, localeSegments));
                 }
             });
 

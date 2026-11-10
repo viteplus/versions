@@ -3,7 +3,6 @@
  */
 
 import { inject } from '@remotex-labs/xinject';
-import { createRouteResolver } from '@components/rewrites.component';
 import { parseVersionLinks, versionLink } from '@components/links.component';
 
 /**
@@ -72,9 +71,8 @@ describe('parseVersionLinks', () => {
     beforeEach(async () => {
         xJet.restoreAllMocks();
 
-        state = { latest: 'v2.x', versionsList: versions, localesMap: { '/': 'root', '/de/': 'de' }, vitepressConfig: {} };
+        state = { latest: 'v2.x', versionsList: versions, localeSegments: [ 'de' ], vitepressConfig: {} };
         xJet.mock(inject).mockReturnValue(state);
-        xJet.mock(createRouteResolver).mockReturnValue((id: string) => id.replace(/^src\//, 'next/'));
 
         parseVersionLinks();
         await state.vitepressConfig.markdown.config(md);
@@ -84,9 +82,11 @@ describe('parseVersionLinks', () => {
         page                    | href             | expected
         ${ 'v1.x/index.md' }    | ${ '/guide' }    | ${ '/v1.x/guide' }
         ${ 'de/v1.x/index.md' } | ${ '/guide' }    | ${ '/v1.x/guide' }
-        ${ 'src/guide.md' }     | ${ '/release' }  | ${ '/next/release' }
+        ${ 'next/guide.md' }    | ${ '/release' }  | ${ '/next/release' }
+        ${ 'de/next/guide.md' } | ${ '/de/x' }     | ${ '/de/next/x' }
         ${ 'v1.x/index.md' }    | ${ 'https://a' } | ${ 'https://a' }
-        ${ 'src/release.md' }   | ${ '/v2.x/x' }   | ${ '/v2.x/x' }
+        ${ 'next/release.md' }  | ${ '/v2.x/x' }   | ${ '/v2.x/x' }
+        ${ 'src/guide.md' }     | ${ '/guide' }    | ${ '/guide' }
         ${ 'guide.md' }         | ${ '/guide' }    | ${ '/guide' }
         ${ 'legacy/index.md' }  | ${ '/guide' }    | ${ '/guide' }
         ${ undefined }          | ${ '/guide' }    | ${ '/guide' }
