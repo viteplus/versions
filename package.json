@@ -32,6 +32,10 @@
             "import": "./dist/index.js",
             "require": "./dist/index.js"
         },
+        "./fallback": {
+            "types": "./components/fallback.component.ts",
+            "import": "./components/fallback.component.ts"
+        },
         "./components/*": "./components/*"
     },
     "files": [
