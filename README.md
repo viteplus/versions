@@ -95,14 +95,20 @@ Register the `VersionSwitcher` component in your theme so it can be placed in th
 // .vitepress/theme/index.ts
 import DefaultTheme from 'vitepress/theme';
 import VersionSwitcher from '@viteplus/versions/components/version-switcher.component.vue';
+import { installVersionFallback } from '@viteplus/versions/fallback';
 
 export default {
     extends: DefaultTheme,
-    enhanceApp({ app }) {
+    enhanceApp({ app, router, siteData }) {
         app.component('VersionSwitcher', VersionSwitcher);
+        installVersionFallback(router, siteData);
     }
 };
 ```
+
+`installVersionFallback` catches a switch of version or language onto a page that does not exist there, such as the
+language menu on an untranslated page, and opens the home page of that version or language instead. Any other missing
+address keeps its 404 page.
 
 ## Project structure
 
@@ -161,11 +167,13 @@ export default defineVersionedConfig({
 Control how source paths map to URLs with `rewritesHook`.
 
 ```ts
+import { join } from 'path/posix';
+
 export default defineVersionedConfig({
     versionsConfig: {
         hooks: {
-            // version first, then locale
-            rewritesHook: (source, version, locale) => `${version}/${locale}/${source}`
+            // keep locale/version/ in front, reshape the rest
+            rewritesHook: (source, version, locale) => join(locale, version, source.toLowerCase())
         }
     }
 });
