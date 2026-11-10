@@ -53,19 +53,22 @@ Default output, given `current: 'next'`, `latest: 'v2.0.0'`, and a root locale o
 
 ## Customizing the structure
 
-Return a different order to put the version ahead of the locale:
+The hook may reshape everything after the version, such as lowercasing file names or moving a folder:
 
 ```ts
+import { join } from 'path/posix';
+
 export default defineVersionedConfig({
     versionsConfig: {
         hooks: { // [!code focus]
-            rewritesHook: (source, version, locale) => join(version, locale, source) // [!code focus]
+            rewritesHook: (source, version, locale) => // [!code focus]
+                join(locale, version, source.replace(/^old-guide\//, 'guide/')) // [!code focus]
         } // [!code focus]
     }
 });
 ```
 
-That turns `/de/v1.0.0/guide/intro` into `/v1.0.0/de/guide/intro`.
+That turns `/de/v1.0.0/old-guide/intro` into `/de/v1.0.0/guide/intro`.
 
 ::: warning
 `locale` is empty for the root locale. Join
@@ -74,8 +77,10 @@ the URL.
 :::
 
 Every page of every version runs through the hook, including sites without `locales`.
-Keep the version as the first segment, or the first one after the locale,
-since the version switcher, the link rewriting, and the [root URL](./configuration#the-root-url) script look for it there.
+Its output has to start with `<locale>/<version>/`, or `<version>/` for the root locale,
+since the locale entries, the navigation, the version switchers, the link rewriting, and the
+[root URL](./configuration#the-root-url) script look for the version right after the locale.
+A hook that moves or drops them stops the build, see [Errors that stop the build](./configuration#errors-that-stop-the-build).
 
 ## See also
 

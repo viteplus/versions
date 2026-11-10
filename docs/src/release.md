@@ -41,6 +41,42 @@ versionsConfig: {
   reloading the page, see [The root URL](guide/config/configuration#the-root-url). This replaces the 2.2.0 script that
   reloaded `/<current>/…` at the root.
 
+- **Added**: [`installVersionFallback`](guide/features/switchers#step-1b-catch-switches-onto-missing-pages)
+  catches a switch of version or language onto a page that does not exist there, such as the language menu on an
+  untranslated page, and opens the home page of that version or language instead. Any other missing address keeps
+  its 404 page. Add it to `enhanceApp` next to the `VersionSwitcher` component.
+
+- **Added**: A version whose [`path`](guide/config/configuration#path) lies inside `sources` or an archive folder,
+  or holds one, stops the build. Its pages used to go to the version of the outer folder, so the version
+  published nothing.
+
+- **Fixed**: A locale with a `link` such as `/de/` published its pages under `<version>/de/` and added a second
+  set of locale entries. The slashes are now dropped, so the link gives the prefix `de`.
+
+- **Fixed**: A nav link whose path contains `http`, such as `/guide/http-client`, was taken for an external link
+  and left out of its version.
+
+- **Fixed**: The `VersionSwitcher` component dropped every folder of the page that carried the name of a version,
+  so switching from `v2.x/guide/next/setup` lost the `next` folder.
+
+- **Fixed**: A locale whose `themeConfig` was empty shared one object among all its versions, so the last nav
+  written won.
+
+- **Added**: The site title links to the home page of the version the reader is on, instead of `/`, which no version
+  publishes. A `logoLink` of your own is kept.
+
+- **Added**: Locales whose prefixes clash stop the build: two locales with one language and no `link`, a `link` of more
+  than one segment, or a prefix that is also the name of a version.
+
+- **Fixed**: `sources` written as `./src` or `src/` published every current page unversioned at `/src/...`.
+
+- **Fixed**: A nav link that already names a version, such as `/v1.x/release`, or points at a public file, such as
+  `/files/a.pdf`, is no longer prefixed with the version of the page.
+
+- **Changed**: The versions, labels, and routes that the `VersionSwitcher` reads are published once as
+  `themeConfig.versioning`, instead of in the props of the switcher in every locale entry. On this site that
+  removes two thirds of the site data, and the saving grows with every locale and version.
+
 - **Changed**: The switchers tag the [`latest`](guide/features/switchers#marking-the-latest-version) version with
   `(latest)`.
 
@@ -54,8 +90,16 @@ versionsConfig: {
 - **Migration**: An archive folder that carries the `current` label now stops the build, since both would publish
   under one URL. Set `current` to the version that the sources hold, or rename the folder.
 
-- **Migration**: A custom theme that renders the `VersionSwitcher` component by hand passes `latestVersion` instead of
-  `currentVersion`, and `versions` as an array. The plugin fills these props for every `VersionSwitcher` nav item.
+- **Migration**: The `VersionSwitcher` component reads its versions from `themeConfig.versioning`, so a custom theme
+  that renders it by hand drops the `versioningPlugin` prop. A theme that still passes one gives `latestVersion`
+  instead of `currentVersion`, and `versions` as an array.
+
+- **Migration**: Every page now has its version in its path, so a nav `activeMatch` such as `^/guide/` no longer
+  matches. Write it as `^/[^/]+/guide/` to match the guide of every version, or `^/v2\.x/guide/` for one.
+
+- **Migration**: The [`rewritesHook`](guide/config/rewrites#the-hook) has to keep `<locale>/<version>/` at the front
+  of every route, and a hook that puts the version first now stops the build. Only the part after the version is
+  yours to reshape.
 
 ## Earlier releases
 

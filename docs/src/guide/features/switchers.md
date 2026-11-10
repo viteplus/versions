@@ -79,6 +79,35 @@ export default {
 };
 ```
 
+### Step 1b: Catch Switches Onto Missing Pages
+
+Not every version holds every page, and not every page is translated. The `VersionSwitcher` already links to a page
+that exists, but VitePress's language menu links each page to the same page in every language, translated or not.
+`installVersionFallback` catches a switch of version or language onto a page that does not exist there:
+
+```ts
+// docs/.vitepress/theme/index.ts
+import { installVersionFallback } from '@viteplus/versions/fallback'; // [!code focus]
+
+export default {
+  extends: DefaultTheme,
+  enhanceApp({ app, router, siteData }) { // [!code focus]
+    app.component('VersionSwitcher', VersionSwitcher);
+    installVersionFallback(router, siteData); // [!code focus]
+  }
+};
+```
+
+| On                 | Asked for             | Opens       | Why                                              |
+|--------------------|-----------------------|-------------|--------------------------------------------------|
+| `/v2.x/config/cli` | `/de/v2.x/config/cli` | `/de/v2.x/` | Language switch, the page is not translated      |
+| `/v1.x/hooks`      | `/de/v1.x/hooks`      | `/de/v2.x/` | Language switch, v1.x has no German pages at all |
+| `/de/v2.x/guide`   | `/de/v1.x/guide`      | `/de/v1.x/` | Version switch, v1.x has no German guide         |
+| `/v2.x/guide`      | `/v2.x/missing`       | 404         | Not a switch: a missing page keeps its 404       |
+
+Only a switch is caught, meaning the same page with another version or language. Every other missing address,
+whether typed, bookmarked, or linked, shows the not-found page, so a broken link stays visible.
+
 ### Step 2: Add to Navigation
 
 Then, include the component in your navigation configuration:
@@ -109,6 +138,10 @@ The `VersionSwitcher` component offers significant advantages:
 3. **Responsive Design**: Adapts to both desktop and mobile viewports with appropriate styling.
 4. **Custom Styling**: Can be styled to match your theme's design system.
 5. **Dynamic Behavior**: Shows only relevant version options based on the current context.
+
+The component reads the versions, their labels, and the routes of every version from `themeConfig.versioning`,
+which the plugin publishes once for the whole site. A custom theme that renders `VersionSwitcher` itself needs no
+props beyond `label`, `latestLabel`, and `screenMenu`; a `versioningPlugin` prop still overrides the site data.
 
 ### Marking the Latest Version
 

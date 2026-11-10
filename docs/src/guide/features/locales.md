@@ -300,7 +300,7 @@ For example, with `en` as the root locale and `latest: 'v2.0'`:
 The root locale is served without a segment of its own, and every version keeps its segment in every locale.
 `/` and `/de/` open the home page of the [`latest`](../config/configuration#the-root-url) version,
 and the language switcher keeps both the version and the page.
-Override the order with [`rewritesHook`](../config/rewrites).
+Reshape the rest of the path with [`rewritesHook`](../config/rewrites); the locale and the version stay in front.
 
 ## Version-Specific Locale Configuration
 
