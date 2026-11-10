@@ -164,14 +164,16 @@ predictable paths. Absolute links in your markdown, such as `/guide/`, stay insi
 Customize how URLs are generated with the `rewritesHook`:
 
 ```ts
+import { join } from 'path/posix';
+
 export default defineVersionedConfig({
   // ...
   versionsConfig: {
     // ...
     hooks: {
       rewritesHook: (source, version, locale) => {
-        // Custom URL structure
-        return `${version}/${locale}/${source}`;
+        // The locale and the version stay in front, the rest is yours
+        return join(locale, version, source.toLowerCase());
       }
     }
   }

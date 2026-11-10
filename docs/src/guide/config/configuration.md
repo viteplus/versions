@@ -114,17 +114,20 @@ docs/
 ```
 
 VitePress builds only the files inside the docs root, so the folder has to exist inside it.
+It also has to be a folder of its own: a `path` inside `sources` or an archive folder would hand its pages to both versions.
 A `path` on the current version is rejected, since [`sources`](#sources) already places it.
 
 ## Errors that stop the build
 
 A version setup that would publish the wrong pages fails while the configuration loads, with a message that names the problem:
 
-| Message                                                    | Cause                                                                      |
-|------------------------------------------------------------|----------------------------------------------------------------------------|
-| `Version v2.x is published from both src and archive/v2.x` | Two versions share a name, such as an archive folder named after `current` |
-| `Version v3.x is neither the current version nor ...`      | `latest`, or a key of `versions`, names no version                         |
-| `Path ../v0 of version v0.x has to be an existing folder`  | A `path` is missing, or lies outside the docs root                         |
+| Message                                                    | Cause                                                                          |
+|------------------------------------------------------------|--------------------------------------------------------------------------------|
+| `Version v2.x is published from both src and archive/v2.x` | Two versions share a name, such as an archive folder named after `current`     |
+| `Version v3.x is neither the current version nor ...`      | `latest`, or a key of `versions`, names no version                             |
+| `Path ../v0 of version v0.x has to be an existing folder`  | A `path` is missing, or lies outside the docs root                             |
+| `Version v0.x in src/legacy overlaps version next in src`  | A `path` lies inside the folder of another version, or holds one               |
+| `rewritesHook has to keep de/v2.x/ at the front of ...`    | The [`rewritesHook`](./rewrites#the-hook) moves or drops the locale or version |
 
 ## `sources`
 
