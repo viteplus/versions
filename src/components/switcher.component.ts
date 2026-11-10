@@ -1,9 +1,17 @@
 /**
+ * Type-only imports erased during TypeScript compilation.
+ */
+
+import type { DefaultTheme } from 'vitepress';
+import type { VersionsConfigInterface } from '@interfaces/configuration.interface';
+import type { NavItemWithChildrenType, NavItemWithLinkType } from '@interfaces/nav.interface';
+
+/**
  * Imports
  */
 
-import type { VersionsConfigInterface } from '@interfaces/configuration.interface';
-import type { NavItemWithChildrenType, NavItemWithLinkType } from '@interfaces/nav.interface';
+import { inject } from '@remotex-labs/xinject';
+import { StateModel } from '@models/state.model';
 
 /**
  * Builds a version switcher navigation item for the documentation site.
@@ -64,4 +72,32 @@ export function versionSwitcher(
     }
 
     return { text, items };
+}
+
+/**
+ * Publishes the data that the `VersionSwitcher` component reads, once for the whole site.
+ *
+ * @remarks
+ * The data lands in `themeConfig.versioning` of the site, which VitePress merges into the theme of every locale,
+ * so `useData().theme` hands it to the component on every page,
+ * and `installVersionFallback` reads it from the site data to send a missing address to the nearest page.
+ * It used to ride in the props of every switcher nav item, which repeated the routes of every version
+ * in each of the locale entries and grew the site data with locales × versions × routes.
+ *
+ * @example
+ * ```ts
+ * parseVersioningData();
+ * vitepressConfig.themeConfig.versioning;
+ * // { versions: [ 'v2.x', 'v1.x' ], latestVersion: 'v2.x', labels: { ... }, routes: { ... }, locales: [ 'de' ] }
+ * ```
+ *
+ * @see https://github.com/viteplus/versions/issues/55
+ * @since 3.0.0
+ */
+
+export function parseVersioningData(): void {
+    const { vitepressConfig, routesMap, labels, versionsList, latest, localeSegments } = inject(StateModel);
+    const versioning = { routes: routesMap, labels, versions: versionsList, latestVersion: latest, locales: localeSegments };
+
+    vitepressConfig.themeConfig = <DefaultTheme.Config> { ...vitepressConfig.themeConfig, versioning };
 }
