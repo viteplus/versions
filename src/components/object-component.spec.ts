@@ -10,6 +10,12 @@ import { deepMerge, getAllMarkdownFilesRelative } from '@components/object.compo
  */
 
 describe('deepMerge', () => {
+    test('should replace an array with an object instead of merging into it', () => {
+        const result = deepMerge({ dedupe: [ 'vue' ] }, { dedupe: { vue: true } });
+
+        expect(result).toEqual({ dedupe: { vue: true } });
+    });
+
     test('should merge two shallow objects', () => {
         const obj1 = { a: 1, b: 2 };
         const obj2 = { c: 3, d: 4 };

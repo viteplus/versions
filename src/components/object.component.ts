@@ -46,7 +46,7 @@ export function deepMerge<T extends object, U extends object>(obj1: T, obj2: U):
             if (
                 val1 && typeof val1 === 'object' &&
                 val2 && typeof val2 === 'object' &&
-                !Array.isArray(val2) && !Array.isArray(val2)
+                !Array.isArray(val1) && !Array.isArray(val2)
             ) {
                 result[key] = deepMerge(val1 as object, val2 as object);
             } else {
