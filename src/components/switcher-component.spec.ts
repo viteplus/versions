@@ -2,7 +2,8 @@
  * Imports
  */
 
-import { versionSwitcher } from '@components/switcher.component';
+import { inject } from '@remotex-labs/xinject';
+import { parseVersioningData, versionSwitcher } from '@components/switcher.component';
 
 /**
  * Tests
@@ -74,6 +75,33 @@ describe('versionSwitcher', () => {
         expect(result).toEqual({
             text: 'Versions',
             items: [{ text: 'v1.5.0', link: '/v1.5.0/', skipVersioning: true }]
+        });
+    });
+});
+
+describe('parseVersioningData', () => {
+    test('should publish the versioning data once in the site theme and keep the theme of the user', () => {
+        const state: any = {
+            latest: 'v2.x',
+            versionsList: [ 'v2.x', 'v1.x' ],
+            labels: { 'v1.x': 'v1.x (LTS)' },
+            routesMap: { 'v2.x': [ 'v2.x/index.md' ] },
+            localeSegments: [ 'de' ],
+            vitepressConfig: { themeConfig: { logo: '/logo.png' } }
+        };
+        xJet.mock(inject).mockReturnValue(state);
+
+        parseVersioningData();
+
+        expect(state.vitepressConfig.themeConfig).toEqual({
+            logo: '/logo.png',
+            versioning: {
+                routes: { 'v2.x': [ 'v2.x/index.md' ] },
+                labels: { 'v1.x': 'v1.x (LTS)' },
+                versions: [ 'v2.x', 'v1.x' ],
+                latestVersion: 'v2.x',
+                locales: [ 'de' ]
+            }
         });
     });
 });
