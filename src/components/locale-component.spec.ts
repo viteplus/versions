@@ -8,7 +8,6 @@ import type { MockState } from '@remotex-labs/xjet';
  * Imports
  */
 
-import { join } from 'path/posix';
 import { inject } from '@remotex-labs/xinject';
 import { parseLocale } from '@components/locale.component';
 
@@ -26,9 +25,11 @@ describe('parseLocale', () => {
 
     test('should populate root locale and version sub-locales with key-based locale map', () => {
         const mockState: any = {
-            localesMap: { '/': 'root', '/de/': 'de' },
+            latest: 'v1.0',
+            localePrefixes: { '/': '', '/de/': 'de' },
             versionsList: [ 'v1.0', 'v2.0' ],
             configuration: {
+                themeConfig: { logoLink: '/' },
                 locales: {
                     '/': { lang: 'en-US', label: 'English' },
                     '/de/': { lang: 'de-DE', label: 'Germany' }
@@ -69,12 +70,12 @@ describe('parseLocale', () => {
         });
 
         // Non-root locale versions
-        expect(mockState.vitepressConfig.locales[join('/de/', 'v1.0')]).toEqual({
+        expect(mockState.vitepressConfig.locales['de/v1.0']).toEqual({
             link: '/de/',
             lang: 'de-DE',
             label: ' '
         });
-        expect(mockState.vitepressConfig.locales[join('/de/', 'v2.0')]).toEqual({
+        expect(mockState.vitepressConfig.locales['de/v2.0']).toEqual({
             link: '/de/',
             lang: 'de-DE',
             label: ' '
@@ -83,9 +84,11 @@ describe('parseLocale', () => {
 
     test('should populate root locale and version sub-locales with index-based locale map (root key in userLocales)', () => {
         const mockState: any = {
-            localesMap: { '/': 'root', '/de/': 'de' },
+            latest: 'v1.0',
+            localePrefixes: { root: '', de: 'de' },
             versionsList: [ 'v1.0', 'v2.0' ],
             configuration: {
+                themeConfig: { logoLink: '/' },
                 locales: {
                     root: { lang: 'en-US', label: 'English' },
                     de: { lang: 'de-DE', label: 'Germany' }
@@ -126,12 +129,12 @@ describe('parseLocale', () => {
         });
 
         // Non-root locale versions
-        expect(mockState.vitepressConfig.locales[join('/de/', 'v1.0')]).toEqual({
+        expect(mockState.vitepressConfig.locales['de/v1.0']).toEqual({
             link: '/de/',
             lang: 'de-DE',
             label: ' '
         });
-        expect(mockState.vitepressConfig.locales[join('/de/', 'v2.0')]).toEqual({
+        expect(mockState.vitepressConfig.locales['de/v2.0']).toEqual({
             link: '/de/',
             lang: 'de-DE',
             label: ' '
@@ -140,9 +143,11 @@ describe('parseLocale', () => {
 
     test('should handle empty versionsList', () => {
         const mockState: any = {
-            localesMap: { '/': 'root' },
+            latest: 'v1.0',
+            localePrefixes: { '/': '' },
             versionsList: [],
             configuration: {
+                themeConfig: { logoLink: '/' },
                 locales: {
                     '/': { lang: 'en-US', label: 'English' }
                 }
@@ -167,9 +172,11 @@ describe('parseLocale', () => {
 
     test('should sanitize themeConfig by removing nav and sidebar', () => {
         const mockState: any = {
-            localesMap: { '/': 'root' },
+            latest: 'v1.0',
+            localePrefixes: { '/': '' },
             versionsList: [ 'v1.0' ],
             configuration: {
+                themeConfig: { logoLink: '/' },
                 locales: {
                     '/': {
                         lang: 'en-US',
@@ -203,14 +210,16 @@ describe('parseLocale', () => {
 
     test('should handle multiple non-root locales', () => {
         const mockState: any = {
-            localesMap: {
-                '/': 'root',
+            latest: 'v1.0',
+            localePrefixes: {
+                '/': '',
                 '/fr/': 'fr',
                 '/es/': 'es',
                 '/de/': 'de'
             },
             versionsList: [ 'v1.0' ],
             configuration: {
+                themeConfig: { logoLink: '/' },
                 locales: {
                     '/': { lang: 'en-US', label: 'English' },
                     '/fr/': { lang: 'fr-CA', label: 'Français' },
@@ -234,16 +243,18 @@ describe('parseLocale', () => {
 
         // Check all versioned locales
         expect(mockState.vitepressConfig.locales['v1.0'].lang).toBe('en-US');
-        expect(mockState.vitepressConfig.locales[join('/fr/', 'v1.0')].lang).toBe('fr-CA');
-        expect(mockState.vitepressConfig.locales[join('/es/', 'v1.0')].lang).toBe('es-MX');
-        expect(mockState.vitepressConfig.locales[join('/de/', 'v1.0')].lang).toBe('de-DE');
+        expect(mockState.vitepressConfig.locales['fr/v1.0'].lang).toBe('fr-CA');
+        expect(mockState.vitepressConfig.locales['es/v1.0'].lang).toBe('es-MX');
+        expect(mockState.vitepressConfig.locales['de/v1.0'].lang).toBe('de-DE');
     });
 
     test('should extract language code from complex locale strings', () => {
         const mockState: any = {
-            localesMap: { '/': 'root', '/zh/': 'zh' },
+            latest: 'v1.0',
+            localePrefixes: { '/': '', '/zh/': 'zh' },
             versionsList: [ 'v1.0' ],
             configuration: {
+                themeConfig: { logoLink: '/' },
                 locales: {
                     '/': { lang: 'en-US', label: 'English' },
                     '/zh/': { lang: 'zh-Hans-CN', label: '简体中文' }
@@ -259,14 +270,16 @@ describe('parseLocale', () => {
 
         // Chinese locale should use 'zh' in link (not 'zh-Hans-CN')
         expect(mockState.vitepressConfig.locales.zh.link).toBe('/zh/');
-        expect(mockState.vitepressConfig.locales[join('/zh/', 'v1.0')].link).toBe('/zh/');
+        expect(mockState.vitepressConfig.locales['zh/v1.0'].link).toBe('/zh/');
     });
 
     test('should handle locale without lang property', () => {
         const mockState: any = {
-            localesMap: { '/': 'root' },
+            latest: 'v1.0',
+            localePrefixes: { '/': '' },
             versionsList: [ 'v1.0' ],
             configuration: {
+                themeConfig: { logoLink: '/' },
                 locales: {
                     '/': { label: 'English' }
                 }
@@ -292,9 +305,11 @@ describe('parseLocale', () => {
         };
 
         const mockState: any = {
-            localesMap: { '/': 'root' },
+            latest: 'v1.0',
+            localePrefixes: { '/': '' },
             versionsList: [ 'v1.0' ],
             configuration: {
+                themeConfig: { logoLink: '/' },
                 locales: {
                     '/': {
                         lang: 'en-US',
@@ -326,9 +341,11 @@ describe('parseLocale', () => {
 
     test('should create independent copies for each locale version', () => {
         const mockState: any = {
-            localesMap: { '/': 'root' },
+            latest: 'v1.0',
+            localePrefixes: { '/': '' },
             versionsList: [ 'v1.0', 'v2.0' ],
             configuration: {
+                themeConfig: { logoLink: '/' },
                 locales: {
                     '/': {
                         lang: 'en-US',
@@ -372,9 +389,11 @@ describe('parseLocale', () => {
         const customFunction = () => 'test';
 
         const mockState: any = {
-            localesMap: { '/': 'root' },
+            latest: 'v1.0',
+            localePrefixes: { '/': '' },
             versionsList: [ 'v1.0' ],
             configuration: {
+                themeConfig: { logoLink: '/' },
                 locales: {
                     '/': {
                         lang: 'en-US',
@@ -403,5 +422,117 @@ describe('parseLocale', () => {
 
         // Functions should still work
         expect(mockState.vitepressConfig.locales.root.themeConfig?.customFunction()).toBe('test');
+    });
+
+    test('should put the versioned entries of a locale before the entry of the locale', () => {
+        const mockState: any = {
+            latest: 'v1.0',
+            localePrefixes: { root: '', de: 'de' },
+            versionsList: [ 'v1', 'v2' ],
+            configuration: { themeConfig: { logoLink: '/' }, locales: { root: { lang: 'en' }, de: { lang: 'de-DE' } } },
+            vitepressConfig: { locales: {} }
+        };
+
+        mockInject.mockReturnValue(mockState);
+        parseLocale();
+
+        expect(Object.keys(mockState.vitepressConfig.locales)).toEqual([ 'root', 'v1', 'v2', 'de/v1', 'de/v2', 'de' ]);
+    });
+
+    test('should key the entries of a locale by its prefix, not by its configuration key', () => {
+        const mockState: any = {
+            latest: 'v1.0',
+            localePrefixes: { root: '', german: 'de' },
+            versionsList: [ 'v1' ],
+            configuration: { themeConfig: { logoLink: '/' }, locales: { root: { lang: 'en' }, german: { lang: 'de-DE', label: 'Deutsch' } } },
+            vitepressConfig: { locales: {} }
+        };
+
+        mockInject.mockReturnValue(mockState);
+        parseLocale();
+
+        expect(mockState.vitepressConfig.locales.de).toEqual({ lang: 'de-DE', label: 'Deutsch', link: '/de/' });
+        expect(mockState.vitepressConfig.locales['de/v1']).toEqual({ lang: 'de-DE', label: ' ', link: '/de/' });
+        expect(mockState.vitepressConfig.locales.german).toBeUndefined();
+    });
+
+    test('should give the root and every version an empty entry on a site without locales', () => {
+        const mockState: any = {
+            latest: 'v1.0',
+            localePrefixes: {},
+            versionsList: [ 'next', 'v1' ],
+            configuration: { themeConfig: { logoLink: '/' }, locales: {} },
+            vitepressConfig: { locales: {} }
+        };
+
+        mockInject.mockReturnValue(mockState);
+        parseLocale();
+
+        expect(mockState.vitepressConfig.locales).toEqual({ root: {}, next: {}, v1: {} });
+    });
+
+    test('should give every entry its own themeConfig, even an empty one', () => {
+        const mockState: any = {
+            latest: 'v1.0',
+            localePrefixes: { root: '' },
+            versionsList: [ 'v1', 'v2' ],
+            configuration: { themeConfig: { logoLink: '/' }, locales: { root: { themeConfig: {} } } },
+            vitepressConfig: { locales: {} }
+        };
+
+        mockInject.mockReturnValue(mockState);
+        parseLocale();
+        const { locales } = mockState.vitepressConfig;
+        locales.v1.themeConfig.nav = [ 'v1 nav' ];
+
+        expect(locales.v2.themeConfig.nav).toBeUndefined();
+        expect(locales.root.themeConfig.nav).toBeUndefined();
+        expect(mockState.configuration.locales.root.themeConfig.nav).toBeUndefined();
+    });
+
+    describe('the title link of every entry', () => {
+        test('should point the title of every entry at the home page of its version, and the bare locales at latest', () => {
+            const mockState: any = {
+                latest: 'v2',
+                localePrefixes: { root: '', de: 'de' },
+                versionsList: [ 'next', 'v2' ],
+                configuration: { locales: { root: { lang: 'en' }, de: { lang: 'de-DE' } } },
+                vitepressConfig: { base: '/docs/', locales: {} }
+            };
+
+            mockInject.mockReturnValue(mockState);
+            parseLocale();
+            const logoLinks = Object.fromEntries(
+                Object.entries(mockState.vitepressConfig.locales).map(([ key, locale ]: any) => [ key, locale.themeConfig.logoLink ])
+            );
+
+            expect(logoLinks).toEqual({
+                root: '/docs/v2/',
+                next: '/docs/next/',
+                v2: '/docs/v2/',
+                'de/next': '/docs/de/next/',
+                'de/v2': '/docs/de/v2/',
+                de: '/docs/de/v2/'
+            });
+        });
+
+        test.each`
+            case                  | site                       | locale
+            ${ 'the site' }       | ${ { logoLink: '/home' } } | ${ {} }
+            ${ 'the locale' }     | ${ {} }                    | ${ { logoLink: '/home' } }
+        `('should keep a logoLink that $case sets', ({ site, locale }: any) => {
+            const mockState: any = {
+                latest: 'v2',
+                localePrefixes: { root: '' },
+                versionsList: [ 'v2' ],
+                configuration: { themeConfig: site, locales: { root: { lang: 'en', themeConfig: locale } } },
+                vitepressConfig: { locales: {} }
+            };
+
+            mockInject.mockReturnValue(mockState);
+            parseLocale();
+
+            expect(mockState.vitepressConfig.locales.v2.themeConfig?.logoLink).toBe(locale.logoLink);
+        });
     });
 });
