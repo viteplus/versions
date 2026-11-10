@@ -36,9 +36,9 @@ import { readFileSync, writeFileSync } from 'fs';
  */
 
 export function parseLatestEntry(): void {
-    const { latest, localesMap, vitepressConfig } = inject(StateModel);
+    const { latest, localeSegments, vitepressConfig } = inject(StateModel);
     const { buildEnd, base = '/', vite = {} } = vitepressConfig;
-    const locales = [ '', ...Object.keys(localesMap).filter(key => localesMap[key] !== 'root') ];
+    const locales = [ '', ...localeSegments ];
     const withScript = (html: string, locale: string): string => {
         const url = JSON.stringify(posix.join('/', base, locale, latest, '/'));
 
