@@ -8,6 +8,12 @@
 [![Discord](https://img.shields.io/discord/1422908712116420659?logo=Discord&label=Discord)](https://discord.gg/6vgFhJTEGn)
 [![Ask DeepWiki](https://img.shields.io/badge/Ask-DeepWiki-blue)](https://deepwiki.com/viteplus/versions)
 
+> [!NOTE]
+> This is a community project and is not affiliated with or endorsed by `VoidZero`, `Vite`, `VitePress`, or `Vite+`.
+> The `viteplus` GitHub organization and the `@viteplus` npm scope are independent and predate any knowledge of
+> `Vite+`. the name only means "plugins for Vite and VitePress". See
+> [#59](https://github.com/viteplus/versions/issues/59#issuecomment-6780832222).
+
 A VitePress plugin for versioned documentation. Call `defineVersionedConfig` instead of VitePress's
 `defineConfig` and it manages versioned routes, a per-version sidebar and navigation, and a `VersionSwitcher`
 component - so a single site can serve your current docs alongside frozen copies of every previous version.
