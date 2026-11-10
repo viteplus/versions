@@ -48,6 +48,8 @@ export function isNavItemWithChildren(item: NavItemType): item is NavItemWithChi
  *
  * @remarks
  * - This function checks for the presence of a `link` property.
+ * - A link that names a scheme, such as `https:` or `mailto:`, or starts with `//` leaves the site and does not count.
+ *   A path that merely contains `http`, such as `/guide/http-client`, still counts.
  * - Use this type guard to safely access the `link` property when iterating
  *   or transforming navigation trees.
  *
@@ -63,7 +65,7 @@ export function isNavItemWithChildren(item: NavItemType): item is NavItemWithChi
  */
 
 export function isNavItemWithLink(item: NavItemType): item is NavItemWithLinkType {
-    return 'link' in item && !!item.link && typeof item.link === 'string' && !item.link.includes('http');
+    return 'link' in item && !!item.link && typeof item.link === 'string' && !/^([a-z][\w+.-]*:|\/\/)/i.test(item.link);
 }
 
 /**
@@ -71,11 +73,13 @@ export function isNavItemWithLink(item: NavItemType): item is NavItemWithLinkTyp
  *
  * @param version - The version string to prefix (e.g., `"v2.0.0"`).
  * @param item - The navigation item to process, which can be a link, a group with children, or a component.
+ * @param versions - The names of every published version, whose links are left as written.
  * @returns A new navigation item with updated `link` values where applicable.
  *
  * @remarks
  * - For {@link NavItemWithLinkType}, prepends the given `version` to the `link`
- *   unless `skipVersioning` is `true`.
+ *   unless `skipVersioning` is `true`, the link already starts with one of `versions`,
+ *   or its last segment has an extension other than `.md` or `.html`, which marks a public file.
  * - For {@link NavItemWithChildrenType}, recursively traverses all children and applies
  *   the same transformation.
  * - Component-based navigation items ({@link NavItemComponentType}) are returned as-is.
@@ -98,19 +102,20 @@ export function isNavItemWithLink(item: NavItemType): item is NavItemWithLinkTyp
  * @since 2.0.0
  */
 
-export function replaceLinksRecursive(version: string, item: NavItemType): NavItemType {
+export function replaceLinksRecursive(version: string, item: NavItemType, versions: Array<string> = []): NavItemType {
     if (isNavItemWithChildren(item) && !item.skipVersioning) {
         return {
             ...item,
-            items: item.items.map(child => replaceLinksRecursive(version, child))
+            items: item.items.map(child => replaceLinksRecursive(version, child, versions))
         };
     }
 
-    if (isNavItemWithLink(item) && !item.skipVersioning) {
-        return {
-            ...item,
-            link: typeof item.link === 'string' ? join('/', version, item.link) : item.link
-        };
+    if (isNavItemWithLink(item) && !item.skipVersioning && typeof item.link === 'string') {
+        const pathname = item.link.replace(/[?#].*$/, '');
+        const versioned = versions.includes(pathname.split('/').filter(Boolean)[0]);
+        if (versioned || /\.(?!(md|html)$)[^./]+$/.test(pathname)) return item;
+
+        return { ...item, link: join('/', version, item.link) };
     }
 
     return item;
@@ -122,11 +127,13 @@ export function replaceLinksRecursive(version: string, item: NavItemType): NavIt
  * @param items - An array of navigation items to process.
  * @param version - The version string to prepend to links (e.g., `"v2.0.0"`).
  *   - If `"root"` is provided, no version prefix is added.
+ * @param versions - The names of every published version, whose links are left as written.
  * @returns A new array of navigation items with versioned links applied.
  *
  * @remarks
  * - Uses {@link replaceLinksRecursive} to traverse each navigation item.
  * - Only items that are link-based or have children are modified; component items remain unchanged.
+ *   The `VersionSwitcher` component reads the versions from `themeConfig.versioning`, see `parseVersioningData`.
  * - Preserves other properties of the navigation items.
  *
  * @example
@@ -145,28 +152,10 @@ export function replaceLinksRecursive(version: string, item: NavItemType): NavIt
  * @since 2.0.0
  */
 
-export function populateNav(items: Array<NavItemType>, version: string): Array<NavItemType> {
-    const state = inject(StateModel);
+export function populateNav(items: Array<NavItemType>, version: string, versions: Array<string> = []): Array<NavItemType> {
     if (version === 'root') version = '';
 
-    return items.map(item => {
-        if ('component' in item && item.component) {
-            return {
-                ...item,
-                props: {
-                    ...item.props,
-                    versioningPlugin: {
-                        routes: state.routesMap,
-                        labels: state.labels,
-                        versions: state.versionsList,
-                        latestVersion: state.latest
-                    }
-                }
-            };
-        }
-
-        return replaceLinksRecursive(version, item);
-    });
+    return items.map(item => replaceLinksRecursive(version, item, versions));
 }
 
 /**
@@ -274,7 +263,7 @@ export function normalizeNavs(state: StateModel): Record<string, Array<NavItemTy
     const results: Record<string, Array<NavItemType>> = { root: [] };
 
     for (const locale of localesKeys) {
-        const prefix = locale === 'root' || state.localesMap[locale] === 'root' ? 'root' : locale;
+        const prefix = state.localePrefixes[locale] || 'root';
         normalizeNav(results, (locales[locale].themeConfig?.nav ?? []) as NavType, prefix, globalResults);
     }
 
@@ -373,12 +362,12 @@ export function parseNavs(): void {
     const state = inject(StateModel);
     const { vitepressConfig: { locales } } = state;
     const navs = normalizeNavs(state);
-    const rootLocales = [ 'root', ...Object.values(state.localesMap) ];
+    const rootLocales = [ 'root', ...Object.values(state.localePrefixes) ];
 
     for (const [ key, locale ] of Object.entries(locales)) {
         const version = rootLocales.includes(key) ? join(key === 'root' ? '' : key, state.latest) : key;
 
         locale.themeConfig ??= {};
-        locale.themeConfig.nav = populateNav(getNavForLocale(navs, version), version);
+        locale.themeConfig.nav = populateNav(getNavForLocale(navs, version), version, state.versionsList);
     }
 }
