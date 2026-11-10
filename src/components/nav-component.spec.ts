@@ -55,9 +55,33 @@ describe('isNavItemWithLink', () => {
         const item: any = { text: 'Invalid', link: undefined };
         expect(isNavItemWithLink(item)).toBe(false);
     });
+
+    test.each`
+        link                           | expected
+        ${ '/guide/http-client' }      | ${ true }
+        ${ '/https/' }                 | ${ true }
+        ${ 'https://example.com' }     | ${ false }
+        ${ 'http://example.com' }      | ${ false }
+        ${ 'mailto:team@example.com' } | ${ false }
+        ${ '//cdn.example.com/a' }     | ${ false }
+    `('should judge $link as a site link: $expected', ({ link, expected }: any) => {
+        expect(isNavItemWithLink(<any> { text: 'Link', link })).toBe(expected);
+    });
 });
 
 describe('replaceLinksRecursive', () => {
+    test.each`
+        link                     | expected
+        ${ '/guide/' }           | ${ '/v2.0/guide/' }
+        ${ '/v1.0/release' }     | ${ '/v1.0/release' }
+        ${ '/files/a.pdf' }      | ${ '/files/a.pdf' }
+        ${ '/guide.html' }       | ${ '/v2.0/guide.html' }
+    `('should version $link as $expected when the versions are known', ({ link, expected }: any) => {
+        const result = replaceLinksRecursive('v2.0', <any> { text: 'Link', link }, [ 'v1.0', 'v2.0' ]) as any;
+
+        expect(result.link).toBe(expected);
+    });
+
     test('should prepend version to link when item is a link and skipVersioning is not set', () => {
         const item: NavItemType = { text: 'Guide', link: '/guide/' } as any;
         const result = replaceLinksRecursive('v1.0', item) as any;
@@ -163,6 +187,12 @@ describe('populateNav', () => {
         const result = populateNav(items, 'v3.0') as any[];
         expect(result[0].items[0].link).toBe(join('/', 'v3.0', '/child1/'));
         expect(result[0].items[1].link).toBe('/child2/');
+    });
+
+    test('should leave a component item as it is', () => {
+        const item = { component: 'VersionSwitcher', props: { label: 'Version' } };
+
+        expect(populateNav([ <any> item ], 'v1.0')).toEqual([ item ]);
     });
 });
 
@@ -310,9 +340,9 @@ describe('normalizeNavs', () => {
                 current: 'v1.0.0',
                 versionSwitcher: false
             },
-            localesMap: {
-                'fr': 'root',
-                'en': 'en'
+            localePrefixes: {
+                fr: '',
+                en: 'en'
             },
             configuration: {
                 locales: {
@@ -344,8 +374,8 @@ describe('normalizeNavs', () => {
                 current: 'v1.0.0',
                 versionSwitcher: false
             },
-            localesMap: {
-                'fr': 'root'
+            localePrefixes: {
+                fr: ''
             },
             configuration: {
                 locales: {
@@ -376,8 +406,8 @@ describe('normalizeNavs', () => {
                 current: 'v1.0.0',
                 versionSwitcher: false
             },
-            localesMap: {
-                'en': 'root'
+            localePrefixes: {
+                en: ''
             },
             configuration: {
                 locales: {
@@ -410,13 +440,15 @@ describe('parseNavs', () => {
 
     test('should populate navs for each locale using normalizeNavs result', () => {
         const mockState = {
+            latest: 'v1.0.0',
             versionsList: [ 'v1.0.0' ],
             versionsConfig: {
                 current: 'v1.0.0',
                 versionSwitcher: false
             },
-            localesMap: {
-                'en': 'root'
+            localePrefixes: {
+                en: '',
+                fr: 'fr'
             },
             configuration: {
                 locales: {
@@ -439,7 +471,7 @@ describe('parseNavs', () => {
 
         parseNavs();
         expect(mockState.vitepressConfig.locales.en.themeConfig?.nav).toEqual([{ text: 'Global', link: '/en/' }]);
-        expect(mockState.vitepressConfig.locales.fr.themeConfig?.nav).toEqual([{ text: 'Global', link: '/fr/' }]);
+        expect(mockState.vitepressConfig.locales.fr.themeConfig?.nav).toEqual([{ text: 'Global', link: '/fr/v1.0.0/' }]);
     });
 
     test('should fallback to root nav if locale key is missing in navs', () => {
@@ -449,8 +481,8 @@ describe('parseNavs', () => {
                 current: 'v1.0.0',
                 versionSwitcher: false
             },
-            localesMap: {
-                'en': 'root'
+            localePrefixes: {
+                en: ''
             },
             configuration: {
                 locales: {
@@ -482,8 +514,8 @@ describe('parseNavs', () => {
                     text: 'some text'
                 }
             },
-            localesMap: {
-                'de': 'root'
+            localePrefixes: {
+                root: ''
             },
             configuration: {
                 locales: {
@@ -514,7 +546,7 @@ describe('parseNavs', () => {
             latest: 'v2.0.x',
             versionsList: [ 'next', 'v2.0.x' ],
             versionsConfig: { current: 'next', versionSwitcher: false },
-            localesMap: { '/': 'root', de: 'de' },
+            localePrefixes: { '/': '', de: 'de' },
             configuration: {
                 locales: {},
                 themeConfig: { nav: { root: [{ text: 'Generic', link: '/guide' }], 'v2.0.x': [{ text: 'V2', link: '/guide' }] } }
