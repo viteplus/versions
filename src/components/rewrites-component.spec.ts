@@ -2,9 +2,10 @@
  * Imports
  */
 
+import { join } from 'path/posix';
 import { inject } from '@remotex-labs/xinject';
 import { getAllMarkdownFilesRelative } from '@components/object.component';
-import { createRouteResolver, parseRoutesComponent, parseVersionRoutes, rewritesHook } from '@components/rewrites.component';
+import { assertRewritesHook, createRouteResolver, parseRoutesComponent, parseVersionRoutes, rewritesHook } from '@components/rewrites.component';
 
 /**
  * Tests
@@ -122,6 +123,8 @@ describe('parseRoutesComponent', () => {
         state = {
             root: '/docs',
             localesMap: {},
+            localeSegments: [],
+            versionsList: [ 'v2.0.x', 'v1.0.x' ],
             routesMap: {},
             versionDirs: { 'v2.0.x': 'src', 'v1.0.x': 'archive/v1.0.x' },
             versionsConfig: { hooks: { rewritesHook } },
@@ -137,5 +140,42 @@ describe('parseRoutesComponent', () => {
 
         expect(state.vitepressConfig.rewrites('archive/v1.0.x/index.md')).toBe('v1.0.x/index.md');
         expect(state.routesMap).toEqual({ 'v2.0.x': [ 'v2.0.x/index.md' ], 'v1.0.x': [ 'v1.0.x/index.md' ] });
+    });
+});
+
+describe('assertRewritesHook', () => {
+    let state: any;
+
+    beforeEach(() => {
+        xJet.restoreAllMocks();
+
+        state = {
+            localeSegments: [ 'de' ],
+            versionsList: [ 'v2.0.x', 'v1.0.x' ],
+            versionsConfig: { hooks: { rewritesHook } },
+            fail: (message: string) => {
+                throw new Error(message);
+            }
+        };
+
+        xJet.mock(inject).mockReturnValue(state);
+    });
+
+    test('should accept a hook that keeps the locale and the version first and reshapes the rest', () => {
+        state.versionsConfig.hooks.rewritesHook = (source: string, version: string, locale: string) =>
+            join(locale, version, 'pages', source);
+
+        expect(() => assertRewritesHook()).not.toThrow();
+    });
+
+    test.each`
+        case                              | hook
+        ${ 'puts the version first' }     | ${ (source: string, version: string, locale: string) => join(version, locale, source) }
+        ${ 'drops the version' }          | ${ (source: string, version: string, locale: string) => join(locale, source) }
+        ${ 'starts with a slash' }        | ${ (source: string, version: string, locale: string) => `/${ join(locale, version, source) }` }
+    `('should reject a hook that $case', ({ hook }: any) => {
+        state.versionsConfig.hooks.rewritesHook = hook;
+
+        expect(() => assertRewritesHook()).toThrow(/rewritesHook has to keep .* at the front of every route/);
     });
 });

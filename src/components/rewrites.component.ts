@@ -119,10 +119,48 @@ export function parseVersionRoutes(resolve: RouteResolverType): Record<string, A
 }
 
 /**
+ * Checks that the `rewritesHook` keeps the locale and the version at the front of every route.
+ *
+ * @throws Error - When the hook gives the home page of a version and locale a route
+ * that does not start with `<locale>/<version>/`
+ *
+ * @remarks
+ * The locale entries, the navigation, the version switchers, the link rewriting, and the root URL
+ * all find the version right after the locale. A hook that puts the version first, or drops it,
+ * would publish pages that none of them can place, so the build stops with the route the hook returned.
+ *
+ * @example
+ * ```ts
+ * // rewritesHook: (source, version, locale) => join(version, locale, source)
+ * assertRewritesHook();
+ * // Error: rewritesHook has to keep de/v2.x/ at the front of every route, it returned v2.x/de/index.md
+ * ```
+ *
+ * @see https://github.com/viteplus/versions/issues/55
+ * @since 3.0.0
+ */
+
+export function assertRewritesHook(): void {
+    const state = inject(StateModel);
+    const { versionsList, localeSegments, versionsConfig } = state;
+
+    for (const locale of [ '', ...localeSegments ]) {
+        for (const version of versionsList) {
+            const prefix = `${ join(locale, version) }/`;
+            const route = versionsConfig.hooks.rewritesHook('index.md', version, locale);
+            if (route.startsWith(prefix)) continue;
+
+            state.fail(`rewritesHook has to keep ${ prefix } at the front of every route, it returned ${ route }`);
+        }
+    }
+}
+
+/**
  * Wires route rewriting into the VitePress configuration and records the routes of every version.
  *
  * @remarks
- * Assigns `vitepressConfig.rewrites` the resolver from {@link createRouteResolver},
+ * Checks the hook with {@link assertRewritesHook}, then
+ * assigns `vitepressConfig.rewrites` the resolver from {@link createRouteResolver},
  * which VitePress calls once per source file while it builds the site.
  * Fills {@link StateModel.routesMap} with the output of {@link parseVersionRoutes},
  * so the version switcher can check a route before it links to it.
@@ -136,14 +174,16 @@ export function parseVersionRoutes(resolve: RouteResolverType): Record<string, A
  *
  * @see createRouteResolver
  * @see parseVersionRoutes
+ * @see assertRewritesHook
  *
  * @since 2.0.0
  */
 
 export function parseRoutesComponent(): void {
     const state = inject(StateModel);
-    const resolve = createRouteResolver();
+    assertRewritesHook();
 
+    const resolve = createRouteResolver();
     state.vitepressConfig.rewrites = resolve;
     Object.assign(state.routesMap, parseVersionRoutes(resolve));
 }
