@@ -191,17 +191,13 @@ export class StateModel {
     readonly labels: Record<string, string> = {};
 
     /**
-     * Maps locale keys to their effective base paths.
+     * Maps the URL prefix of each locale to its key in the user configuration.
      *
      * @remarks
-     * - Keys are the locale identifiers as defined in the user configuration
-     *   (e.g., `"de"`, `"root"`).
-     * - Values are the corresponding effective base paths or link prefixes
-     *   used inside the generated VitePress config.
-     * - The `"root"` locale always maps to the default language of the site.
-     *
-     * This mapping is used internally to resolve and normalize locale-based
-     * routing for both source files and versioned archives.
+     * - Keys are the URL prefixes: the `link` of the locale without its slashes,
+     *   or else the language of its `lang` (or of its key), such as `de` for `de-DE`.
+     *   A source folder with that name holds the pages of the locale.
+     * - Values are the keys of `configuration.locales`, and `"root"` for the root locale.
      *
      * @example
      * ```ts
@@ -215,6 +211,39 @@ export class StateModel {
      */
 
     readonly localesMap: Record<string, string> = {};
+
+    /**
+     * Maps each key of `configuration.locales` to the URL prefix of that locale.
+     *
+     * @remarks
+     * The prefix of the root locale is an empty string, since its pages carry no locale segment.
+     * Every other prefix is the key of that locale in {@link localesMap}.
+     *
+     * @example
+     * ```ts
+     * localePrefixes = { root: '', de: 'de', '/fr/': 'fr' };
+     * ```
+     *
+     * @since 3.0.0
+     */
+
+    readonly localePrefixes: Record<string, string> = {};
+
+    /**
+     * The URL prefixes of every locale other than the root one.
+     *
+     * @example
+     * ```ts
+     * state.localeSegments; // [ 'de', 'fr' ]
+     * ```
+     *
+     * @see localePrefixes
+     * @since 3.0.0
+     */
+
+    get localeSegments(): Array<string> {
+        return Object.values(this.localePrefixes).filter(Boolean);
+    }
 
     /**
      * Maps each version label to the routes that version publishes.
@@ -264,11 +293,11 @@ export class StateModel {
     constructor(readonly configuration: ConfigurationInterface = defaultConfiguration) {
         const { sources, archive } = configuration.versionsConfig;
 
-        this.sources = sources;
+        this.root = join(process.cwd(), process.argv[3] ?? '', configuration.srcDir ?? '');
+        this.sources = relative(this.root, resolve(this.root, sources)).split(sep).join('/');
         this.archive = archive;
         this.versionsConfig = configuration.versionsConfig;
 
-        this.root = join(process.cwd(), process.argv[3] ?? '', configuration.srcDir ?? '');
         this.sourcesPath = join(this.root, this.sources);
         this.archivePath = join(this.root, this.archive);
 
@@ -279,11 +308,11 @@ export class StateModel {
     }
 
     /**
-     * Initializes the state model by collecting the published versions and setting up the locale entries.
+     * Initializes the state model by collecting the published versions and resolving the locale prefixes.
      *
      * @returns The current instance for method chaining
      *
-     * @throws Error - When two versions share a name, when a `path` is no folder inside {@link root},
+     * @throws Error - When two versions share a name or overlapping folders, when a `path` is no folder inside {@link root},
      * or when `versionsConfig.latest` or a key of `versionsConfig.versions` names no version
      *
      * @remarks
@@ -297,9 +326,8 @@ export class StateModel {
      * // archive/ holds v1.0.x, and versionsConfig.current is 'v2.0.x'
      * const state = new StateModel(config).init();
      *
-     * state.versionsList;                         // [ 'v2.0.x', 'v1.0.x' ]
-     * state.latest;                               // 'v2.0.x'
-     * Object.keys(state.vitepressConfig.locales); // [ 'root', 'v2.0.x', 'v1.0.x' ]
+     * state.versionsList; // [ 'v2.0.x', 'v1.0.x' ]
+     * state.latest;       // 'v2.0.x'
      * ```
      *
      * @see versionDirs
@@ -310,7 +338,6 @@ export class StateModel {
 
     init(): this {
         const { current, latest, versions } = this.versionsConfig;
-        this.vitepressConfig.locales.root = { themeConfig: {} };
 
         this.addVersion(current, this.sources);
         for (const entry of readdirSync(this.archivePath, { withFileTypes: true })) {
@@ -333,47 +360,57 @@ export class StateModel {
     }
 
     /**
-     * Initializes the locale entries in the VitePress configuration and builds a mapping
-     * of locales to their links for all versions.
+     * Reports a configuration error and stops loading the configuration.
+     *
+     * @param message - The description of the error
+     *
+     * @throws Error - Always, carrying the given message
      *
      * @remarks
-     * - Adds a `root` locale entry.
-     * - Copies all user-defined locales into the VitePress config.
-     * - Populates `localesMap` with locale keys and their corresponding links (or folder names).
-     * - Ensures that for each documentation version, a locale entry exists in the VitePress config.
-     * - Handles both root and non-root locales, creating versioned paths automatically.
+     * The message goes to the console in red first,
+     * so it stays visible above the stack trace that VitePress prints for the thrown error.
+     * The components report their own configuration errors through it as well.
+     *
+     * @since 3.0.0
+     */
+
+    fail(message: string): never {
+        console.error(xterm.red('[ viteplus ]'), `${ message }\n`);
+        throw new Error(message);
+    }
+
+    /**
+     * Resolves the URL prefix of every configured locale.
+     *
+     * @remarks
+     * The root locale is the `root` key, or else the first key of `configuration.locales`.
+     * A `link` such as `/de/` gives the prefix `de`, so the slashes of a VitePress style link never reach a URL.
+     * Two locales with one prefix, a prefix of more than one segment, or a prefix that names a version stop the build,
+     * since the locale and the version of a page are read from its first two segments.
+     * The locale entries of the VitePress configuration are built from these maps by `parseLocale`.
+     *
+     * @see localesMap
+     * @see localePrefixes
      *
      * @since 2.0.0
      */
 
     private initializeLocalesMap(): void {
-        const locales = this.vitepressConfig.locales;
         const userLocales = this.configuration.locales;
+        const keys = Object.keys(userLocales);
+        const rootKey = 'root' in userLocales ? 'root' : keys[0];
 
-        locales['root'] = {};
-        if (Object.keys(userLocales).length > 0) {
-            const keys = Object.keys(userLocales);
-            const rootLocaleKey = 'root' in userLocales ? 'root' : keys[0];
+        for (const key of keys) {
+            const { lang, link } = userLocales[key];
+            const prefix = link ? link.replace(/^\/+|\/+$/g, '') : getLanguageOnly(lang ?? key);
+            const taken = Object.keys(this.localePrefixes).find(other => this.localePrefixes[other] === prefix);
 
-            for (const key of keys) {
-                const index = getLanguageOnly(userLocales[key].lang ?? key);
-                for (const version of this.versionsList) {
-                    if (key === rootLocaleKey) continue;
-                    const versionPath = posix.join(index, version);
-                    locales[versionPath] = {};
-                }
+            if (key !== rootKey && taken) this.fail(`Locales ${ taken } and ${ key } share the prefix ${ prefix }, give one a link of its own`);
+            if (key !== rootKey && prefix.includes('/')) this.fail(`Locale ${ key } has the prefix ${ prefix }, a prefix has to be one segment`);
+            if (key !== rootKey && this.versionDirs[prefix]) this.fail(`Locale ${ key } and a version share the name ${ prefix }, rename one of them`);
 
-                if (key === rootLocaleKey) {
-                    this.localesMap[userLocales[key].link ?? index] = 'root';
-                } else {
-                    locales[key] = {};
-                    this.localesMap[userLocales[key].link ?? index] = key;
-                }
-            }
-        }
-
-        for (const version of this.versionsList) {
-            locales[version] = {};
+            this.localesMap[prefix] = key === rootKey ? 'root' : key;
+            this.localePrefixes[key] = key === rootKey ? '' : prefix;
         }
     }
 
@@ -383,11 +420,13 @@ export class StateModel {
      * @param name - The name of the version, which becomes its URL segment
      * @param folder - The folder of the version, relative to {@link root}
      *
-     * @throws Error - When another version already carries the name
+     * @throws Error - When another version already carries the name,
+     * or when its folder holds or sits inside the folder of another version
      *
      * @remarks
      * Two versions with one name would publish over each other's pages,
      * such as an archive folder named after the current version.
+     * A folder inside another one, such as a `path` of `src/legacy`, would hand its pages to both versions.
      *
      * @since 3.0.0
      */
@@ -395,6 +434,12 @@ export class StateModel {
     private addVersion(name: string, folder: string): void {
         const taken = this.versionDirs[name];
         if (taken) this.fail(`Version ${ name } is published from both ${ taken } and ${ folder }, rename one of them`);
+
+        for (const [ other, otherFolder ] of Object.entries(this.versionDirs)) {
+            if (`${ folder }/`.startsWith(`${ otherFolder }/`) || `${ otherFolder }/`.startsWith(`${ folder }/`)) {
+                this.fail(`Version ${ name } in ${ folder } overlaps version ${ other } in ${ otherFolder }, move it to a folder of its own`);
+            }
+        }
 
         this.versionDirs[name] = folder;
     }
@@ -421,25 +466,6 @@ export class StateModel {
         }
 
         return folder;
-    }
-
-    /**
-     * Reports a configuration error and stops loading the configuration.
-     *
-     * @param message - The description of the error
-     *
-     * @throws Error - Always, carrying the given message
-     *
-     * @remarks
-     * The message goes to the console in red first,
-     * so it stays visible above the stack trace that VitePress prints for the thrown error.
-     *
-     * @since 3.0.0
-     */
-
-    private fail(message: string): never {
-        console.error(xterm.red('[ viteplus ]'), `${ message }\n`);
-        throw new Error(message);
     }
 
     /**
