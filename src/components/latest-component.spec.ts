@@ -21,7 +21,7 @@ describe('parseLatestEntry', () => {
 
         state = {
             latest: 'v2.0.x',
-            localesMap: { '/': 'root', de: 'de' },
+            localeSegments: [ 'de' ],
             vitepressConfig: { base: '/docs/', vite: { plugins: [ userPlugin ] } }
         };
 
