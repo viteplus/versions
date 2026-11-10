@@ -33,6 +33,7 @@ const props = defineProps<PropsInterface>();
 const {
     isOpen,
     toggle,
+    versions,
     hasVersions,
     activeVersionText,
     availableVersions,
@@ -77,7 +78,7 @@ const {
 
             <ul id="navbar-group-version" class="items">
                 <VPMenuLink
-                    v-for="version in versioningPlugin.versions"
+                    v-for="version in versions"
                     :key="version"
                     :item="createVersionMenuItem(version)"
                 />

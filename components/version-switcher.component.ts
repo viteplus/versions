@@ -15,8 +15,8 @@ import { useData, useRouter } from 'vitepress';
  * The versioning state that the plugin hands to the theme.
  *
  * @remarks
- * The plugin builds this object at configuration time and passes it to every `VersionSwitcher` nav item,
- * so the switcher reads the published versions from its prop instead of the site configuration.
+ * The plugin builds this object at configuration time and publishes it once as `themeConfig.versioning`,
+ * which VitePress merges into the theme of every locale, so the switcher reads it through `useData().theme`.
  *
  * @example
  * ```ts
@@ -98,6 +98,20 @@ export interface VersioningPluginInterface {
      */
 
     latestVersion: string;
+
+    /**
+     * The URL prefixes of every locale other than the root one.
+     *
+     * @example
+     * ```ts
+     * const { locales } = versioningPlugin;
+     * locales; // [ 'de' ]
+     * ```
+     *
+     * @since 3.0.0
+     */
+
+    locales?: Array<string>;
 }
 
 /**
@@ -116,7 +130,10 @@ export interface VersioningPluginInterface {
 
 export interface PropsInterface {
     /**
-     * The versioning state that the plugin injected into the theme.
+     * Versioning state that replaces the `themeConfig.versioning` the plugin publishes.
+     *
+     * @remarks
+     * Leave it out to read the state of the site, which is what every `VersionSwitcher` nav item does.
      *
      * @example
      * ```ts
@@ -128,7 +145,7 @@ export interface PropsInterface {
      * @since 2.1.0
      */
 
-    versioningPlugin: VersioningPluginInterface;
+    versioningPlugin?: VersioningPluginInterface;
 
     /**
      * Whether the switcher renders as the mobile dropdown.
@@ -259,6 +276,19 @@ export interface VersionSwitcherInterface {
     isOpen: Ref<boolean>;
 
     /**
+     * The names of every published version, in menu order.
+     *
+     * @example
+     * ```ts
+     * versions.value; // [ 'next', 'v2.0.x', 'v1.0.x' ]
+     * ```
+     *
+     * @since 3.0.0
+     */
+
+    versions: ComputedRef<Array<string>>;
+
+    /**
      * Whether the site publishes more than one version.
      *
      * @remarks
@@ -328,7 +358,8 @@ export interface VersionSwitcherInterface {
      *
      * @remarks
      * The link keeps the locale and the page of the reader.
-     * When the version never published that page, the link falls back to the home page of the version.
+     * When the version never published that page, the link falls back to the home page of the version in the locale,
+     * and when the locale has no pages in that version either, to the home page of the version itself.
      *
      * @example
      * ```ts
@@ -364,6 +395,7 @@ export interface VersionSwitcherInterface {
  *
  * @remarks
  * The composable reads the router and the site data, so only the setup function of the component may call it.
+ * The versions come from `props.versioningPlugin`, or else from `themeConfig.versioning` of the site.
  *
  * @example
  * ```ts
@@ -377,46 +409,52 @@ export interface VersionSwitcherInterface {
 
 export function useVersionSwitcher(props: PropsInterface): VersionSwitcherInterface {
     const router = useRouter();
-    const { site } = useData();
+    const { site, theme } = useData();
     const isOpen = ref(false);
 
-    const versions = computed(() => new Set(props.versioningPlugin.versions));
+    const plugin = computed<VersioningPluginInterface>(
+        () => props.versioningPlugin ?? theme.value.versioning ?? { versions: [], latestVersion: '' }
+    );
+
+    const versionSet = computed(() => new Set(plugin.value.versions));
     const locale = computed(() => site.value.locales[site.value.localeIndex ?? '']?.link?.replace(/\//g, '') || '');
     const segments = computed(() => router.route.data.relativePath.split('/'));
+    const versionIndex = computed(() => (segments.value[0] === locale.value ? 1 : 0));
 
     const activeVersion = computed(() => {
-        const [ first, second ] = segments.value;
-        const candidate = first === locale.value ? second : first;
+        const candidate = segments.value[versionIndex.value];
 
-        return versions.value.has(candidate) ? candidate : props.versioningPlugin.latestVersion;
+        return versionSet.value.has(candidate) ? candidate : plugin.value.latestVersion;
     });
 
     function versionText(version: string): string {
         const tag = props.latestLabel ?? 'latest';
-        const label = props.versioningPlugin.labels?.[version] ?? version;
-        const tagged = tag && version === props.versioningPlugin.latestVersion && label.toLowerCase() !== tag.toLowerCase();
+        const label = plugin.value.labels?.[version] ?? version;
+        const tagged = tag && version === plugin.value.latestVersion && label.toLowerCase() !== tag.toLowerCase();
 
         return tagged ? `${ label } (${ tag })` : label;
     }
 
     function createVersionMenuItem(version: string): VersionMenuItemInterface {
-        const page = segments.value.filter((segment: string) => !versions.value.has(segment));
-        const index = page[0] === locale.value ? 1 : 0;
-        const home = `/${ [ ...page.slice(0, index), version, '' ].join('/') }`;
+        const index = versionIndex.value;
+        const page = [ ...segments.value ];
+        page.splice(index, versionSet.value.has(page[index]) ? 1 : 0, version);
 
-        page.splice(index, 0, version);
         const path = page.join('/');
-        const routes = props.versioningPlugin.routes?.[version];
+        const home = [ ...page.slice(0, index + 1), 'index.md' ].join('/');
+        const routes = plugin.value.routes?.[version];
+        if (!routes || routes.includes(path)) return { text: versionText(version), link: `/${ path }` };
 
-        return { text: versionText(version), link: !routes || routes.includes(path) ? `/${ path }` : home };
+        return { text: versionText(version), link: routes.includes(home) ? `/${ home }` : `/${ version }/` };
     }
 
     return {
         isOpen,
-        hasVersions: computed(() => versions.value.size > 1),
+        versions: computed(() => plugin.value.versions),
+        hasVersions: computed(() => versionSet.value.size > 1),
         activeVersion,
         activeVersionText: computed(() => versionText(activeVersion.value)),
-        availableVersions: computed(() => [ ...versions.value ].filter(version => version !== activeVersion.value)),
+        availableVersions: computed(() => plugin.value.versions.filter((version: string) => version !== activeVersion.value)),
         createVersionMenuItem,
         toggle: () => (isOpen.value = !isOpen.value)
     };
