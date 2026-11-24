@@ -48,6 +48,31 @@ Every version is a name and a folder, and every version is served under its name
 So a link to a page always names its version, and stays valid when a newer version becomes the latest one.
 The root shows the latest version's home page, see [`latest`](#latest).
 
+## Moving from v2
+
+In v2 the current version was served at the root, so `/guide` showed the current guide. That breaks once the sources
+hold a release that is not out yet: the unreleased docs would own `/guide`, and readers coming from search engines
+and old links would land on them. Since v3 every version, the latest one included, is served under its name, and
+[`latest`](#latest) says which one is stable.
+
+Only one address that names no version is still served: the root, `/` and `/<locale>/`, which opens the latest
+version. **Any other address without a version, such as `/guide`, now answers 404.** VitePress publishes every page at
+exactly one path, so serving `/guide` as well as `/v2.x/guide` would build each page of the latest version twice, and
+show it twice in the local search.
+
+What moves for you:
+
+| Link                                          | In v3                                                                |
+|-----------------------------------------------|----------------------------------------------------------------------|
+| Nav and sidebar links, such as `/guide/`      | Rewritten to the version of the page, nothing to do                  |
+| Absolute links in markdown, such as `/guide/` | Rewritten to the version of the page, nothing to do                  |
+| Links from outside the site, and bookmarks    | Answer 404, point them at `/<latest>/guide/`, such as `/v2.x/guide/` |
+| A nav `activeMatch` such as `^/guide/`        | No longer matches, write `^/[^/]+/guide/`                            |
+| Links in your own Vue components              | Answer 404, add the version, such as `/v2.x/guide/`                  |
+
+If your site depends on addresses without a version, stay on `v2.3.0` for now. Support for opening such an address
+on the latest version is tracked in [#61](https://github.com/viteplus/versions/issues/61).
+
 ## `current`
 
 The label of the version that `sources` holds.
