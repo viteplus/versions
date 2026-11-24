@@ -19,7 +19,10 @@ versionsConfig: {
 ```
 
 - **Migration**: The current version's pages move from the root to `/<current>/`, so an old link such as `/guide`
-  now answers 404. Only `/` still opens the latest version.
+  now answers 404. Only `/` still opens the latest version. Nav links and absolute markdown links are rewritten for
+  you, but links from outside the site and bookmarks have to name the version, see
+  [Moving from v2](guide/config/configuration#moving-from-v2). Opening such a link on the latest version is tracked
+  in [#61](https://github.com/viteplus/versions/issues/61).
 
 - **Migration**: An archive folder that carries the `current` label now stops the build, since both would publish
   under one URL. Set `current` to the version that the sources hold, or rename the folder.
