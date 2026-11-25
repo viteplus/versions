@@ -167,6 +167,39 @@ export function resolveSwitchRoute(from: string, to: string, versioning: Version
 }
 
 /**
+ * Finds the page of the latest version for a route that names no version.
+ *
+ * @param to - The route the reader asked for, such as `guide.md` or `de/guide/index.md`
+ * @param versioning - The versioning data that the plugin publishes in `themeConfig.versioning`
+ * @returns The route of the same page in the {@link VersioningPluginInterface.latestVersion | latest} version,
+ * or `undefined` when `to` names a version or the latest version has no such page
+ *
+ * @remarks
+ * `guide.md` and `guide/index.md` name the same page, so either form of the latest page is found.
+ *
+ * @example
+ * ```ts
+ * resolveLatestRoute('guide.md', versioning);      // 'v2.x/guide.md'
+ * resolveLatestRoute('de/index.md', versioning);   // 'de/v2.x/index.md'
+ * resolveLatestRoute('v1.x/guide.md', versioning); // undefined, it names a version
+ * ```
+ *
+ * @see https://github.com/viteplus/versions/issues/61
+ * @since 3.1.0
+ */
+
+export function resolveLatestRoute(to: string, versioning: VersioningPluginInterface): string | undefined {
+    const { locale, version, page } = splitRoute(to, versioning);
+    if (version) return;
+
+    const latest = versioning.routes?.[versioning.latestVersion] ?? [];
+    const prefix = [ locale, versioning.latestVersion, page ].filter(Boolean).join('/');
+    const candidates = page ? [ `${ prefix }.md`, `${ prefix }/index.md` ] : [ `${ prefix }/index.md` ];
+
+    return candidates.find(candidate => latest.includes(candidate));
+}
+
+/**
  * Catches a switch of version or language onto a page that does not exist there, and opens the nearest page instead.
  *
  * @param router - The VitePress router, from the `enhanceApp` context
@@ -176,7 +209,9 @@ export function resolveSwitchRoute(from: string, to: string, versioning: Version
  * The version switcher already links to a page that exists, but VitePress's language menu links every page
  * to the same page in each language, translated or not. The fallback hooks into `router.onBeforeRouteChange`,
  * after any hook that the theme set before it, and hands such a switch to {@link resolveSwitchRoute},
- * keeping the query and the hash. Every other navigation, the first load included, goes through untouched,
+ * keeping the query and the hash. A link that names no version, such as `/guide`, opens the same page of the latest
+ * version through {@link resolveLatestRoute}, which the inline script of the plugin already does on a first load.
+ * Every other navigation, the first load included, goes through untouched,
  * so an address that does not exist still shows the not-found page.
  *
  * @example
@@ -211,7 +246,8 @@ export function installVersionFallback(router: Router, siteData: Ref<SiteData>):
         const url = new URL(to, window.location.href);
         if (!url.pathname.startsWith(base)) return;
 
-        const target = resolveSwitchRoute(from, pathToRoute(url.pathname.slice(base.length)), versioning);
+        const route = pathToRoute(url.pathname.slice(base.length));
+        const target = resolveSwitchRoute(from, route, versioning) ?? resolveLatestRoute(route, versioning);
         if (!target) return;
 
         await router.go(`${ base.replace(/\/$/, '') }${ routeToPath(target, !!cleanUrls) }${ url.search }${ url.hash }`);

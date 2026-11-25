@@ -3,7 +3,7 @@
  */
 
 import { URL as NodeURL } from 'url';
-import { installVersionFallback, pathToRoute, resolveSwitchRoute, routeToPath, splitRoute } from './fallback.component';
+import { installVersionFallback, pathToRoute, resolveLatestRoute, resolveSwitchRoute, routeToPath, splitRoute } from './fallback.component';
 
 /**
  * Tests
@@ -80,6 +80,34 @@ describe('resolveSwitchRoute', () => {
     });
 });
 
+describe('resolveLatestRoute', () => {
+    test.each`
+        to                       | expected
+        ${ 'guide.md' }          | ${ 'v2.x/guide.md' }
+        ${ 'config.md' }         | ${ 'v2.x/config/index.md' }
+        ${ 'config/index.md' }   | ${ 'v2.x/config/index.md' }
+        ${ 'index.md' }          | ${ 'v2.x/index.md' }
+        ${ 'de/index.md' }       | ${ 'de/v2.x/index.md' }
+        ${ 'de/guide.md' }       | ${ undefined }
+        ${ 'missing.md' }        | ${ undefined }
+        ${ 'v1.x/hooks.md' }     | ${ undefined }
+    `('should send $to to $expected', ({ to, expected }: any) => {
+        expect(resolveLatestRoute(to, versioning)).toBe(expected);
+    });
+
+    test.each`
+        to                       | expected
+        ${ 'de/guide.md' }       | ${ 'de/v2.x/guide/index.md' }
+        ${ 'de/guide/index.md' } | ${ 'de/v2.x/guide/index.md' }
+        ${ 'de/api.md' }         | ${ 'de/v2.x/api.md' }
+        ${ 'de/v1.x/api.md' }    | ${ undefined }
+    `('should send the German $to to $expected', ({ to, expected }: any) => {
+        const routes = { ...versioning.routes, 'v2.x': [ ...versioning.routes['v2.x'], 'de/v2.x/guide/index.md', 'de/v2.x/api.md' ] };
+
+        expect(resolveLatestRoute(to, { ...versioning, routes })).toBe(expected);
+    });
+});
+
 describe('installVersionFallback', () => {
     let router: any;
     const siteData: any = { value: { base: '/docs/', cleanUrls: false, themeConfig: { versioning } } };
@@ -104,10 +132,17 @@ describe('installVersionFallback', () => {
         expect(router.go).toHaveBeenCalledWith('/docs/de/v2.x/?q=1#top');
     });
 
+    test('should move a link that names no version onto the latest version, keeping the hash', async () => {
+        installVersionFallback(router, siteData);
+
+        await expect(router.onBeforeRouteChange('/docs/guide.html#top')).resolves.toBe(false);
+        expect(router.go).toHaveBeenCalledWith('/docs/v2.x/guide.html#top');
+    });
+
     const passing = [
         [ 'a page that exists', '/docs/v2.x/guide.html' ],
         [ 'a missing page that is no switch', '/docs/v1.x/missing.html' ],
-        [ 'an old link that names no version', '/docs/guide.html' ],
+        [ 'a link that names no version and no latest page', '/docs/hooks.html' ],
         [ 'an address outside the site base', '/other/de/v1.x/hooks.html' ]
     ];
 
