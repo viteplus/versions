@@ -51,7 +51,16 @@ describe('StateModel', () => {
         ] as any);
 
         const state = new StateModel().init();
-        expect(state.versionsList).toEqual([ 'latest', 'v1.0', 'v2.0' ]);
+        expect(state.versionsList).toEqual([ 'latest', 'v2.0', 'v1.0' ]);
+    });
+
+    test('should list the archived versions newest first, comparing the numbers in a name by value', () => {
+        mockExistsSync.mockReturnValue(true);
+        xJet.mock(readdirSync).mockReturnValue(<any> [ 'v1.0.x', 'v2.10.x', 'v2.2.x', 'v2.9.x' ].map(name => ({
+            parentPath: '', name, isDirectory: () => true
+        })));
+
+        expect(new StateModel().init().versionsList).toEqual([ 'latest', 'v2.10.x', 'v2.9.x', 'v2.2.x', 'v1.0.x' ]);
     });
 
     describe('the stable version and labels that init resolves', () => {
@@ -110,7 +119,7 @@ describe('StateModel', () => {
             xJet.spyOn(console, 'error').mockImplementation(() => undefined);
         });
 
-        test('should publish the version after the archived ones from its folder', () => {
+        test('should publish the version from its folder, in order among the archived ones', () => {
             const state = init({ 'v0.x': { path: './legacy/v0/', label: 'v0.x (EOL)' } });
 
             expect(state.versionsList).toEqual([ 'next', 'v1.x', 'v0.x' ]);

@@ -122,8 +122,9 @@ export class StateModel {
      *
      * @remarks
      * These are the names of {@link versionDirs} in the order that `init()` adds them:
-     * the current version first, then every folder under {@link archivePath},
-     * then every version that `versionsConfig.versions` gives its own `path`.
+     * the current version first, then every folder under {@link archivePath}
+     * and every version that `versionsConfig.versions` gives its own `path`, newest first.
+     * Numbers in a name compare by value, so `v2.10.x` comes before `v2.9.x`.
      *
      * @example
      * ```ts
@@ -339,14 +340,20 @@ export class StateModel {
     init(): this {
         const { current, latest, versions } = this.versionsConfig;
 
-        this.addVersion(current, this.sources);
+        const others: Array<[ string, string ]> = [];
         for (const entry of readdirSync(this.archivePath, { withFileTypes: true })) {
-            if (entry.isDirectory()) this.addVersion(entry.name, posix.join(this.archive, entry.name));
+            if (entry.isDirectory()) others.push([ entry.name, posix.join(this.archive, entry.name) ]);
         }
 
         for (const [ name, { path }] of Object.entries(versions)) {
-            if (path) this.addVersion(name, this.versionFolder(name, path));
+            if (path) others.push([ name, this.versionFolder(name, path) ]);
         }
+
+        // newest first, comparing the numbers in a name by value, so v2.10.x comes before v2.9.x
+        others.sort(([ a ], [ b ]) => b.localeCompare(a, 'en', { numeric: true }));
+
+        this.addVersion(current, this.sources);
+        for (const [ name, folder ] of others) this.addVersion(name, folder);
 
         for (const name of [ latest, ...Object.keys(versions) ]) {
             if (name && !this.versionDirs[name]) this.fail(`Version ${ name } is neither the current version nor an archive folder`);
