@@ -55,23 +55,27 @@ hold a release that is not out yet: the unreleased docs would own `/guide`, and 
 and old links would land on them. Since v3 every version, the latest one included, is served under its name, and
 [`latest`](#latest) says which one is stable.
 
-Only one address that names no version is still served: the root, `/` and `/<locale>/`, which opens the latest
-version. **Any other address without a version, such as `/guide`, now answers 404.** VitePress publishes every page at
-exactly one path, so serving `/guide` as well as `/v2.x/guide` would build each page of the latest version twice, and
-show it twice in the local search.
+An address that names no version, such as `/guide`, `/guide.html` or `/de/guide`, opens the same page of the latest
+version, and the address bar moves to `/v2.x/guide`. The root, `/` and `/<locale>/`, opens the latest home page the same
+way. An address whose page the latest version lacks still shows the not-found page.
+
+VitePress publishes every page at exactly one path, so serving `/guide` as well as `/v2.x/guide` would build each page of
+the latest version twice, and show it twice in the local search. Instead, the host serves `404.html` for `/guide`, as it
+does for any address with no page, and a small script in that page moves the address to the versioned page before the
+app starts. Nothing is built twice and nothing reloads. The host still answers `/guide` with status 404, so search
+engines index only the versioned address.
+See [Addresses Without a Version](../features/unversioned) for how it works and what the host needs.
 
 What moves for you:
 
-| Link                                          | In v3                                                                |
-|-----------------------------------------------|----------------------------------------------------------------------|
-| Nav and sidebar links, such as `/guide/`      | Rewritten to the version of the page, nothing to do                  |
-| Absolute links in markdown, such as `/guide/` | Rewritten to the version of the page, nothing to do                  |
-| Links from outside the site, and bookmarks    | Answer 404, point them at `/<latest>/guide/`, such as `/v2.x/guide/` |
-| A nav `activeMatch` such as `^/guide/`        | No longer matches, write `^/[^/]+/guide/`                            |
-| Links in your own Vue components              | Answer 404, add the version, such as `/v2.x/guide/`                  |
-
-If your site depends on addresses without a version, stay on `v2.3.0` for now. Support for opening such an address
-on the latest version is tracked in [#61](https://github.com/viteplus/versions/issues/61).
+| Link                                          | In v3                                                                                                                    |
+|-----------------------------------------------|--------------------------------------------------------------------------------------------------------------------------|
+| Absolute links in markdown, such as `/guide/` | Rewritten to the version of the page, nothing to do                                                                      |
+| Frontmatter links, such as `hero.actions`     | Rewritten to the version of the page, nothing to do                                                                      |
+| Nav and sidebar links, such as `/guide/`      | Rewritten to the version of the page, nothing to do                                                                      |
+| Links from outside the site, and bookmarks    | Open the latest version, the address moves to `/<latest>/guide/`                                                         |
+| Links in your own Vue components              | Open the latest version with [`installVersionFallback`](../features/switchers#step-1b-catch-switches-onto-missing-pages) |
+| A nav `activeMatch` such as `^/guide/`        | No longer matches, write `^/[^/]+/guide/`                                                                                |
 
 ## `current`
 

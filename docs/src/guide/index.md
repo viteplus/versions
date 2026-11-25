@@ -8,12 +8,10 @@ This is a community project and is not affiliated with or endorsed by `VoidZero`
 See [#59](https://github.com/viteplus/versions/issues/59#issuecomment-6780832222) for the background of the name.
 :::
 
-::: warning Upgrading from v2
-Since v3 every version is served under its name, the latest one included, so an address without a version such as
-`/guide` now answers 404. Only the root `/` still opens the latest version. Nav, sidebar and absolute markdown links
-are rewritten for you, but links from outside the site and bookmarks have to name the version, such as `/v2.x/guide/`.
-See [Moving from v2](./config/configuration#moving-from-v2), and
-[#61](https://github.com/viteplus/versions/issues/61) for opening such addresses on the latest version.
+::: tip Upgrading from v2
+Since v3 every version is served under its name, the latest one included. An address without a version, such as
+`/guide`, opens the same page of the latest version, but a nav `activeMatch` such as `^/guide/` has to become
+`^/[^/]+/guide/`. See [Moving from v2](./config/configuration#moving-from-v2).
 :::
 
 ## Installation
