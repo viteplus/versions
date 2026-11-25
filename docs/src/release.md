@@ -1,7 +1,25 @@
 # Release Notes
 
-What changed in each release of `@viteplus/versions`. The current line is `v3.0.x`; for
+What changed in each release of `@viteplus/versions`. The current line is `v3.1.x`; for
 the previous lines see [Earlier releases](#earlier-releases).
+
+## v3.1.0
+
+- **Fixed**: A `link` in the frontmatter, such as a `hero.actions` button of a home page, `features`, or `prev` and
+  `next`, left the version, so `link: /guide` answered 404. Every `link` in the frontmatter now goes into the version
+  of its page, as absolute markdown links do.
+
+- **Added**: An address that names no version, such as `/guide` or `/de/guide`, opens the same page of the latest
+  version instead of answering 404, without building any page twice, see
+  [Addresses Without a Version](guide/features/unversioned).
+  ([#61](https://github.com/viteplus/versions/issues/61))
+
+- **Added**: [`installVersionFallback`](guide/features/switchers#step-1b-catch-switches-onto-missing-pages) also sends
+  an in-app link without a version, such as `/guide` in a Vue component, to the latest version.
+
+- **Changed**: The switchers list the versions newest first, the current one on top, so `v2.3.x` comes before
+  `v2.2.x`. Numbers in a name compare by value, so `v2.10.x` comes before `v2.9.x`. They were listed in the order of
+  the archive folders on disk, oldest first.
 
 ## v3.0.0
 
@@ -19,10 +37,8 @@ versionsConfig: {
 ```
 
 - **Migration**: The current version's pages move from the root to `/<current>/`, so an old link such as `/guide`
-  now answers 404. Only `/` still opens the latest version. Nav links and absolute markdown links are rewritten for
-  you, but links from outside the site and bookmarks have to name the version, see
-  [Moving from v2](guide/config/configuration#moving-from-v2). Opening such a link on the latest version is tracked
-  in [#61](https://github.com/viteplus/versions/issues/61).
+  now answers 404. Only `/` still opens the latest version. Since v3.1.0 such a link opens the latest version again,
+  see [Moving from v2](guide/config/configuration#moving-from-v2).
 
 - **Migration**: An archive folder that carries the `current` label now stops the build, since both would publish
   under one URL. Set `current` to the version that the sources hold, or rename the folder.

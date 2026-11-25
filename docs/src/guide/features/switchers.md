@@ -98,15 +98,19 @@ export default {
 };
 ```
 
-| On                 | Asked for             | Opens       | Why                                              |
-|--------------------|-----------------------|-------------|--------------------------------------------------|
-| `/v2.x/config/cli` | `/de/v2.x/config/cli` | `/de/v2.x/` | Language switch, the page is not translated      |
-| `/v1.x/hooks`      | `/de/v1.x/hooks`      | `/de/v2.x/` | Language switch, v1.x has no German pages at all |
-| `/de/v2.x/guide`   | `/de/v1.x/guide`      | `/de/v1.x/` | Version switch, v1.x has no German guide         |
-| `/v2.x/guide`      | `/v2.x/missing`       | 404         | Not a switch: a missing page keeps its 404       |
+| On                 | Asked for             | Opens         | Why                                              |
+|--------------------|-----------------------|---------------|--------------------------------------------------|
+| `/v2.x/config/cli` | `/de/v2.x/config/cli` | `/de/v2.x/`   | Language switch, the page is not translated      |
+| `/v1.x/hooks`      | `/de/v1.x/hooks`      | `/de/v2.x/`   | Language switch, v1.x has no German pages at all |
+| `/de/v2.x/guide`   | `/de/v1.x/guide`      | `/de/v1.x/`   | Version switch, v1.x has no German guide         |
+| `/v1.x/hooks`      | `/guide`              | `/v2.x/guide` | No version named, v2.x is the latest version     |
+| `/v2.x/guide`      | `/v2.x/missing`       | 404           | Not a switch: a missing page keeps its 404       |
 
-Only a switch is caught, meaning the same page with another version or language. Every other missing address,
-whether typed, bookmarked, or linked, shows the not-found page, so a broken link stays visible.
+Only a switch is caught, meaning the same page with another version or language, and an in-app link that names no
+version, which opens the same page of the latest version. Every other missing address, whether typed, bookmarked, or
+linked, shows the not-found page, so a broken link stays visible. A typed or bookmarked address without a version, such
+as `/guide`, opens the latest version even without the fallback, see
+[Moving from v2](../config/configuration#moving-from-v2).
 
 ### Step 2: Add to Navigation
 

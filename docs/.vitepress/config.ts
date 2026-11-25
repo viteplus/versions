@@ -2,13 +2,46 @@
  * Type-only imports erased during TypeScript compilation.
  */
 
-import type { PageData } from 'vitepress';
+import type { DefaultTheme, PageData } from 'vitepress';
 
 /**
  * Imports
  */
 
 import { defineVersionedConfig } from '@viteplus/versions';
+
+/**
+ * The sidebar of every version since v2.0.x, with the feature pages that only some versions hold.
+ *
+ * @param features - The feature pages of the version beyond the shared ones
+ * @returns The sidebar of the version
+ */
+
+function sidebar(features: Array<DefaultTheme.SidebarItem> = []): Array<DefaultTheme.SidebarItem> {
+    return [
+        { text: 'Getting Started', link: '/guide/' },
+        { text: 'Release Notes', link: '/release' },
+        {
+            text: 'Features',
+            collapsed: false,
+            items: [
+                { text: 'Locales', link: '/guide/features/locales' },
+                { text: 'Navigation', link: '/guide/features/navigation' },
+                { text: 'Version Switchers', link: '/guide/features/switchers' },
+                ...features
+            ]
+        },
+        {
+            text: 'Configuration',
+            collapsed: false,
+            items: [
+                { text: 'Configuration', link: '/guide/config/configuration' },
+                { text: 'Sidebar', link: '/guide/config/sidebar' },
+                { text: 'Rewrites', link: '/guide/config/rewrites' }
+            ]
+        }
+    ];
+}
 
 /**
  * Doc config
@@ -56,28 +89,8 @@ export default defineVersionedConfig({
         ],
 
         sidebar: {
-            root: [
-                { text: 'Getting Started', link: '/guide/' },
-                { text: 'Release Notes', link: '/release' },
-                {
-                    text: 'Features',
-                    collapsed: false,
-                    items: [
-                        { text: 'Locales', link: '/guide/features/locales' },
-                        { text: 'Navigation', link: '/guide/features/navigation' },
-                        { text: 'Version Switchers', link: '/guide/features/switchers' }
-                    ]
-                },
-                {
-                    text: 'Configuration',
-                    collapsed: false,
-                    items: [
-                        { text: 'Configuration', link: '/guide/config/configuration' },
-                        { text: 'Sidebar', link: '/guide/config/sidebar' },
-                        { text: 'Rewrites', link: '/guide/config/rewrites' }
-                    ]
-                }
-            ],
+            root: sidebar(),
+            'v3.0.x': sidebar([{ text: 'Addresses Without a Version', link: '/guide/features/unversioned' }]),
             'v1.0.x': [
                 { text: 'Getting Started', link: '/guide/' },
                 { text: 'Release Notes', link: '/release' }
