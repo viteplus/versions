@@ -90,8 +90,8 @@ export default defineVersionedConfig({
 });
 ```
 
-Absolute links in your markdown stay inside the version of the page that holds them, and a misspelled version
-name fails the build. See [Configuration Options](https://viteplus.github.io/versions/guide/config/configuration).
+Absolute links in your markdown stay inside the version of the page that holds them, an address without a version
+such as `/guide` opens the same page of the latest version, and a misspelled version name fails the build. See [Configuration Options](https://viteplus.github.io/versions/guide/config/configuration).
 
 ## Theme setup
 
