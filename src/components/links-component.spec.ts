@@ -3,7 +3,7 @@
  */
 
 import { inject } from '@remotex-labs/xinject';
-import { parseVersionLinks, versionLink } from '@components/links.component';
+import { parseVersionLinks, versionFrontmatterLinks, versionLink } from '@components/links.component';
 
 /**
  * Tests
@@ -56,6 +56,53 @@ describe('versionLink', () => {
     });
 });
 
+describe('versionFrontmatterLinks', () => {
+    test('should move every link of a home page into the version, and leave every other key alone', () => {
+        const frontmatter = {
+            layout: 'home',
+            hero: {
+                image: { src: '/logo.png' },
+                actions: [
+                    { theme: 'brand', text: 'Get Started', link: '/guide' },
+                    { theme: 'alt', text: 'Configuration', link: '/configuration/file' },
+                    { theme: 'alt', text: 'GitHub', link: 'https://github.com/a/b' }
+                ]
+            },
+            features: [{ title: 'Hooks', link: '/de/hooks' }, { title: 'Plain' }],
+            next: { text: 'Old', link: '/v1.x/old' }
+        };
+
+        versionFrontmatterLinks(frontmatter, 'v2.x', versions, [ 'de' ]);
+
+        expect(frontmatter).toEqual({
+            layout: 'home',
+            hero: {
+                image: { src: '/logo.png' },
+                actions: [
+                    { theme: 'brand', text: 'Get Started', link: '/v2.x/guide' },
+                    { theme: 'alt', text: 'Configuration', link: '/v2.x/configuration/file' },
+                    { theme: 'alt', text: 'GitHub', link: 'https://github.com/a/b' }
+                ]
+            },
+            features: [{ title: 'Hooks', link: '/de/v2.x/hooks' }, { title: 'Plain' }],
+            next: { text: 'Old', link: '/v1.x/old' }
+        });
+    });
+
+    test.each`
+        value
+        ${ undefined }
+        ${ null }
+        ${ 'link' }
+        ${ { link: 5 } }
+    `('should leave $value as it is', ({ value }: any) => {
+        const copy = structuredClone(value);
+        versionFrontmatterLinks(value, 'v2.x', versions, []);
+
+        expect(value).toEqual(copy);
+    });
+});
+
 describe('parseVersionLinks', () => {
     let state: any;
     let rule: (core: any) => void;
@@ -92,6 +139,30 @@ describe('parseVersionLinks', () => {
         ${ undefined }          | ${ '/guide' }    | ${ '/guide' }
     `('should render $href on $page as $expected', ({ page, href, expected }: any) => {
         expect(render(page, href)).toBe(expected);
+    });
+
+    test.each`
+        page                    | expected
+        ${ 'v1.x/index.md' }    | ${ '/v1.x/guide' }
+        ${ 'de/v1.x/index.md' } | ${ '/v1.x/guide' }
+        ${ 'index.md' }         | ${ '/guide' }
+    `('should move the frontmatter links of $page to $expected', async ({ page, expected }: any) => {
+        const pageData: any = { relativePath: page, frontmatter: { hero: { actions: [{ link: '/guide' }] } } };
+        await state.vitepressConfig.transformPageData(pageData, {});
+
+        expect(pageData.frontmatter.hero.actions[0].link).toBe(expected);
+    });
+
+    test('should run the transformPageData of the user after it, with the versioned links, and hand back its result', async () => {
+        const user = xJet.fn((pageData: any) => ({ title: pageData.frontmatter.next.link }));
+        state.vitepressConfig = { transformPageData: user };
+        parseVersionLinks();
+
+        const pageData: any = { relativePath: 'v1.x/guide.md', frontmatter: { next: { link: '/release' } } };
+        const context = { siteConfig: {} };
+
+        await expect(state.vitepressConfig.transformPageData(pageData, context)).resolves.toEqual({ title: '/v1.x/release' });
+        expect(user).toHaveBeenCalledWith(pageData, context);
     });
 
     test('should keep the markdown options of the user and run their config after the rule', async () => {
