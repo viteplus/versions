@@ -8,67 +8,202 @@ import type { SiteConfig } from 'vitepress';
  * Imports
  */
 
-import { join, posix } from 'path';
+import { join } from 'path';
 import { inject } from '@remotex-labs/xinject';
 import { StateModel } from '@models/state.model';
 import { readFileSync, writeFileSync } from 'fs';
 
 /**
- * Opens the latest version at the root of the site, with its versioned address in the address bar.
+ * The data that {@link openLatestPage} reads in the browser.
+ *
+ * @since 3.1.0
+ */
+
+export interface LatestPageDataInterface {
+    /**
+     * The site base, with a slash at both ends, such as `/docs/`.
+     *
+     * @since 3.1.0
+     */
+
+    base: string;
+
+    /**
+     * The name of the stable version, see {@link StateModel.latest}.
+     *
+     * @since 3.1.0
+     */
+
+    latest: string;
+
+    /**
+     * Whether the site serves pages without `.html`.
+     *
+     * @since 3.1.0
+     */
+
+    cleanUrls: boolean;
+
+    /**
+     * The URL prefixes of every locale other than the root one.
+     *
+     * @since 3.1.0
+     */
+
+    locales: Array<string>;
+
+    /**
+     * The names of every published version.
+     *
+     * @since 3.1.0
+     */
+
+    versions: Array<string>;
+
+    /**
+     * The routes that the latest version publishes, such as `de/v2.x/guide.md`.
+     *
+     * @since 3.1.0
+     */
+
+    routes: Array<string>;
+}
+
+/**
+ * Moves an address that names no version onto the same page of the latest version, before the app starts.
+ *
+ * @param data - The site data the move needs, see {@link LatestPageDataInterface}
  *
  * @remarks
- * The root of the site and of every locale serves the home page of {@link StateModel.latest}
- * with a script that changes the address to `/<latest>/` before the app starts,
- * so the page opens without a redirect or a reload.
- * The dev server adds the script to the root page it serves,
- * and when the build ends the home page is copied to the root with the script, unless a page is already there.
+ * Runs in the browser, inlined into a page by {@link latestScript}, so it reads `location` and changes the address
+ * with `history.replaceState`, which VitePress's router then reads on its first load.
+ * `/guide`, `/guide/` and `/guide.html` become the address of `guide.md` or `guide/index.md` in the latest version,
+ * and `/de/guide` its German page. The query and the hash are kept.
+ * An address that already names a version, lies outside the base, or has no page in the latest version stays as it is,
+ * so it still shows the not-found page.
+ *
+ * It keeps to one function body with no named helpers, since it is inlined from its source text.
+ *
+ * @example
+ * ```ts
+ * // at /docs/guide?a#b, where v2.x publishes v2.x/guide/index.md
+ * openLatestPage({ base: '/docs/', latest: 'v2.x', cleanUrls: false, locales: [], versions, routes });
+ * location.href; // .../docs/v2.x/guide/?a#b
+ * ```
+ *
+ * @see https://github.com/viteplus/versions/issues/61
+ * @since 3.1.0
+ */
+
+export function openLatestPage(data: LatestPageDataInterface): void {
+    const pathname = location.pathname === data.base.slice(0, -1) ? data.base : location.pathname;
+    if (pathname.indexOf(data.base) !== 0) return;
+
+    const segments = decodeURI(pathname.slice(data.base.length)).split('/');
+    const locale = data.locales.indexOf(segments[0]) > -1 ? `${ segments.shift() }/` : '';
+    if (data.versions.indexOf(segments[0]) > -1) return;
+
+    const page = segments.join('/').replace(/\.html$/, '').replace(/\/$/, '').replace(/(^|\/)index$/, '');
+    const prefix = `${ locale }${ data.latest }/`;
+    const candidates = page ? [ `${ prefix }${ page }.md`, `${ prefix }${ page }/index.md` ] : [ `${ prefix }index.md` ];
+    const route = candidates.find(candidate => data.routes.indexOf(candidate) > -1);
+    if (!route) return;
+
+    const path = route.replace(/(^|\/)index\.md$/, '$1').replace(/\.md$/, data.cleanUrls ? '' : '.html');
+    history.replaceState(history.state, '', `${ encodeURI(data.base + path) }${ location.search }${ location.hash }`);
+}
+
+/**
+ * Builds the inline script that runs {@link openLatestPage} with the data of this site.
+ *
+ * @returns A `<script>` tag to place at the start of `<head>`
+ *
+ * @remarks
+ * Only the routes of the latest version ride along, since no other version is a target.
+ * Every `<` in the data is escaped, so a route can never close the script tag.
+ *
+ * @example
+ * ```ts
+ * latestScript();
+ * // '<script>(function openLatestPage(data) { ... })({"base":"/docs/","latest":"v2.x",...})</script>'
+ * ```
+ *
+ * @since 3.1.0
+ */
+
+export function latestScript(): string {
+    const { latest, localeSegments, versionsList, routesMap, vitepressConfig } = inject(StateModel);
+    const { base = '/', cleanUrls = false } = vitepressConfig;
+    const trimmed = base.replace(/^\/+|\/+$/g, '');
+    const data: LatestPageDataInterface = {
+        base: trimmed ? `/${ trimmed }/` : '/',
+        latest,
+        cleanUrls,
+        locales: localeSegments,
+        versions: versionsList,
+        routes: routesMap[latest] ?? []
+    };
+
+    const json = JSON.stringify(data).replace(/</g, '\\u003c');
+
+    return `<script>(${ openLatestPage.toString() })(${ json })</script>`;
+}
+
+/**
+ * Opens the latest version at every address that names no version, without a second copy of its pages.
+ *
+ * @remarks
+ * - The root of the site and of every locale serves the home page of {@link StateModel.latest},
+ *   copied there when the build ends unless a page is already there.
+ * - Any other address that names no version, such as `/guide`, has no page on disk, so the host serves `404.html`.
+ *
+ * Both pages carry the script from {@link latestScript}, which moves the address to the same page of the latest version
+ * before the app starts, so `/guide` opens `/<latest>/guide` without a reload, and only the root home page is copied.
+ * The dev server adds the script to every page it serves, where it does nothing at an address that names a version.
  * The `vite` plugins and the `buildEnd` hook of the user configuration are kept, and that hook runs last.
  *
  * @example
  * ```ts
  * parseLatestEntry();
  * // opening / shows the home page of v2.0.x, with /v2.0.x/ in the address bar
+ * // opening /guide shows the guide of v2.0.x, with /v2.0.x/guide.html in the address bar
  * ```
  *
  * @see https://github.com/viteplus/versions/issues/55
+ * @see https://github.com/viteplus/versions/issues/61
  *
  * @since 3.0.0
  */
 
 export function parseLatestEntry(): void {
     const { latest, localeSegments, vitepressConfig } = inject(StateModel);
-    const { buildEnd, base = '/', vite = {} } = vitepressConfig;
-    const locales = [ '', ...localeSegments ];
-    const withScript = (html: string, locale: string): string => {
-        const url = JSON.stringify(posix.join('/', base, locale, latest, '/'));
-
-        return html.replace('<head>', `<head><script>history.replaceState(null,'',${ url }+location.search+location.hash)</script>`);
-    };
+    const { buildEnd, vite = {} } = vitepressConfig;
+    const script = latestScript();
+    const withScript = (html: string): string => html.replace('<head>', `<head>${ script }`);
 
     const plugin = {
         name: 'viteplus-versions:latest',
-        transformIndexHtml(html: string, { originalUrl = '' }: { originalUrl?: string }): string {
-            const path = originalUrl.replace(/[?#].*/, '').replace(/\/?(index\.html)?$/, '/');
-            const locale = locales.find(locale => path === posix.join('/', base, locale, '/'));
-
-            return locale === undefined ? html : withScript(html, locale);
-        }
+        transformIndexHtml: withScript
     };
 
     vitepressConfig.vite = { ...vite, plugins: [ ...vite.plugins ?? [], plugin ] };
 
     vitepressConfig.buildEnd = async (siteConfig: SiteConfig): Promise<void> => {
-        for (const locale of locales) {
-            const home = join(siteConfig.outDir, locale, latest, 'index.html');
-            const root = join(siteConfig.outDir, locale, 'index.html');
-
+        const write = (from: string, to: string, flag: 'w' | 'wx'): void => {
             try {
                 // 'wx' fails when a page already sits at the root, in one step and without a race
-                writeFileSync(root, withScript(readFileSync(home, 'utf8'), locale), { flag: 'wx' });
+                writeFileSync(to, withScript(readFileSync(from, 'utf8')), { flag });
             } catch (error) {
                 if (![ 'ENOENT', 'EEXIST' ].includes(<string> (<NodeJS.ErrnoException> error).code)) throw error;
             }
+        };
+
+        for (const locale of [ '', ...localeSegments ]) {
+            write(join(siteConfig.outDir, locale, latest, 'index.html'), join(siteConfig.outDir, locale, 'index.html'), 'wx');
         }
+
+        const notFound = join(siteConfig.outDir, '404.html');
+        write(notFound, notFound, 'w');
 
         await buildEnd?.(siteConfig);
     };
