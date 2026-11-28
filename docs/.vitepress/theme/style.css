@@ -101,3 +101,7 @@
 .DocSearch {
     --docsearch-primary-color: var(--vp-c-brand-1) !important;
 }
+
+.VPDoc.has-aside .content-container {
+    max-width: 100% !important;
+}
