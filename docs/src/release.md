@@ -3,6 +3,15 @@
 What changed in each release of `@viteplus/versions`. The current line is `v3.1.x`; for
 the previous lines see [Earlier releases](#earlier-releases).
 
+## v3.1.1
+
+- **Fixed**: An address that names no version, such as `/guide`, opened the latest page with an empty body on a built
+  site until a refresh. The host serves `404.html` for it, and on a first load VitePress keeps the not-found markup and
+  loads the page without its content. `404.html` now opens the latest page with a new request, and hides the not-found
+  page so it never shows. The back button skips the address without a version, and the root `index.html` and
+  `vitepress dev` still change the address in place, see [Addresses Without a Version](guide/features/unversioned).
+  ([#61](https://github.com/viteplus/versions/issues/61))
+
 ## v3.1.0
 
 - **Fixed**: A `link` in the frontmatter, such as a `hero.actions` button of a home page, `features`, or `prev` and
