@@ -61,8 +61,8 @@ way. An address whose page the latest version lacks still shows the not-found pa
 
 VitePress publishes every page at exactly one path, so serving `/guide` as well as `/v2.x/guide` would build each page of
 the latest version twice, and show it twice in the local search. Instead, the host serves `404.html` for `/guide`, as it
-does for any address with no page, and a small script in that page moves the address to the versioned page before the
-app starts. Nothing is built twice and nothing reloads. The host still answers `/guide` with status 404, so search
+does for any address with no page, and a small script in that page opens the versioned page before the app starts.
+Nothing is built twice. The host still answers `/guide` with status 404, so search
 engines index only the versioned address.
 See [Addresses Without a Version](../features/unversioned) for how it works and what the host needs.
 
