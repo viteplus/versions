@@ -72,7 +72,7 @@ export default defineVersionedConfig({
         ]
     ],
     versionsConfig: {
-        current: 'v3.0.x',
+        current: 'v3.1.x',
         versionSwitcher: false
     },
     themeConfig: {
@@ -89,8 +89,8 @@ export default defineVersionedConfig({
         ],
 
         sidebar: {
-            root: sidebar(),
-            'v3.0.x': sidebar([{ text: 'Addresses Without a Version', link: '/guide/features/unversioned' }]),
+            root: sidebar([{ text: 'Addresses Without a Version', link: '/guide/features/unversioned' }]),
+            'v3.0.x': sidebar(),
             'v1.0.x': [
                 { text: 'Getting Started', link: '/guide/' },
                 { text: 'Release Notes', link: '/release' }
