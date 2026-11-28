@@ -17,7 +17,7 @@ x-node: &node
     init: true
     volumes:
         # The folder compose is run from, which is the repo root
-        - ${PWD}:/app
+        - ${PWD}:/app:z
         # An anonymous volume over the repo's node_modules. Docker fills a new one from the
         # image, so the container uses the image's dependencies and never the host's
         # (built for macOS/Windows). Compose keeps it when it recreates a container, so pass
