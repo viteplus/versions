@@ -42,12 +42,15 @@ reader opens /guide
   → the host has no /guide.html, so it serves 404.html
   → a script at the top of <head> runs before the app:
       /guide names no version, and v2.x publishes v2.x/guide.md
-      → history.replaceState to /v2.x/guide.html
-  → the VitePress router starts, reads /v2.x/guide.html, and opens that page
+      → hides the not-found page and calls location.replace to /v2.x/guide.html
+  → the host serves /v2.x/guide.html, and the page opens as if the reader had opened it directly
 ```
 
-The script does not reload the page or send a second request. VitePress's router only reads the address when the app
-starts, so it sees the versioned address and loads that page as if the reader had opened it directly.
+On the first load of a built site, VitePress keeps the markup it was served with and loads only the lean part of the
+page, without its content. `404.html` holds the not-found markup, so the script opens the versioned page with a second
+request instead of changing the address in place. The not-found page never shows, and `location.replace` keeps
+`/guide` out of the history, so the back button skips it. The root `index.html` already holds the latest home page, so
+there the script changes the address with `history.replaceState`, without a second request.
 
 ### The script
 
