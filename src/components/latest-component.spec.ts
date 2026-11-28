@@ -15,20 +15,22 @@ const routes = [
     'v2.0.x/index.md', 'v2.0.x/guide.md', 'v2.0.x/config/index.md', 'v2.0.x/für.md',
     'de/v2.0.x/index.md', 'de/v2.0.x/guide/index.md', 'de/v2.0.x/api.md'
 ];
-const data = { base: '/docs/', latest: 'v2.0.x', cleanUrls: false, locales: [ 'de' ], versions: [ 'next', 'v2.0.x', 'v1.0.x' ], routes };
+const data = { base: '/docs/', latest: 'v2.0.x', cleanUrls: false, locales: [ 'de' ], versions: [ 'next', 'v2.0.x', 'v1.0.x' ], routes, reload: false };
 
 describe('openLatestPage', () => {
+    let replace: any;
     let replaceState: any;
 
     const open = (href: string, overrides: object = {}): void => {
         const url = new NodeURL(href, 'https://a.com');
-        (<any> globalThis).location = { pathname: url.pathname, search: url.search, hash: url.hash };
+        (<any> globalThis).location = { pathname: url.pathname, search: url.search, hash: url.hash, replace };
         openLatestPage({ ...data, ...overrides });
     };
 
     beforeEach(() => {
         xJet.restoreAllMocks();
 
+        replace = xJet.fn();
         replaceState = xJet.fn();
         (<any> globalThis).history = { state: null, replaceState };
     });
@@ -36,6 +38,7 @@ describe('openLatestPage', () => {
     afterEach(() => {
         delete (<any> globalThis).location;
         delete (<any> globalThis).history;
+        delete (<any> globalThis).document;
     });
 
     test.each`
@@ -57,6 +60,15 @@ describe('openLatestPage', () => {
         open(href);
 
         expect(replaceState).toHaveBeenCalledWith(null, '', url);
+    });
+
+    test('should hide the page and open the address with a new request when reload is set', () => {
+        (<any> globalThis).document = { documentElement: { style: {} } };
+        open('/docs/guide?a#b', { reload: true });
+
+        expect(replace).toHaveBeenCalledWith('/docs/v2.0.x/guide.html?a#b');
+        expect(replaceState).not.toHaveBeenCalled();
+        expect((<any> globalThis).document.documentElement.style.visibility).toBe('hidden');
     });
 
     test('should write a clean address when the site serves clean URLs', () => {
@@ -152,7 +164,8 @@ describe('parseLatestEntry', () => {
         expect(readFileSync).toHaveBeenCalledWith('/out/de/v2.0.x/index.html', 'utf8');
         expect(writeFileSync).toHaveBeenNthCalledWith(1, '/out/index.html', expect.stringContaining('<head><script>'), { flag: 'wx' });
         expect(writeFileSync).toHaveBeenNthCalledWith(2, '/out/de/index.html', expect.stringContaining('<head><script>'), { flag: 'wx' });
-        expect(writeFileSync).toHaveBeenNthCalledWith(3, '/out/404.html', expect.stringContaining('<head><script>'), { flag: 'w' });
+        expect(writeFileSync).toHaveBeenNthCalledWith(1, '/out/index.html', expect.stringContaining('"reload":false'), { flag: 'wx' });
+        expect(writeFileSync).toHaveBeenNthCalledWith(3, '/out/404.html', expect.stringContaining('"reload":true'), { flag: 'w' });
         expect(userBuildEnd).toHaveBeenCalledWith(siteConfig);
     });
 
