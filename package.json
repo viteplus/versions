@@ -74,7 +74,7 @@
         "eslint-plugin-perfectionist": "^5.13.0",
         "@types/node": "^26.6.6",
         "@types/markdown-it": "^14.2.0",
-        "@viteplus/versions": "^2.3.0",
+        "@viteplus/versions": "^3.1.0",
         "@remotex-labs/xjet": "^1.5.6",
         "@remotex-labs/xbuild": "^3.1.1"
     },
